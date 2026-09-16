@@ -1,0 +1,8 @@
+[package]
+name = "pdfium_probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+pdfium-render = "0.9"
