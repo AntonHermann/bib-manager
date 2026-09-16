@@ -46,7 +46,7 @@ Bekannte Schwachstellen dieses Workflows, die das Tool beheben soll: zerfallende
 | **Konfiguration dagegen im Repo** (`bib.toml`) | Von Hand geschrieben, versioniert, diff-bar. Bei KI-Regeln zusätzlich: über die Git-Historie belegbar, welche Regeln zum Abgabezeitpunkt galten. |
 | **Rust, ein Programm, ein Workspace** | Kein Baustein der ersten Version braucht Python. `typst-syntax` gibt es nur in Rust und ist der offizielle Parser. |
 | **Lizenz `MIT OR Apache-2.0`** | Ausdrücklicher Wunsch: Wirkung im Wissenschaftsbetrieb geht vor Copyleft. Schließt `mupdf-rs` (AGPL) als Abhängigkeit aus. |
-| **Extraktion hinter einer Schnittstelle, Standard `pdf_oxide`** | Backend-Wahl bleibt billig revidierbar; Schritt 0 der Umsetzung ist ein Benchmark. |
+| **Extraktion hinter einer Schnittstelle, Standard `pdf_oxide`** | Backend-Wahl bleibt billig revidierbar; Schritt 0a der Umsetzung ist ein Benchmark. |
 | **Kein LLM in dieser Version** | Alles Nötige ist deterministisch. Die Vorkehrungen für spätere LLM-Funktionen sind trotzdem enthalten (Abschnitt 12). |
 | **Kein Daemon** | Language Server und CLI sprechen direkt mit SQLite (WAL). Ein Daemon lohnt erst mit geladenen Modellen. |
 
@@ -201,7 +201,7 @@ Beim Wortlaut eines `#quote` wird der reine Text gesammelt, Escapes aufgelöst, 
 
 ## 9. Language Server und Zed
 
-Laut Zed-Doku und Issue #61865 führt Zed Hover, Definition und References über mehrere Server zusammen; Diagnostics kommen ohnehin von allen. Nur das Hervorheben von Symbolvorkommen nutzt den ersten Server, was hier nicht gebraucht wird. **Das ist nicht praktisch getestet** und wird deshalb in Schritt 0 mit einem Minimal-Server neben tinymist überprüft (Abschnitt 15). Fällt der Test negativ aus, trägt der Editor-Teil vor allem über Diagnostics und Code Actions, die in jedem Fall von allen Servern kommen.
+Laut Zed-Doku und Issue #61865 führt Zed Hover, Definition und References über mehrere Server zusammen; Diagnostics kommen ohnehin von allen. Nur das Hervorheben von Symbolvorkommen nutzt den ersten Server, was hier nicht gebraucht wird. **Das ist nicht praktisch getestet** und wird deshalb in Schritt 0b mit einem Minimal-Server neben tinymist überprüft (Abschnitt 15). Fällt der Test negativ aus, trägt der Editor-Teil vor allem über Diagnostics und Code Actions, die in jedem Fall von allen Servern kommen.
 
 **Meldungen:** Wortlaut stimmt nicht (mit Seitenqualität als Begründung); Key unbekannt; Key fehlt in der `.bib`; Metadaten weichen ab; dynamisches Zitat (Hinweis); optional: zitiert ohne Belegstelle. Der Schweregrad kommt aus `bib.toml`. Die Meldung zu unbekannten Keys ist abschaltbar, weil tinymist Ähnliches meldet.
 
