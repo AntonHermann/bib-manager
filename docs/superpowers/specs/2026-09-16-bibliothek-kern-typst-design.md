@@ -86,7 +86,7 @@ Eine SQLite-Datenbank an festem Ort (`~/.local/share/bib/bib.db`), WAL-Modus, ve
 
 | Tabelle | Inhalt |
 |---|---|
-| `source` | Quelle: Zotero-Key (optional), Citation Key, Metadaten, Tags, Herkunft (Zotero/`.bib`/manuell), Status (aktiv/stillgelegt) |
+| `source` | Quelle aus Zotero: Bibliothek + Item-Key (Pflicht), Citation Key, Metadaten, Tags, Status (aktiv/stillgelegt) |
 | `attachment` | PDF: Pfad, Prüfsumme, Seitenzahl |
 | `text_layer` | Textschicht eines Anhangs: Backend je Seite, Backend-Version, Normalisierungs-Version, kanonischer Text (zstd), Qualitätsmerkmale |
 | `page_geometry` | je Seite: Größe, Drehung, Koordinatensystem, Spans als kompakter Block mit Offset-Index |
@@ -115,7 +115,7 @@ Eine SQLite-Datenbank an festem Ort (`~/.local/share/bib/bib.db`), WAL-Modus, ve
 
 **Herkunft an jedem Eintrag:** *von dir*, *deterministisch geprüft*, *importiert, Herkunft unbekannt*, *LLM-Einschätzung* (mit Verweis auf `llm_call`), *von dir bestätigt*.
 
-**Nicht neu erzeugbare Daten** sind Belegstellen, Anker, Verwendungen, Korrekturen, Prüflisten-Entscheidungen, manuell angelegte Quellen und später Notizen. Alles andere lässt sich aus Zotero und den PDFs neu bauen.
+**Nicht neu erzeugbare Daten** sind Belegstellen, Anker, Verwendungen, Korrekturen, Prüflisten-Entscheidungen und später Notizen. Alles andere lässt sich aus Zotero und den PDFs neu bauen.
 
 **Sicherung und Export:**
 
@@ -144,9 +144,11 @@ Eine Belegstelle ist ein wörtlicher, prüfbarer Ausschnitt; eine Notiz sind eig
 - **Gelöschte, zusammengeführte oder umbenannte Einträge** — erkannt daran, dass sie im Vollabgleich fehlen oder ihr Key sich geändert hat — werden stillgelegt, nicht gelöscht, und landen in der Prüfliste, weil Belegstellen daran hängen.
 - **Annotationen** sind über die lokale API lesbar (`annotationText`, `annotationComment`, `annotationPosition`, `annotationPageLabel`, …), werden aber erst in Teilprojekt 4 übernommen.
 
-**Quellen außerhalb von Zotero.** Eine Quelle darf ohne Zotero-Key existieren, angelegt aus ihrem `.bib`-Eintrag; ein PDF wird per CLI zugeordnet (`bib source attach <key> <pdf>`). Die Prüfliste schlägt „in Zotero anlegen" vor. Taucht die Quelle später in Zotero auf (gleicher Citation Key oder gleiche DOI), werden beide Einträge zusammengeführt; Belegstellen bleiben erhalten.
+**Zotero ist die einzige Quelle für Quellen.** Jede `source` stammt aus Zotero. Quellen, die nur in einer `.bib` stehen, werden nicht angelegt; das Tool fordert auf, sie in Zotero anzulegen (mit dem Connector ein Klick). Fremde `.bib`-Dateien lassen sich bei Bedarf in eine eigene Zotero-Bibliothek importieren.
 
-**Die `.bib` wird gelesen, nie geschrieben** (Bibliothek `biblatex`, dieselbe wie in Typst). Daraus entstehen drei Meldungen: Key nur in der `.bib`, Key nur in Zotero, Metadaten auseinandergelaufen.
+**Mehrere Bibliotheken.** Geteilte Literatur läuft typischerweise über Zotero-Gruppenbibliotheken. Eine Quelle wird deshalb über das Paar *Bibliothek + Item-Key* identifiziert, nicht über den Item-Key allein, und der Abgleich ist so gebaut, dass er über mehrere Bibliotheken laufen kann. Ob die lokale API Gruppenbibliotheken ausliefert (`/api/groups/<id>/…`), ist noch ungeprüft (Abschnitt 18). Kommt derselbe Citation Key in zwei Bibliotheken vor, landet das in der Prüfliste.
+
+**Die `.bib` wird gelesen, nie geschrieben** (Bibliothek `biblatex`, dieselbe wie in Typst), und zwar nur im Speicher — eine `.bib` ist in Millisekunden geparst, eine eigene Tabelle braucht es nicht. Daraus entstehen drei Meldungen: Key nur in der `.bib` („nicht in Zotero, bitte dort anlegen"), Key nur in Zotero (Export veraltet, Zitat kompiliert nicht), Metadaten auseinandergelaufen.
 
 ---
 
@@ -221,7 +223,7 @@ Laut Zed-Doku und Issue #61865 führt Zed Hover, Definition und References über
 
 ## 10. CLI
 
-`bib init`, `sync`, `index`, `check`, `cites`, `search`, `text`, `excerpt`, `patch`, `review`, `source`, `export`, `import`, `backup`, `doctor`.
+`bib init`, `sync`, `index`, `check`, `cites`, `search`, `text`, `excerpt`, `patch`, `review`, `export`, `import`, `backup`, `doctor`.
 
 Durchgängig `--json` für Skripte, Git-Hooks und Claude Code, dazu sinnvolle Exit-Codes. `bib check` verhält sich wie das bestehende Skript: still bei Erfolg, Fehlercode bei echtem Fehlschlag, `-v` zeigt auch Bestandenes, Ausgabe als `datei:zeile` mit nächstliegendem Kandidaten.
 
@@ -263,7 +265,7 @@ Die Datei ist Pflicht und gewinnt gegen die Datenbank. Taucht dieselbe ID an zwe
 
 ## 11. Import und Abnahme
 
-Für jeden Eintrag aus `quote_verification.json`: Key auflösen; Wortlaut in der Textschicht suchen (exakt, normalisiert, unscharf); daraus Anker mit Kontext bauen, den die JSON-Datei nicht hat. Einordnung: Quelle ohne PDF → Belegstelle mit *unverankertem* Anker, nicht prüfbar; Quelle nicht in Zotero → aus der `.bib` angelegt, Prüflisten-Eintrag „in Zotero anlegen"; gefunden → *deterministisch geprüft*; mehrere Treffer → Prüfliste mit Kandidaten; nicht gefunden mit `validated` → *von dir bestätigt, nicht maschinell verankert*; nicht gefunden ohne `validated` → Prüfliste. Das Label wird zur Verwendung, bei passender Überschrift mit Verweis auf das Kapitel. Vorhandene `#quote`-Stellen werden über ihren Wortlaut mit den Belegstellen verknüpft.
+Für jeden Eintrag aus `quote_verification.json`: Key auflösen; Wortlaut in der Textschicht suchen (exakt, normalisiert, unscharf); daraus Anker mit Kontext bauen, den die JSON-Datei nicht hat. Einordnung: Quelle ohne PDF → Belegstelle mit *unverankertem* Anker, nicht prüfbar; Key nicht in Zotero → Prüfliste mit „in Zotero anlegen, dann `bib import` erneut ausführen" (der Import ist idempotent, ein zweiter Lauf legt nichts doppelt an); gefunden → *deterministisch geprüft*; mehrere Treffer → Prüfliste mit Kandidaten; nicht gefunden mit `validated` → *von dir bestätigt, nicht maschinell verankert*; nicht gefunden ohne `validated` → Prüfliste. Das Label wird zur Verwendung, bei passender Überschrift mit Verweis auf das Kapitel. Vorhandene `#quote`-Stellen werden über ihren Wortlaut mit den Belegstellen verknüpft.
 
 Am Ende ein Bericht mit Zahlen je Kategorie. **Nichts wird still verworfen.** Optional übernimmt `bib import triage --from-dirs literatur/` die Ebenen `A_kern`, `B_belege`, `C_rest` als Tags.
 
@@ -341,6 +343,8 @@ Jeder Schritt ist für sich nutzbar; ab Schritt 3 ersetzt das Tool bereits Teile
 
 **Leseoberfläche.** Eigener PDF-Leser mit CiteSee-Färbung (Zitate markiert nach *in Bibliothek / Triage-Ebene / selbst zitiert / ungelesen / fehlt*), CiteRead-Randnotizen (was zitierende Papers über eine Stelle sagen) und Anzeige von Ankern, Belegstellen und Notizen. Setzt Zitatmarker aus GROBID und Zitatkontexte aus Teilprojekt 5 voraus.
 
+**Fremde oder geteilte `.bib` ohne Zotero.** Bewusst nicht modelliert. Wird es nötig (etwa bei gemeinsamen Papers mit häufig aktualisierter, von Hand gepflegter `.bib`), kommt es als eigenes Thema zurück; bis dahin ist der Weg eine eigene Zotero-Bibliothek oder eine Gruppenbibliothek.
+
 **Weitere Teilprojekte:** Notizen und Discourse Graph (4); hybride Suche aus BM25 und Embeddings, SPECTER2 auf Paper-Ebene (3); Zitationsgraph, Zitatkontexte zitierender Papers, Co-Autoren, Retraction-Check, Metadaten-Lint (5); Zitat-Prüfung inhaltlich per LLM, Extraktions-Matrix (6); Zurückschreiben nach Zotero, MCP-Server, Erfassung der Claude-Sessions eines Projekts (7).
 
 ---
@@ -369,5 +373,6 @@ Fremde Quellen, die das Design geprägt haben: Jergas & Baethge (Zitatfehlerquot
 - Öffnet Zed einen externen Link (`zotero://…`), den der Language Server über `window/showDocument` schickt? Falls nicht, übernimmt das CLI.
 - Ergebnis des Backend-Benchmarks (Schritt 0a). Fällt `pdf_oxide` durch, wird pdfium mit eigenem Reparaturschritt zum Standard.
 - Ergebnis des Zed-Tests mit zwei Language Servern (Schritt 0b).
+- Liefert die lokale Zotero-API Gruppenbibliotheken aus (`/api/groups/<id>/…`)? Nicht geprüft, weil Zotero zum Zeitpunkt der Abfrage nicht lief.
 - Unterstützt die lokale Zotero-API `sort=dateModified`? Die Abfrage lieferte als „neueste" Einträge solche vom Juni, obwohl im September Einträge hinzugekommen sind. Für den Vollabgleich unerheblich, für eine spätere Optimierung zu klären.
 - Beitrag an `pdf_oxide` für Glyphennamen aus eingebetteten Type1-Schriften: wünschenswert, nicht eingeplant.
