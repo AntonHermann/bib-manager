@@ -86,12 +86,12 @@ Eine SQLite-Datenbank an festem Ort (`~/.local/share/bib/bib.db`), WAL-Modus, ve
 
 | Tabelle | Inhalt |
 |---|---|
-| `source` | Quelle: Zotero-Key, Citation Key, Metadaten, Tags, Zotero-Version, Status (aktiv/stillgelegt) |
+| `source` | Quelle: Zotero-Key (optional), Citation Key, Metadaten, Tags, Herkunft (Zotero/`.bib`/manuell), Status (aktiv/stillgelegt) |
 | `attachment` | PDF: Pfad, Prüfsumme, Seitenzahl |
 | `text_layer` | Textschicht eines Anhangs: Backend je Seite, Backend-Version, Normalisierungs-Version, kanonischer Text (zstd), Qualitätsmerkmale |
 | `page_geometry` | je Seite: Größe, Drehung, Koordinatensystem, Spans als kompakter Block mit Offset-Index |
 | `text_patch` | manuelle Korrektur: Ziel als Anker, Ersatztext, Begründung, Herkunft, Status (aktiv/überflüssig) |
-| `anchor` | **eigene Tabelle.** Art *Textbereich* (Wortlaut, je 32 Zeichen Kontext, Position) oder *Seitenbereich* (Seite, Rechteck) |
+| `anchor` | **eigene Tabelle.** Art *Textbereich* (Wortlaut, je 32 Zeichen Kontext, Position) oder *Seitenbereich* (Seite, Rechteck). Zustand *verankert*, *mehrdeutig* oder *unverankert* |
 | `excerpt` | wörtlicher Ausschnitt an einem Anker, mit Prüfstatus und Herkunft |
 | `project` | Pfad, Abzug der `bib.toml`, Status |
 | `document` | `.typ`-Datei eines Projekts, Art Paper oder Folien |
@@ -107,11 +107,20 @@ Eine SQLite-Datenbank an festem Ort (`~/.local/share/bib/bib.db`), WAL-Modus, ve
 
 **Anker nach W3C-Vorbild.** Wortlaut plus Kontext plus Position. Auflösung in der Reihenfolge exakt → normalisiert → unscharf (höchstens 5 % Abweichung), Kontext löst Mehrdeutigkeit auf. Ändert sich die Textschicht, werden alle Anker neu aufgelöst; Abweichungen gehen in die Prüfliste.
 
+**Anker ohne Textschicht.** Hat eine Quelle (noch) kein PDF, kann eine Belegstelle trotzdem existieren: Ihr Anker ist *unverankert*, sie gilt als nicht prüfbar. Sobald ein PDF da ist, wird automatisch verankert.
+
+**Mehrdeutige Treffer.** Für die *Prüfung* eines Wortlauts genügt ein Treffer. Beim *Anlegen* einer Belegstelle entscheidet bei mehreren Treffern zuerst der Kontext, dann eine Seitenangabe aus dem Dokument (Abschnitt 8), sonst bleibt der Anker *mehrdeutig* und landet mit allen Kandidaten in der Prüfliste.
+
 **Belegstelle und Verwendung getrennt.** Der Ausschnitt gehört zur Quelle und ist projektübergreifend nutzbar, das Kapitel-Label gehört zur Verwendung im Projekt.
 
 **Herkunft an jedem Eintrag:** *von dir*, *deterministisch geprüft*, *importiert, Herkunft unbekannt*, *LLM-Einschätzung* (mit Verweis auf `llm_call`), *von dir bestätigt*.
 
-**Nicht neu erzeugbare Daten** sind Belegstellen, Verwendungen, Korrekturen, Prüflisten-Entscheidungen und später Notizen. Sie gehören in Sicherung und Export. Alles andere lässt sich aus Zotero und den PDFs neu bauen.
+**Nicht neu erzeugbare Daten** sind Belegstellen, Anker, Verwendungen, Korrekturen, Prüflisten-Entscheidungen, manuell angelegte Quellen und später Notizen. Alles andere lässt sich aus Zotero und den PDFs neu bauen.
+
+**Sicherung und Export:**
+
+- **Backup** ist eine vollständige, konsistente Kopie der Datenbank per `VACUUM INTO`: automatisch vor jeder Migration und auf Befehl (`bib backup`), mit Aufbewahrung der letzten Stände.
+- **Export** umfasst nur die nicht neu erzeugbaren Daten, als **JSON Lines je Tabelle** mit stabilen IDs. Das ist diff-bar, lesbar und unabhängig vom Datenbankschema; `bib import` kann daraus wiederherstellen. Projektbezogene Exporte (etwa im Format von `quote_verification.json`) sind zusätzlich über `[export]` in `bib.toml` konfigurierbar.
 
 ### Vorgriff: Notizen (Teilprojekt 4)
 
@@ -128,12 +137,14 @@ Eine Belegstelle ist ein wörtlicher, prüfbarer Ausschnitt; eine Notiz sind eig
 
 ## 6. Zotero-Abgleich
 
-- **Lokale API** unter `127.0.0.1:23119/api/`, offline, ohne Kontingent, **nur lesend**. Voraussetzung: Zotero läuft und die Option für andere Programme ist aktiv.
-- **Inkrementell** über die Bibliotheksversion von Zotero.
+- **Lokale API** unter `127.0.0.1:23119/api/users/0/…`, offline, ohne Kontingent, **nur lesend**. Voraussetzung: Zotero läuft und die Option für andere Programme ist aktiv.
+- **Vollabgleich statt inkrementell.** Die lokale API liefert für alle Einträge `version = 0` und `Last-Modified-Version: 0`, und es gibt keinen `/deleted`-Endpunkt (gemessen, Abschnitt 17). Der Abgleich holt deshalb alle Einträge seitenweise und vergleicht mit der Datenbank: neu, geändert (über `dateModified` und eine Prüfsumme der Felder), verschwunden. Bei einigen Hundert Einträgen ist das billig.
 - **Rückfallebene:** schreibgeschützte Kopie von `zotero.sqlite`, wenn Zotero nicht läuft. Ohne beides wird mit dem letzten Stand gearbeitet, dessen Alter überall sichtbar ist.
-- **Übernommen:** Metadaten, nativer Citation Key (Zotero 8+), Tags, Collections, Anhänge inklusive verlinkter Dateien.
-- **Gelöschte, zusammengeführte oder umbenannte Einträge** werden stillgelegt, nicht gelöscht, und landen in der Prüfliste, weil Belegstellen daran hängen.
-- **Annotationen** werden noch nicht übernommen (Teilprojekt 4), der Abgleich ist aber darauf vorbereitet.
+- **Übernommen:** Metadaten, nativer Citation Key (Feld `citationKey`), Tags, Collections, Anhänge. Der Dateipfad steht nicht in den Anhangsdaten, sondern im Link `enclosure` als `file://`-URL (alternativ `/items/<key>/file/view/url`). Betrachtet werden Anhänge mit `contentType = application/pdf`, unabhängig vom `linkMode`.
+- **Gelöschte, zusammengeführte oder umbenannte Einträge** — erkannt daran, dass sie im Vollabgleich fehlen oder ihr Key sich geändert hat — werden stillgelegt, nicht gelöscht, und landen in der Prüfliste, weil Belegstellen daran hängen.
+- **Annotationen** sind über die lokale API lesbar (`annotationText`, `annotationComment`, `annotationPosition`, `annotationPageLabel`, …), werden aber erst in Teilprojekt 4 übernommen.
+
+**Quellen außerhalb von Zotero.** Eine Quelle darf ohne Zotero-Key existieren, angelegt aus ihrem `.bib`-Eintrag; ein PDF wird per CLI zugeordnet (`bib source attach <key> <pdf>`). Die Prüfliste schlägt „in Zotero anlegen" vor. Taucht die Quelle später in Zotero auf (gleicher Citation Key oder gleiche DOI), werden beide Einträge zusammengeführt; Belegstellen bleiben erhalten.
 
 **Die `.bib` wird gelesen, nie geschrieben** (Bibliothek `biblatex`, dieselbe wie in Typst). Daraus entstehen drei Meldungen: Key nur in der `.bib`, Key nur in Zotero, Metadaten auseinandergelaufen.
 
@@ -180,6 +191,8 @@ Erkannt werden: `@key`; `#cite(<key>, form:, supplement:)`; `#quote(attribution:
 
 Beim Wortlaut eines `#quote` wird der reine Text gesammelt, Escapes aufgelöst, Auszeichnungen verworfen.
 
+**Seitenangaben** aus `supplement` (etwa `[S. 12]`, `[p. 12–13]`) dienen nur als **Hinweis**, nie als Einschränkung: Die genannte Seite wird zuerst durchsucht. Gedruckte Seitenzahlen weichen oft vom PDF-Seitenindex ab, deshalb wird gegen die Seitenlabels des PDFs abgeglichen, falls vorhanden. Wird der Wortlaut nur auf einer anderen Seite gefunden, gilt die Prüfung als bestanden, mit einem Hinweis auf die abweichende Seitenangabe.
+
 **Projekt:** Verzeichnis mit `bib.toml`. Einstiegspunkte stehen dort, weitere Dateien folgen aus `#include`. Im Editor wird nur die geänderte Datei neu geparst, Dateiübergreifendes kommt aus der Datenbank.
 
 **Grenze:** Dynamisch erzeugte Zitate (im Beispielprojekt `#cite(label, form: "prose")` in einer Hilfsfunktion) sind ohne Kompilieren nicht auflösbar. Sie werden als *dynamisch* markiert, nicht als Fehler. Optional vergleicht `typst query <datei> "cite"` die Menge der kompilierten Zitate mit der geparsten und meldet die Differenz.
@@ -188,7 +201,7 @@ Beim Wortlaut eines `#quote` wird der reine Text gesammelt, Escapes aufgelöst, 
 
 ## 9. Language Server und Zed
 
-Zed führt Hover, Definition und References über mehrere Server zusammen; Diagnostics kommen ohnehin von allen. Nur das Hervorheben von Symbolvorkommen nutzt den ersten Server, was hier nicht gebraucht wird.
+Laut Zed-Doku und Issue #61865 führt Zed Hover, Definition und References über mehrere Server zusammen; Diagnostics kommen ohnehin von allen. Nur das Hervorheben von Symbolvorkommen nutzt den ersten Server, was hier nicht gebraucht wird. **Das ist nicht praktisch getestet** und wird deshalb in Schritt 0 mit einem Minimal-Server neben tinymist überprüft (Abschnitt 15). Fällt der Test negativ aus, trägt der Editor-Teil vor allem über Diagnostics und Code Actions, die in jedem Fall von allen Servern kommen.
 
 **Meldungen:** Wortlaut stimmt nicht (mit Seitenqualität als Begründung); Key unbekannt; Key fehlt in der `.bib`; Metadaten weichen ab; dynamisches Zitat (Hinweis); optional: zitiert ohne Belegstelle. Der Schweregrad kommt aus `bib.toml`. Die Meldung zu unbekannten Keys ist abschaltbar, weil tinymist Ähnliches meldet.
 
@@ -202,11 +215,13 @@ Zed führt Hover, Definition und References über mehrere Server zusammen; Diagn
 
 **Innenleben:** Der Server hält die Datenbankverbindung, beobachtet `.bib` und `bib.toml`, stößt beim Öffnen einen Abgleich an, erledigt Schweres im Hintergrund und meldet Fortschritt über `$/progress`. Die Zed-Extension meldet nur `bib lsp` für Typst an.
 
+**Auslieferung des Programms:** In dieser Version sucht die Extension `bib` im `PATH` oder unter einem in den Zed-Einstellungen konfigurierten Pfad; installiert wird per `cargo install`. Fehlt das Programm, zeigt die Extension einen Hinweis mit dem Installationsbefehl. Später lädt die Extension ein passendes Binary aus GitHub-Releases, wie es viele Zed-Extensions für ihre Language Server tun.
+
 ---
 
 ## 10. CLI
 
-`bib init`, `sync`, `index`, `check`, `cites`, `search`, `text`, `excerpt`, `patch`, `review`, `export`, `import`, `doctor`.
+`bib init`, `sync`, `index`, `check`, `cites`, `search`, `text`, `excerpt`, `patch`, `review`, `source`, `export`, `import`, `backup`, `doctor`.
 
 Durchgängig `--json` für Skripte, Git-Hooks und Claude Code, dazu sinnvolle Exit-Codes. `bib check` verhält sich wie das bestehende Skript: still bei Erfolg, Fehlercode bei echtem Fehlschlag, `-v` zeigt auch Bestandenes, Ausgabe als `datei:zeile` mit nächstliegendem Kandidaten.
 
@@ -248,7 +263,7 @@ Die Datei ist Pflicht und gewinnt gegen die Datenbank. Taucht dieselbe ID an zwe
 
 ## 11. Import und Abnahme
 
-Für jeden Eintrag aus `quote_verification.json`: Key auflösen; Wortlaut in der Textschicht suchen (exakt, normalisiert, unscharf); daraus Anker mit Kontext bauen, den die JSON-Datei nicht hat. Einordnung: gefunden → *deterministisch geprüft*; mehrere Treffer → Prüfliste mit Kandidaten; nicht gefunden mit `validated` → *von dir bestätigt, nicht maschinell verankert*; nicht gefunden ohne `validated` → Prüfliste. Das Label wird zur Verwendung, bei passender Überschrift mit Verweis auf das Kapitel. Vorhandene `#quote`-Stellen werden über ihren Wortlaut mit den Belegstellen verknüpft.
+Für jeden Eintrag aus `quote_verification.json`: Key auflösen; Wortlaut in der Textschicht suchen (exakt, normalisiert, unscharf); daraus Anker mit Kontext bauen, den die JSON-Datei nicht hat. Einordnung: Quelle ohne PDF → Belegstelle mit *unverankertem* Anker, nicht prüfbar; Quelle nicht in Zotero → aus der `.bib` angelegt, Prüflisten-Eintrag „in Zotero anlegen"; gefunden → *deterministisch geprüft*; mehrere Treffer → Prüfliste mit Kandidaten; nicht gefunden mit `validated` → *von dir bestätigt, nicht maschinell verankert*; nicht gefunden ohne `validated` → Prüfliste. Das Label wird zur Verwendung, bei passender Überschrift mit Verweis auf das Kapitel. Vorhandene `#quote`-Stellen werden über ihren Wortlaut mit den Belegstellen verknüpft.
 
 Am Ende ein Bericht mit Zahlen je Kategorie. **Nichts wird still verworfen.** Optional übernimmt `bib import triage --from-dirs literatur/` die Ebenen `A_kern`, `B_belege`, `C_rest` als Tags.
 
@@ -305,7 +320,8 @@ Entwickelt wird testgetrieben.
 
 | Schritt | Ergebnis | Nutzbar |
 |---|---|---|
-| 0 | Backend-Benchmark | entscheidet Abschnitt 7 |
+| 0a | Backend-Benchmark | entscheidet Abschnitt 7 |
+| 0b | Zed-Test: Minimal-Language-Server neben tinymist, prüft Hover, References, Definition, Diagnostics | bestätigt oder korrigiert Abschnitt 9 |
 | 1 | Datenmodell, Migrationen | `bib init`, `bib doctor` |
 | 2 | Zotero-Abgleich, `.bib` lesen | `bib sync` |
 | 3 | Extraktion, Normalisierung | `bib index`, `bib text`, `bib search` |
@@ -323,6 +339,8 @@ Jeder Schritt ist für sich nutzbar; ab Schritt 3 ersetzt das Tool bereits Teile
 
 **Abbildungen, Diagramme und Tabellen.** Weitgehend additiv: `block` (Layout-Bereiche), `media` (Bilder), abgeleitete Artefakte (Tabellenzellen, Plot-Werte). Vorgesehen ist dafür bereits: Anker mit Seitenbereich, Verwendung am Anker statt am Textausschnitt, Seitengeometrie mit Größe, Drehung und Koordinatensystem. Eine andere Serialisierung von Tabellen verschiebt Offsets — dagegen schützen versionierte Textschichten und Anker über Wortlaut plus Kontext.
 
+**Leseoberfläche.** Eigener PDF-Leser mit CiteSee-Färbung (Zitate markiert nach *in Bibliothek / Triage-Ebene / selbst zitiert / ungelesen / fehlt*), CiteRead-Randnotizen (was zitierende Papers über eine Stelle sagen) und Anzeige von Ankern, Belegstellen und Notizen. Setzt Zitatmarker aus GROBID und Zitatkontexte aus Teilprojekt 5 voraus.
+
 **Weitere Teilprojekte:** Notizen und Discourse Graph (4); hybride Suche aus BM25 und Embeddings, SPECTER2 auf Paper-Ebene (3); Zitationsgraph, Zitatkontexte zitierender Papers, Co-Autoren, Retraction-Check, Metadaten-Lint (5); Zitat-Prüfung inhaltlich per LLM, Extraktions-Matrix (6); Zurückschreiben nach Zotero, MCP-Server, Erfassung der Claude-Sessions eines Projekts (7).
 
 ---
@@ -334,11 +352,13 @@ Eigene Messungen (September 2026):
 | Prüfung | Ergebnis |
 |---|---|
 | ε in Dwork 2006 (altes LaTeX ohne Unicode-Zuordnung) | pdftotext 0, pdfplumber 0, pdfium 0, `pdf_oxide` 0 (Zeichen fällt weg), **`mupdf-rs` 28, `pdf-extract` 28** |
-| ε in Abadi 2016 (modern) | alle Backends 92 |
+| ε in Abadi 2016 (modern) | alle Backends 92. *Vorbehalt:* `file` meldete für den Download 2 Seiten; bei rund 11.500 extrahierten Wörtern ist eher die Seitenzählung von `file` falsch. Nicht nachgeprüft, der Benchmark nutzt frisch geladene Dateien. |
+| NFKC auf ε-Varianten | `ϵ` (U+03F5), `𝜖` (U+1D716), `𝜀` (U+1D700) werden alle zu `ε` (U+03B5), `ﬀ` zu `ff` |
 | Übereinstimmung der Extraktoren untereinander | 64–89 % bei zufälligen 8-Wort-Ausschnitten, ohne Referenz keine Aussage über Richtigkeit → Benchmark nötig |
-| Zed mit zwei Language Servern | Hover zusammengeführt, References und Definition zusammengeführt und dedupliziert, Symbolhervorhebung nur erster Server |
 | Semantic Scholar zur Hauptquelle des Seminars | 79 zitierende Papers, 41 mit Zitat-Satz, 3 „influential", **0 mit Zitationsabsicht** → Absichten sind zu dünn für Teilprojekt 5 |
-| Zotero lokale API | nur lesend; Schreiben nur über die Web-API, kaum dokumentiert |
+| Zotero 9.0.1 (Snap), lokale API, nur lesend abgefragt | erreichbar, 168 Haupteinträge; `citationKey` als natives Feld gefüllt; **`version` überall 0, `Last-Modified-Version: 0`, kein `/deleted`-Endpunkt** → kein inkrementeller Abgleich; PDF-Pfad über Link `enclosure` (`file://…/Zotero/storage/<key>/…`); 274 Annotationen mit Text, Kommentar, Position und Seitenlabel lesbar; 14 Collections. Schreiben geht nur über die Web-API. |
+
+Aus Doku und Issues, **nicht praktisch getestet:** Zed führt bei zwei Language Servern Hover, References und Definition zusammen, Symbolhervorhebung nutzt nur den ersten Server → Schritt 0b.
 
 Fremde Quellen, die das Design geprägt haben: Jergas & Baethge (Zitatfehlerquote rund 25 %, Update 2025 ohne Verbesserung) als Begründung der Prüfung; W3C Web Annotation und Hypothesis für robuste Anker; PaperMage für das Schichtenmodell (Forschungsprototyp, seit 11/2024 ohne Pflege, nutzt pdfplumber und hätte das ε-Problem geerbt); CiteSee, CiteRead, Scim, ScholarPhi, Threddy, Synergi als Ideengeber für spätere Teilprojekte; SemanticCite für die vier Prüfstufen; Discourse Graphs für das Notizmodell.
 
@@ -347,5 +367,7 @@ Fremde Quellen, die das Design geprägt haben: Jergas & Baethge (Zitatfehlerquot
 ## 18. Offene Punkte
 
 - Öffnet Zed einen externen Link (`zotero://…`), den der Language Server über `window/showDocument` schickt? Falls nicht, übernimmt das CLI.
-- Ergebnis des Backend-Benchmarks (Schritt 0). Fällt `pdf_oxide` durch, wird pdfium mit eigenem Reparaturschritt zum Standard.
+- Ergebnis des Backend-Benchmarks (Schritt 0a). Fällt `pdf_oxide` durch, wird pdfium mit eigenem Reparaturschritt zum Standard.
+- Ergebnis des Zed-Tests mit zwei Language Servern (Schritt 0b).
+- Unterstützt die lokale Zotero-API `sort=dateModified`? Die Abfrage lieferte als „neueste" Einträge solche vom Juni, obwohl im September Einträge hinzugekommen sind. Für den Vollabgleich unerheblich, für eine spätere Optimierung zu klären.
 - Beitrag an `pdf_oxide` für Glyphennamen aus eingebetteten Type1-Schriften: wünschenswert, nicht eingeplant.
