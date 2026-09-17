@@ -10,7 +10,7 @@ impl zed::Extension for BibSpike {
     fn language_server_command(&mut self, _id: &LanguageServerId, worktree: &zed::Worktree) -> Result<zed::Command> {
         let command = worktree
             .which("lsp-coexist")
-            .ok_or_else(|| "lsp-coexist nicht im PATH: `cargo install --path spikes/lsp-coexist`".to_string())?;
+            .ok_or_else(|| "lsp-coexist not in PATH: `cargo install --path spikes/lsp-coexist`".to_string())?;
         Ok(zed::Command { command, args: vec![], env: vec![] })
     }
 }

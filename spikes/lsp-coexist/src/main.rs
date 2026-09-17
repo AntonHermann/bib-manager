@@ -1,5 +1,5 @@
-//! Wegwerf-Language-Server für Schritt 0b. Jede Antwort ist mit „bib-spike" markiert,
-//! damit in Zed sichtbar ist, von welchem Server sie stammt.
+//! Throwaway language server for step 0b. Every response is marked with "bib-spike"
+//! so it is visible in Zed which server it came from.
 
 use std::collections::HashMap;
 
@@ -26,7 +26,7 @@ impl Spike {
                 range: range(hit),
                 severity: Some(DiagnosticSeverity::HINT),
                 source: Some("bib-spike".into()),
-                message: format!("bib-spike sieht @{}", hit.key),
+                message: format!("bib-spike sees @{}", hit.key),
                 ..Default::default()
             })
             .collect();
@@ -62,7 +62,7 @@ impl LanguageServer for Spike {
     }
 
     async fn initialized(&self, _: InitializedParams) {
-        self.client.log_message(MessageType::INFO, "bib-spike bereit").await;
+        self.client.log_message(MessageType::INFO, "bib-spike ready").await;
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -86,7 +86,7 @@ impl LanguageServer for Spike {
             Some((_, hit)) => Hover {
                 contents: HoverContents::Markup(MarkupContent {
                     kind: MarkupKind::Markdown,
-                    value: format!("**bib-spike** Hover für `{}`", hit.key),
+                    value: format!("**bib-spike** hover for `{}`", hit.key),
                 }),
                 range: Some(range(&hit)),
             },
@@ -124,7 +124,7 @@ impl LanguageServer for Spike {
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
         Ok(self.hit(&params.text_document.uri, params.range.start).await.map(|(_, hit)| {
             vec![CodeActionOrCommand::CodeAction(CodeAction {
-                title: format!("bib-spike: Aktion für {}", hit.key),
+                title: format!("bib-spike: action for {}", hit.key),
                 kind: Some(CodeActionKind::QUICKFIX),
                 ..Default::default()
             })]
@@ -134,7 +134,7 @@ impl LanguageServer for Spike {
     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
         Ok(Some(CompletionResponse::Array(vec![CompletionItem::new_simple(
             "bibspike2026".into(),
-            "bib-spike Vervollständigung".into(),
+            "bib-spike completion".into(),
         )])))
     }
 }

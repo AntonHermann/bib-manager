@@ -1,4 +1,4 @@
-# Projektidee: Bibliography Management On Steroids
+# Project Idea: Bibliography Management On Steroids
 
 - **Visualize Dependencies**
   - Matching Author / Common Co-Authors

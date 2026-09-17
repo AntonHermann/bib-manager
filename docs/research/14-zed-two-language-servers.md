@@ -4,7 +4,8 @@ Date: 2026-09-17. Zed 1.20.2 (7c451e69), tinymist 0.15.8 (from the Zed `typst` e
 
 Setup: throwaway server `spikes/lsp-coexist` (installed via `cargo install`), loaded through the dev extension
 `spikes/zed-coexist-ext`; test document `spikes/typst-sample/main.typ`. Every response of the spike is labelled
-"bib-spike". The tests were performed by the user in the Zed UI; server start-up was checked in `Zed.log`.
+"bib-spike". (During the test the labels were German; they were translated afterwards and are quoted here in
+their current English form.) The tests were performed by the user in the Zed UI; server start-up was checked in `Zed.log`.
 
 **No settings change was needed.** After installing the dev extension, Zed started both servers for the Typst
 buffer (`lsp-coexist` at 14:25:28, tinymist at 14:25:29). While loading the extension the log contained
@@ -15,11 +16,11 @@ not prevent the server from starting.
 
 | Function | tinymist visible | bib-spike visible | Observation |
 |---|---|---|---|
-| Diagnostics | yes (error for `@unbekannt2020`) | yes (HINT "bib-spike sieht @…") | both servers' diagnostics are shown |
+| Diagnostics | yes (error for `@unknown2020`) | yes (HINT "bib-spike sees @…") | both servers' diagnostics are shown |
 | Hover | no | yes | bib-spike hover plus the bib-spike diagnostic |
 | Go to Definition | no | yes | jumps to the start of the file (the spike's fixed target) |
 | Find All References | no | yes | "References to @dwork2006": both occurrences, no duplicates; nothing when the cursor is not on a key |
-| Code Actions | no | yes | "bib-spike: Aktion für dwork2006" |
+| Code Actions | no | yes | "bib-spike: action for dwork2006" |
 | Completion after `@` | no | yes | only `bibspike2026` |
 
 ## Round 2: control, tinymist only

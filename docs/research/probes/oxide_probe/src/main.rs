@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let eps = text.chars().filter(|c| matches!(c, 'ε' | 'ϵ' | '𝜖' | '𝜀')).count();
     println!("pdf_oxide     eps={eps:3}");
-    // Zeigt, welche Positionsdaten pro Zeichen verfügbar sind.
+    // Shows which position data is available per character.
     if let Some(c) = doc.extract_chars(0)?.first() {
         println!("first char: {c:?}");
     }

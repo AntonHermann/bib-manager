@@ -1,4 +1,4 @@
-// AGPL-3.0-Abhängigkeit: nur zur Messung.
+// AGPL-3.0 dependency: for measurement only.
 use mupdf::{Document, TextPageFlags};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

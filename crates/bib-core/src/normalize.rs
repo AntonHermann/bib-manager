@@ -1,20 +1,20 @@
-//! Vergleichsform für die Wortlaut-Suche (Spec §7, „Normalisierung").
+//! Comparison form for the wording search (Spec §7, "normalization").
 //!
-//! Gesucht wird immer in der Vergleichsform; über [`Normalized::source_range`]
-//! führt jeder Treffer zurück zum Rohtext, an dem Anker und Boxen hängen.
+//! Searches always happen in the comparison form; via [`Normalized::source_range`]
+//! every match is mapped back to the raw text that anchors and boxes attach to.
 
 use std::ops::Range;
 
 use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
 
-/// Wird erhöht, sobald sich das Ergebnis von [`normalize`] für irgendeine Eingabe ändert.
+/// Incremented whenever the result of [`normalize`] changes for any input.
 pub const NORMALIZATION_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Normalized {
     pub text: String,
-    /// Für jedes Byte von `text`: Byte-Bereich im Rohtext, aus dem es stammt.
+    /// For each byte of `text`: the byte range in the raw text it came from.
     spans: Vec<(usize, usize)>,
 }
 
@@ -27,7 +27,7 @@ impl Normalized {
     }
 }
 
-/// Ein Zeichen der Zwischenstufe: Zeichen, Quellbereich, darf an Zeilenende verbunden werden.
+/// A character of the intermediate stage: character, source range, may be joined at a line break.
 struct Unit {
     ch: char,
     start: usize,
@@ -40,7 +40,7 @@ pub fn normalize(input: &str) -> Normalized {
     collapse(&units)
 }
 
-/// NFKC je Segment (Basiszeichen + kombinierende Zeichen), Ersetzungen, Kleinschreibung.
+/// NFKC per segment (base character + combining marks), replacements, lowercasing.
 fn map_characters(input: &str) -> Vec<Unit> {
     let mut units = Vec::with_capacity(input.len());
     let mut chars = input.char_indices().peekable();
@@ -95,7 +95,7 @@ fn map_characters(input: &str) -> Vec<Unit> {
     units
 }
 
-/// Trennung am Zeilenende verbinden, Leerraum zusammenfassen, trimmen.
+/// Join hyphenation at line breaks, collapse whitespace, trim.
 fn collapse(units: &[Unit]) -> Normalized {
     let mut text = String::with_capacity(units.len());
     let mut spans = Vec::with_capacity(units.len());
@@ -216,7 +216,7 @@ mod tests {
             "",
         ] {
             let once = normalize(s).text;
-            assert_eq!(normalize(&once).text, once, "Eingabe: {s:?}");
+            assert_eq!(normalize(&once).text, once, "input: {s:?}");
         }
     }
 }

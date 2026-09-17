@@ -1,232 +1,232 @@
-# Design: Bibliothekskern und Typst-Anbindung (Teilprojekt 1 + 2)
+# Design: Library Core and Typst Integration (Subproject 1 + 2)
 
-**Datum:** 2026-09-16
-**Status:** Entwurf zur Abnahme
-**Vorgänger:** `IDEA.md`
+**Date:** 2026-09-16
+**Status:** Draft pending acceptance
+**Predecessor:** `IDEA.md`
 
 ---
 
-## 1. Ziel und Kontext
+## 1. Goal and Context
 
-Das Projekt aus `IDEA.md` ist zu groß für eine Spec. Diese Spec beschreibt die **erste nutzbare Version**: Bibliothekskern plus Typst-Anbindung. Sie soll die selbstgebauten Skripte des Autors durch ein zusammenhängendes Werkzeug ersetzen.
+The project described in `IDEA.md` is too large for a single spec. This spec describes the **first usable version**: library core plus Typst integration. It is meant to replace the author's home-grown scripts with a coherent tool.
 
-### Der bestehende Workflow
+### The existing workflow
 
-Ermittelt aus `~/Documents/seminar_ehr_ss26` (EHR-Privacy-Seminar, Typst-Paper plus Touying-Folien):
+Determined from `~/Documents/seminar_ehr_ss26` (EHR privacy seminar, Typst paper plus Touying slides):
 
-| Heute | Was es leistet |
+| Today | What it does |
 |---|---|
-| `notes/quote_verification.json` | 143 Belegstellen: Key, Kapitel-Label, Wortlaut, teils `validated` |
-| `notes/check_quotes.py` | prüft Wortlaut gegen `pdftotext`-Volltexte, mit NFKC-Normalisierung, Key→Datei von Hand gepflegt |
-| `notes/check_slide_quotes.py` | prüft Folien gegen die Zitatsammlung |
-| `notes/quote_inserter.sh` | Zed-Task mit fzf, fügt `#quote(attribution: <key>)[…]` ein |
-| `just pres-all-used-citations` | listet verwendete Keys eines Dokuments |
-| `literatur/text/**.txt` | Volltexte, versioniert, mit grep durchsucht |
-| `literatur/{A_kern,B_belege,C_rest}` | Triage-Ebenen als Ordner |
-| `notes/Quellenauswahl.md` | Zitationsrecherche von Hand (Backward/Forward, Co-Autor-Prüfung) |
-| `literatur/zotero_korrekturen.md` | Formalcheck der Metadaten |
+| `notes/quote_verification.json` | 143 excerpts: key, chapter label, wording, some marked `validated` |
+| `notes/check_quotes.py` | verifies wording against `pdftotext` full texts, with NFKC normalization, key→file mapping maintained by hand |
+| `notes/check_slide_quotes.py` | verifies slides against the quote collection |
+| `notes/quote_inserter.sh` | Zed task using fzf, inserts `#quote(attribution: <key>)[…]` |
+| `just pres-all-used-citations` | lists the keys used in a document |
+| `literatur/text/**.txt` | full texts, versioned, searched with grep |
+| `literatur/{A_kern,B_belege,C_rest}` | triage tiers as folders |
+| `notes/Quellenauswahl.md` | manual citation research (backward/forward, co-author check) |
+| `literatur/zotero_korrekturen.md` | formal check of the metadata |
 
-Bekannte Schwachstellen dieses Workflows, die das Tool beheben soll: zerfallende Tabellen, verschwindendes ε in Mathe-Schriften, von Hand gepflegte Key→Datei-Zuordnung, Belegstellen ohne Anker, Triage nur als Ordnerstruktur.
+Known weaknesses of this workflow that the tool should fix: tables falling apart, ε disappearing in math fonts, a manually maintained key→file mapping, excerpts without anchors, triage only as folder structure.
 
-### Umgebung
+### Environment
 
-- Typst 0.15, geschrieben in **Zed** (neben tinymist)
-- **Zotero 9.0.1** (Snap) mit nativen Citation Keys, Better BibTeX migriert; Tablet-Sync über Zotero
-- Bibliothek: einige Hundert Einträge, Schwerpunkt Informatik, etwas Medizin
-- Laptop: Ryzen 7 PRO 5850U, integrierte Grafik, 30 GiB RAM, keine dedizierte GPU
+- Typst 0.15, written in **Zed** (alongside tinymist)
+- **Zotero 9.0.1** (Snap) with native citation keys, migrated from Better BibTeX; tablet sync via Zotero
+- Library: a few hundred entries, focused on computer science, some medicine
+- Laptop: Ryzen 7 PRO 5850U, integrated graphics, 30 GiB RAM, no dedicated GPU
 
 ---
 
-## 2. Entscheidungen
+## 2. Decisions
 
-| Entscheidung | Begründung |
+| Decision | Rationale |
 |---|---|
-| **Zotero bleibt Quelle der Wahrheit**, das Tool liest nur | Zotero Connector und Tablet-Sync sind zu wertvoll, um sie zu ersetzen. Zurückschreiben ist später nachrüstbar, die Zotero-IDs werden dafür gespeichert. |
-| **Alle Daten zentral in SQLite** | Belegstellen sind projektübergreifend nutzbar; ein Export bringt sie bei Bedarf ins Repo. |
-| **Konfiguration dagegen im Repo** (`bib.toml`) | Von Hand geschrieben, versioniert, diff-bar. Bei KI-Regeln zusätzlich: über die Git-Historie belegbar, welche Regeln zum Abgabezeitpunkt galten. |
-| **Rust, ein Programm, ein Workspace** | Kein Baustein der ersten Version braucht Python. `typst-syntax` gibt es nur in Rust und ist der offizielle Parser. |
-| **Lizenz `MIT OR Apache-2.0`** | Ausdrücklicher Wunsch: Wirkung im Wissenschaftsbetrieb geht vor Copyleft. Schließt `mupdf-rs` (AGPL) als Abhängigkeit aus. |
-| **Extraktion hinter einer Schnittstelle, Standard `pdf_oxide`** | Backend-Wahl bleibt billig revidierbar; Schritt 0a der Umsetzung ist ein Benchmark. |
-| **Kein LLM in dieser Version** | Alles Nötige ist deterministisch. Die Vorkehrungen für spätere LLM-Funktionen sind trotzdem enthalten (Abschnitt 12). |
-| **Kein Daemon** | Language Server und CLI sprechen direkt mit SQLite (WAL). Ein Daemon lohnt erst mit geladenen Modellen. |
+| **Zotero stays the source of truth**, the tool only reads | The Zotero connector and tablet sync are too valuable to replace. Writing back can be added later; the Zotero IDs are stored for that purpose. |
+| **All data centrally in SQLite** | Excerpts are usable across projects; an export brings them into the repo when needed. |
+| **Configuration, by contrast, lives in the repo** (`bib.toml`) | Hand-written, versioned, diffable. For AI rules specifically: the git history can prove which rules applied at submission time. |
+| **Rust, one program, one workspace** | No component of the first version needs Python. `typst-syntax` exists only in Rust and is the official parser. |
+| **License `MIT OR Apache-2.0`** | An explicit preference: impact in academia takes priority over copyleft. This rules out `mupdf-rs` (AGPL) as a dependency. |
+| **Extraction behind an interface, default `pdf_oxide`** | The backend choice stays cheap to revise; step 0a of the implementation is a benchmark. |
+| **No LLM in this version** | Everything needed is deterministic. Still, the groundwork for later LLM features is included (section 12). |
+| **No daemon** | The language server and CLI talk directly to SQLite (WAL). A daemon only pays off once models are loaded. |
 
 ---
 
-## 3. Abgrenzung
+## 3. Scope
 
-**Enthalten:** Zotero-Abgleich (lesend), Textextraktion mit Normalisierung, Anker und Belegstellen, Korrekturen an Textschichten, Typst-Analyse, Wortlaut-Prüfung, Language Server, CLI, Import der bestehenden Zitatsammlung.
+**Included:** Zotero sync (read-only), text extraction with normalization, anchors and excerpts, text-layer corrections, Typst analysis, quote verification, language server, CLI, import of the existing quote collection.
 
-**Nicht enthalten** (jeweils eigenes Teilprojekt): GROBID und Satzstruktur, Zitatmarker im PDF, Embeddings und semantische Suche, Zitationsgraph und Metadaten-Anreicherung, Notizen und Discourse Graph, PDF-Oberfläche, Schreiben nach Zotero, Annotationen vom Tablet, jegliche LLM-Funktion, MCP-Server, Erkennung von Abbildungen und Tabellen.
-
----
-
-## 4. Architektur
-
-```
-bib-core      Datenmodell, SQLite, Zotero, Normalisierung, Anker
-bib-extract   Schnittstelle + Backends (pdf_oxide, pdf-extract, optional mutool)
-bib-typst     Typst-Parser, Projekt- und Dokumentanalyse
-bib-lsp       Language Server
-bib-cli       Programm `bib`
-zed-bib       Zed-Extension, startet `bib lsp` neben tinymist
-```
-
-```
-Zotero (lokale API) ──► Quellen, Citation Keys, PDF-Pfade, Tags
-PDF ──► Extraktion ──► Textschicht (Spans, Boxen, Seiten) ──► + Korrekturen ──► kanonischer Text
-Belegstelle ──► Anker im kanonischen Text ──► Wortlaut-Prüfung
-*.typ ──► Parser ──► Zitate, Kapitel, #quote ──► Verwendung im Projekt
-```
+**Not included** (each its own subproject): GROBID and sentence structure, citation markers in the PDF, embeddings and semantic search, citation graph and metadata enrichment, notes and discourse graph, PDF interface, writing back to Zotero, annotations from the tablet, any LLM feature, MCP server, detection of figures and tables.
 
 ---
 
-## 5. Datenmodell
+## 4. Architecture
 
-Eine SQLite-Datenbank an festem Ort (`~/.local/share/bib/bib.db`), WAL-Modus, versionierte Migrationen, Fremdschlüssel aktiv.
+```
+bib-core      data model, SQLite, Zotero, normalization, anchors
+bib-extract   interface + backends (pdf_oxide, pdf-extract, optional mutool)
+bib-typst     Typst parser, project and document analysis
+bib-lsp       language server
+bib-cli       program `bib`
+zed-bib       Zed extension, starts `bib lsp` alongside tinymist
+```
 
-| Tabelle | Inhalt |
+```
+Zotero (local API) ──► sources, citation keys, PDF paths, tags
+PDF ──► extraction ──► text layer (spans, boxes, pages) ──► + corrections ──► canonical text
+Excerpt ──► anchor in the canonical text ──► quote verification
+*.typ ──► parser ──► citations, chapters, #quote ──► usage in the project
+```
+
+---
+
+## 5. Data Model
+
+A single SQLite database at a fixed location (`~/.local/share/bib/bib.db`), WAL mode, versioned migrations, foreign keys enabled.
+
+| Table | Contents |
 |---|---|
-| `source` | Quelle aus Zotero: Bibliothek + Item-Key (Pflicht), Citation Key, Metadaten, Tags, Status (aktiv/stillgelegt) |
-| `attachment` | PDF: Pfad, Prüfsumme, Seitenzahl |
-| `text_layer` | Textschicht eines Anhangs: Backend je Seite, Backend-Version, Normalisierungs-Version, kanonischer Text (zstd), Qualitätsmerkmale |
-| `page_geometry` | je Seite: Größe, Drehung, Koordinatensystem, Spans als kompakter Block mit Offset-Index |
-| `text_patch` | manuelle Korrektur: Ziel als Anker, Ersatztext, Begründung, Herkunft, Status (aktiv/überflüssig) |
-| `anchor` | **eigene Tabelle.** Art *Textbereich* (Wortlaut, je 32 Zeichen Kontext, Position) oder *Seitenbereich* (Seite, Rechteck). Zustand *verankert*, *mehrdeutig* oder *unverankert* |
-| `excerpt` | wörtlicher Ausschnitt an einem Anker, mit Prüfstatus und Herkunft |
-| `project` | Pfad, Abzug der `bib.toml`, Status |
-| `document` | `.typ`-Datei eines Projekts, Art Paper oder Folien |
-| `chapter` | Überschriftenbaum eines Dokuments |
-| `citation` | Zitat im Dokument: Position, Key, Form, ggf. Belegstelle, ggf. „dynamisch" |
-| `usage` | Verwendung einer Belegstelle in einem Projekt: Kapitel oder Label, Rolle |
-| `llm_call` | Nutzungsprotokoll, in dieser Version leer angelegt |
-| `review_queue` | alles, was ein Mensch anschauen muss |
+| `source` | source from Zotero: library + item key (required), citation key, metadata, tags, status (active/retired) |
+| `attachment` | PDF: path, checksum, page count |
+| `text_layer` | text layer of an attachment: backend per page, backend version, normalization version, canonical text (zstd), quality flags |
+| `page_geometry` | per page: size, rotation, coordinate system, spans as a compact block with an offset index |
+| `text_patch` | manual correction: target as an anchor, replacement text, rationale, provenance, status (active/obsolete) |
+| `anchor` | **its own table.** Kind *text range* (wording, 32 characters of context on each side, position) or *page range* (page, rectangle). State *anchored*, *ambiguous*, or *unanchored* |
+| `excerpt` | verbatim excerpt at an anchor, with verification status and provenance |
+| `project` | path, snapshot of `bib.toml`, status |
+| `document` | `.typ` file of a project, kind paper or slides |
+| `chapter` | heading tree of a document |
+| `citation` | citation in the document: position, key, form, optionally an excerpt, optionally "dynamic" |
+| `usage` | use of an excerpt in a project: chapter or label, role |
+| `llm_call` | usage log, created empty in this version |
+| `review_queue` | everything a human needs to look at |
 
-### Prinzipien
+### Principles
 
-**Anker getrennt von Inhalt.** Belegstelle, Korrektur und später Notiz oder Abbildung zeigen auf denselben Ankertyp. Knoten werden einheitlich als `knoten_typ` plus `knoten_id` referenziert; diese Konvention gilt ab jetzt überall.
+**Anchors separate from content.** Excerpts, corrections, and later notes or figures all point at the same anchor type. Nodes are referenced uniformly as `node_type` plus `node_id`; this convention applies everywhere from now on.
 
-**Anker nach W3C-Vorbild.** Wortlaut plus Kontext plus Position. Auflösung in der Reihenfolge exakt → normalisiert → unscharf (höchstens 5 % Abweichung), Kontext löst Mehrdeutigkeit auf. Ändert sich die Textschicht, werden alle Anker neu aufgelöst; Abweichungen gehen in die Prüfliste.
+**Anchors follow the W3C model.** Wording plus context plus position. Resolution proceeds exact → normalized → fuzzy (at most 5% deviation), with context resolving ambiguity. If the text layer changes, all anchors are re-resolved; discrepancies go to the review queue.
 
-**Anker ohne Textschicht.** Hat eine Quelle (noch) kein PDF, kann eine Belegstelle trotzdem existieren: Ihr Anker ist *unverankert*, sie gilt als nicht prüfbar. Sobald ein PDF da ist, wird automatisch verankert.
+**Anchors without a text layer.** If a source doesn't (yet) have a PDF, an excerpt can still exist: its anchor is *unanchored*, and it counts as not verifiable. As soon as a PDF is available, it is anchored automatically.
 
-**Mehrdeutige Treffer.** Für die *Prüfung* eines Wortlauts genügt ein Treffer. Beim *Anlegen* einer Belegstelle entscheidet bei mehreren Treffern zuerst der Kontext, dann eine Seitenangabe aus dem Dokument (Abschnitt 8), sonst bleibt der Anker *mehrdeutig* und landet mit allen Kandidaten in der Prüfliste.
+**Ambiguous matches.** For *verifying* a wording, one match is enough. When *creating* an excerpt, if there are multiple matches, context decides first, then a page reference from the document (section 8); otherwise the anchor stays *ambiguous* and lands in the review queue with all candidates.
 
-**Belegstelle und Verwendung getrennt.** Der Ausschnitt gehört zur Quelle und ist projektübergreifend nutzbar, das Kapitel-Label gehört zur Verwendung im Projekt.
+**Excerpt and usage are separate.** The excerpt belongs to the source and is usable across projects; the chapter label belongs to the usage within the project.
 
-**Herkunft an jedem Eintrag:** *von dir*, *deterministisch geprüft*, *importiert, Herkunft unbekannt*, *LLM-Einschätzung* (mit Verweis auf `llm_call`), *von dir bestätigt*.
+**Provenance on every entry:** *by you*, *deterministically verified*, *imported, provenance unknown*, *LLM assessment* (referencing `llm_call`), *confirmed by you*.
 
-**Nicht neu erzeugbare Daten** sind Belegstellen, Anker, Verwendungen, Korrekturen, Prüflisten-Entscheidungen und später Notizen. Alles andere lässt sich aus Zotero und den PDFs neu bauen.
+**Data that cannot be regenerated** are excerpts, anchors, usages, corrections, review-queue decisions, and later notes. Everything else can be rebuilt from Zotero and the PDFs.
 
-**Sicherung und Export:**
+**Backup and export:**
 
-- **Backup** ist eine vollständige, konsistente Kopie der Datenbank per `VACUUM INTO`: automatisch vor jeder Migration und auf Befehl (`bib backup`), mit Aufbewahrung der letzten Stände.
-- **Export** umfasst nur die nicht neu erzeugbaren Daten, als **JSON Lines je Tabelle** mit stabilen IDs. Das ist diff-bar, lesbar und unabhängig vom Datenbankschema; `bib import` kann daraus wiederherstellen. Projektbezogene Exporte (etwa im Format von `quote_verification.json`) sind zusätzlich über `[export]` in `bib.toml` konfigurierbar.
+- **Backup** is a complete, consistent copy of the database via `VACUUM INTO`: automatic before every migration and on command (`bib backup`), retaining recent snapshots.
+- **Export** covers only the data that cannot be regenerated, as **JSON Lines per table** with stable IDs. That is diffable, readable, and independent of the database schema; `bib import` can restore from it. Project-specific exports (for instance in the format of `quote_verification.json`) are additionally configurable via `[export]` in `bib.toml`.
 
-### Vorgriff: Notizen (Teilprojekt 4)
+### Preview: notes (subproject 4)
 
-Damit das später ohne Umbau passt, steht die Form hier fest:
+So this fits later without rework, the shape is fixed here:
 
 ```
 note ──< note_target ──► anchor | source | chapter | project | tag | note
-link (von, nach, typ: stützt · widerspricht · beantwortet · verfeinert)
+link (from, to, type: supports · contradicts · answers · refines)
 ```
 
-Eine Belegstelle ist ein wörtlicher, prüfbarer Ausschnitt; eine Notiz sind eigene Worte, typisierbar und verknüpfbar. Zotero-Markierungen werden später zu `anchor` plus `excerpt` mit Zotero-ID, Kommentare zu `note` am selben Anker. In dieser Version entstehen nur `anchor` und die Knoten-Konvention.
+An excerpt is a verbatim, verifiable passage; a note is in the author's own words, typeable and linkable. Zotero highlights will later become `anchor` plus `excerpt` with a Zotero ID, comments become `note` at the same anchor. This version only creates `anchor` and the node convention.
 
 ---
 
-## 6. Zotero-Abgleich
+## 6. Zotero Sync
 
-- **Lokale API** unter `127.0.0.1:23119/api/users/0/…`, offline, ohne Kontingent, **nur lesend**. Voraussetzung: Zotero läuft und die Option für andere Programme ist aktiv.
-- **Vollabgleich statt inkrementell.** Die lokale API liefert für alle Einträge `version = 0` und `Last-Modified-Version: 0`, und es gibt keinen `/deleted`-Endpunkt (gemessen, Abschnitt 17). Der Abgleich holt deshalb alle Einträge seitenweise und vergleicht mit der Datenbank: neu, geändert (über `dateModified` und eine Prüfsumme der Felder), verschwunden. Bei einigen Hundert Einträgen ist das billig.
-- **Rückfallebene:** schreibgeschützte Kopie von `zotero.sqlite`, wenn Zotero nicht läuft. Ohne beides wird mit dem letzten Stand gearbeitet, dessen Alter überall sichtbar ist.
-- **Übernommen:** Metadaten, nativer Citation Key (Feld `citationKey`), Tags, Collections, Anhänge. Der Dateipfad steht nicht in den Anhangsdaten, sondern im Link `enclosure` als `file://`-URL (alternativ `/items/<key>/file/view/url`). Betrachtet werden Anhänge mit `contentType = application/pdf`, unabhängig vom `linkMode`.
-- **Gelöschte, zusammengeführte oder umbenannte Einträge** — erkannt daran, dass sie im Vollabgleich fehlen oder ihr Key sich geändert hat — werden stillgelegt, nicht gelöscht, und landen in der Prüfliste, weil Belegstellen daran hängen.
-- **Annotationen** sind über die lokale API lesbar (`annotationText`, `annotationComment`, `annotationPosition`, `annotationPageLabel`, …), werden aber erst in Teilprojekt 4 übernommen.
+- **Local API** at `127.0.0.1:23119/api/users/0/…`, offline, no rate limit, **read-only**. Requirement: Zotero is running and the "allow other applications" option is enabled.
+- **Full sync instead of incremental.** The local API returns `version = 0` and `Last-Modified-Version: 0` for every entry, and there is no `/deleted` endpoint (measured, section 17). The sync therefore fetches all entries page by page and compares against the database: new, changed (via `dateModified` and a checksum of the fields), gone. With a few hundred entries, this is cheap.
+- **Fallback:** a read-only copy of `zotero.sqlite` when Zotero isn't running. Without either, the tool works from the last known state, whose age is shown everywhere.
+- **Imported:** metadata, native citation key (field `citationKey`), tags, collections, attachments. The file path is not in the attachment data itself but in the `enclosure` link as a `file://` URL (alternatively `/items/<key>/file/view/url`). Attachments with `contentType = application/pdf` are considered, regardless of `linkMode`.
+- **Deleted, merged, or renamed entries** — recognized by being missing from the full sync or by their key having changed — are retired, not deleted, and land in the review queue because excerpts depend on them.
+- **Annotations** are readable via the local API (`annotationText`, `annotationComment`, `annotationPosition`, `annotationPageLabel`, …), but are only imported starting in subproject 4.
 
-**Zotero ist die einzige Quelle für Quellen.** Jede `source` stammt aus Zotero. Quellen, die nur in einer `.bib` stehen, werden nicht angelegt; das Tool fordert auf, sie in Zotero anzulegen (mit dem Connector ein Klick). Fremde `.bib`-Dateien lassen sich bei Bedarf in eine eigene Zotero-Bibliothek importieren.
+**Zotero is the sole source of sources.** Every `source` originates from Zotero. Sources that exist only in a `.bib` file are not created; the tool prompts the user to add them in Zotero (one click with the connector). Third-party `.bib` files can, if needed, be imported into a personal Zotero library.
 
-**Mehrere Bibliotheken.** Geteilte Literatur läuft über Zotero-Gruppenbibliotheken; die lokale API liefert sie aus (`/api/users/0/groups` listet sie, `/api/groups/<id>/items` liefert Einträge, Anhänge und Annotationen — gemessen, Abschnitt 17). Daraus folgt:
+**Multiple libraries.** Shared literature goes through Zotero group libraries; the local API serves them (`/api/users/0/groups` lists them, `/api/groups/<id>/items` returns entries, attachments, and annotations — measured, section 17). It follows that:
 
-- Eine Quelle wird über das Paar **Bibliothek + Item-Key** identifiziert, nicht über den Item-Key allein. Der Abgleich läuft über alle Bibliotheken.
-- **Citation Keys sind nicht bibliotheksübergreifend eindeutig.** Im gemessenen Bestand kommen 17 Keys in mehr als einer Bibliothek vor, meist dasselbe Paper in eigener und Gruppenbibliothek. Welche Bibliotheken ein Projekt benutzt und in welcher Reihenfolge, steht deshalb in `bib.toml` (`[zotero] libraries`). Ein Key wird in dieser Reihenfolge aufgelöst.
-- **Kollision innerhalb der Bibliotheken eines Projekts:** Stimmen DOI oder Titel und Jahr überein, gilt es als dasselbe Werk, und die erste Bibliothek gewinnt, ohne Meldung. Sonst Prüfliste.
-- Einträge **ohne Citation Key** (kommt in Gruppenbibliotheken vor) werden übernommen, sind aber nicht zitierbar; `bib doctor` listet sie.
+- A source is identified by the pair **library + item key**, not by the item key alone. The sync runs across all libraries.
+- **Citation keys are not unique across libraries.** In the measured collection, 17 keys occur in more than one library, usually the same paper in both the personal and a group library. Which libraries a project uses, and in what order, is therefore set in `bib.toml` (`[zotero] libraries`). A key is resolved in that order.
+- **Collision within a project's libraries:** if the DOI matches, or the title and year match, it counts as the same work, and the first library wins silently. Otherwise, review queue.
+- Entries **without a citation key** (which occurs in group libraries) are imported but not citable; `bib doctor` lists them.
 
-**Die `.bib` wird gelesen, nie geschrieben** (Bibliothek `biblatex`, dieselbe wie in Typst), und zwar nur im Speicher — eine `.bib` ist in Millisekunden geparst, eine eigene Tabelle braucht es nicht. Daraus entstehen drei Meldungen: Key nur in der `.bib` („nicht in Zotero, bitte dort anlegen"), Key nur in Zotero (Export veraltet, Zitat kompiliert nicht), Metadaten auseinandergelaufen.
-
----
-
-## 7. Extraktion und Normalisierung
-
-### Schnittstelle
-
-Ein Backend liefert je Seite **entweder** Spans (Text, Box, Schrift) in Leserichtung samt Seitengröße und Drehung **oder** nur reinen Text. Text ist Pflicht, Geometrie optional: `pdf-extract` liefert über seine öffentliche API nur Text. Seiten ohne Geometrie tragen das Qualitätsmerkmal *keine Geometrie*; Anker lösen dort über den Text auf, und „PDF an dieser Stelle öffnen" springt nur auf die Seite. In dieser Version rendert nichts Boxen, deshalb reicht das.
-
-Der Kern baut aus den Seiten den kanonischen Text und, wo vorhanden, die Zuordnung Textbereich → Seite und Box. Spans statt einzelner Zeichen halten die Datenmenge klein; Zeichen lassen sich bei Bedarf je Seite nachladen.
-
-**Ein Koordinatensystem für alle Backends:** Punkte, Ursprung oben links, y wächst nach unten, relativ zur MediaBox. Jedes Backend rechnet selbst um (`pdf_oxide` und pdfium liefern PDF-Koordinaten mit Ursprung unten links, `mutool` bereits oben links). Ein Test prüft, dass dieselbe Textstelle in verschiedenen Backends auf wenige Punkte genau an derselben Stelle liegt.
-
-### Kaskade, pro Seite
-
-1. Standard ist **`pdf_oxide`** (MIT/Apache, reines Rust, reichhaltige Daten), bestätigt durch den Benchmark aus Schritt 0a (Entscheidungsregel 1, `bench/results/2026-09-17.md`).
-2. Ein **Verdachtsprüfer** bewertet: Steuerzeichen oder `(cid:…)`, Schriften ohne Unicode-Zuordnung, Mathe-Schriften wie CMMI ohne ein einziges griechisches Zeichen, gar kein Text.
-3. Bei Verdacht läuft **`pdf-extract`** (MIT) über dieselbe Seite; gespeichert wird das bessere Ergebnis samt Angabe des Backends. Im Benchmark lieferte `pdf-extract` in beiden Dokumenten, in denen `pdf_oxide` ε fehlte, alle erwarteten Zeichen.
-4. **`mutool`**, falls installiert, ist dritte Stufe und Vergleichsmaß im Benchmark.
-
-Pro Seite festzuhalten, welches Backend gewonnen hat, erlaubt später, einzelne kaputte Seiten gezielt durch ein OCR- oder Vision-Modell zu ersetzen.
-
-Ein eigener Reparaturschritt für fehlende Unicode-Zuordnungen (Glyphennamen aus eingebetteten Type1-Schriften) wäre wünschenswert und als Beitrag an `pdf_oxide` sinnvoll, ist aber **keine Voraussetzung** dieser Version.
-
-### Korrekturen
-
-Manuelle Korrekturen sind **keine weitere Stufe der Kaskade**, sondern eine gespeicherte Ebene darüber: Extraktion, dann Korrekturen in fester Reihenfolge, ergibt den kanonischen Text. Bei Neuextraktion werden Korrekturen über ihren Anker wiedergefunden. Drei Fälle: erneut angewendet; als *überflüssig geworden* markiert, wenn das neue Backend die Stelle richtig liefert; Prüfliste, wenn die Stelle unauffindbar ist.
-
-### Normalisierung
-
-Zwei Ebenen mit Offset-Zuordnung. Roh ist, was extrahiert wurde; die Vergleichsform wendet NFKC an (macht `ϵ`, `𝜖` zu `ε` und `ﬀ` zu `ff`), entfernt weiche Trennstriche, fügt Trennungen am Zeilenende zusammen, vereinheitlicht Striche und Anführungszeichen, fasst Leerraum zusammen und ignoriert Groß- und Kleinschreibung. Gesucht wird in der Vergleichsform, gespeichert und angezeigt wird roh.
-
-### Qualitätsmerkmale
-
-Je Seite: nicht zuordenbare Zeichen, verdächtige Schriften, kein Text. Sie erscheinen in den Meldungen des Language Servers, damit aus „Wortlaut nicht gefunden" ein verwertbarer Hinweis wird.
-
-**Tabellen erkennt diese Version nicht.** Sie erscheinen als Text in Leserichtung, was bei mehrspaltigen Tabellen unbrauchbar sein kann.
+**The `.bib` file is read, never written** (using the `biblatex` library, the same as in Typst), and only in memory — a `.bib` file parses in milliseconds, so it needs no table of its own. This produces three kinds of messages: key only in the `.bib` file ("not in Zotero, please add it there"), key only in Zotero (export is stale, citation won't compile), metadata that has drifted apart.
 
 ---
 
-## 8. Typst-Analyse
+## 7. Extraction and Normalization
 
-Parser ist `typst-syntax`, derselbe wie in Typst und tinymist. Es wird **geparst, nicht kompiliert**.
+### Interface
 
-Erkannt werden: `@key`; `#cite(<key>, form:, supplement:)`; `#quote(attribution: <key>)[…]`; `#quote(block: true, attribution: [@key])[…]`; Überschriften und Labels; `#include` und `#import`; `#bibliography("…")` samt Typst-Pfadregeln; der umgebende Absatz eines Zitats.
+A backend supplies, per page, **either** spans (text, box, font) in reading order along with page size and rotation, **or** plain text only. Text is required, geometry is optional: `pdf-extract` only returns text through its public API. Pages without geometry carry the quality flag *no geometry*; anchors there resolve via text only, and "open PDF at this location" jumps only to the page. Nothing in this version renders boxes, so that is sufficient.
 
-Beim Wortlaut eines `#quote` wird der reine Text gesammelt, Escapes aufgelöst, Auszeichnungen verworfen.
+The core builds the canonical text from the pages and, where available, the mapping from text range → page and box. Spans instead of individual characters keep the data volume small; characters can be reloaded per page when needed.
 
-**Seitenangaben** aus `supplement` (etwa `[S. 12]`, `[p. 12–13]`) dienen nur als **Hinweis**, nie als Einschränkung: Die genannte Seite wird zuerst durchsucht. Gedruckte Seitenzahlen weichen oft vom PDF-Seitenindex ab, deshalb wird gegen die Seitenlabels des PDFs abgeglichen, falls vorhanden. Wird der Wortlaut nur auf einer anderen Seite gefunden, gilt die Prüfung als bestanden, mit einem Hinweis auf die abweichende Seitenangabe.
+**One coordinate system for all backends:** points, origin top-left, y grows downward, relative to the MediaBox. Each backend converts on its own (`pdf_oxide` and pdfium return PDF coordinates with the origin at bottom-left, `mutool` already uses top-left). A test verifies that the same text location lands at the same place, to within a few points, across different backends.
 
-**Projekt:** Verzeichnis mit `bib.toml`. Einstiegspunkte stehen dort, weitere Dateien folgen aus `#include`. Im Editor wird nur die geänderte Datei neu geparst, Dateiübergreifendes kommt aus der Datenbank.
+### Cascade, per page
 
-**Grenze:** Dynamisch erzeugte Zitate (im Beispielprojekt `#cite(label, form: "prose")` in einer Hilfsfunktion) sind ohne Kompilieren nicht auflösbar. Sie werden als *dynamisch* markiert, nicht als Fehler. Optional vergleicht `typst query <datei> "cite"` die Menge der kompilierten Zitate mit der geparsten und meldet die Differenz.
+1. The default is **`pdf_oxide`** (MIT/Apache, pure Rust, rich data), confirmed by the benchmark from step 0a (decision rule 1, `bench/results/2026-09-17.md`).
+2. A **suspicion detector** evaluates: control characters or `(cid:…)`, fonts without a Unicode mapping, math fonts like CMMI without a single Greek character, no text at all.
+3. If flagged, **`pdf-extract`** (MIT) runs over the same page; the better result is stored along with which backend produced it. In the benchmark, `pdf-extract` delivered all expected characters in both documents where `pdf_oxide` was missing ε.
+4. **`mutool`**, if installed, is the third stage and the benchmark's yardstick.
+
+Recording per page which backend won makes it possible, later, to selectively replace individual broken pages with an OCR or vision model.
+
+A dedicated repair step for missing Unicode mappings (glyph names from embedded Type1 fonts) would be desirable and would make sense as a contribution to `pdf_oxide`, but it is **not a requirement** of this version.
+
+### Corrections
+
+Manual corrections are **not another stage of the cascade** but a stored layer on top: extraction, then corrections applied in a fixed order, yields the canonical text. On re-extraction, corrections are found again via their anchor. Three cases: reapplied; marked *obsolete* if the new backend now gets the spot right; review queue if the spot can't be found.
+
+### Normalization
+
+Two levels with an offset mapping. Raw is what was extracted; the **comparison form** applies NFKC (turning `ϵ`, `𝜖` into `ε` and `ﬀ` into `ff`), removes soft hyphens, rejoins line-end hyphenation, unifies dashes and quotation marks, collapses whitespace, and ignores case. Searches run against the comparison form; storage and display use raw.
+
+### Quality flags
+
+Per page: unmappable characters, suspicious fonts, no text. They appear in the language server's diagnostics, so that "wording not found" becomes an actionable hint.
+
+**This version does not detect tables.** They appear as text in reading order, which can be unusable for multi-column tables.
 
 ---
 
-## 9. Language Server und Zed
+## 8. Typst Analysis
+
+The parser is `typst-syntax`, the same one used by Typst and tinymist. Files are **parsed, not compiled**.
+
+Recognized: `@key`; `#cite(<key>, form:, supplement:)`; `#quote(attribution: <key>)[…]`; `#quote(block: true, attribution: [@key])[…]`; headings and labels; `#include` and `#import`; `#bibliography("…")` including Typst's path rules; the paragraph surrounding a citation.
+
+For the wording of a `#quote`, the plain text is collected, escapes are resolved, and markup is discarded.
+
+**Page references** from `supplement` (such as `[S. 12]`, `[p. 12–13]`) serve only as a **hint**, never as a constraint: the named page is searched first. Printed page numbers often diverge from the PDF's page index, so matching is done against the PDF's page labels where available. If the wording is found only on a different page, verification still passes, with a note about the mismatched page reference.
+
+**Project:** a directory with `bib.toml`. Entry points are listed there; further files follow from `#include`. In the editor, only the changed file is re-parsed; cross-file information comes from the database.
+
+**Limit:** dynamically generated citations (in the example project, `#cite(label, form: "prose")` inside a helper function) cannot be resolved without compiling. They are marked as *dynamic*, not as errors. Optionally, `typst query <file> "cite"` compares the set of compiled citations against the parsed set and reports the difference.
+
+---
+
+## 9. Language Server and Zed
 
 Tested in step 0b (Zed 1.20.2, tinymist 0.15.8, `docs/research/14-zed-two-language-servers.md`): Zed starts a second Typst language server next to tinymist without any settings change. Diagnostics, hover and completion of both servers are merged (the second server's entries appeared first). Code actions, definition and references of the second server work; whether Zed merges them with tinymist's results is untested, because tinymist returned nothing at any position tried. At `@key` citations tinymist offers no hover, definition, references or completion, so the editor features below do not compete with tinymist there (caveat: tested in a single file without a pinned main file).
 
-**Meldungen:** Wortlaut stimmt nicht (mit Seitenqualität als Begründung); Key unbekannt; Key fehlt in der `.bib`; Metadaten weichen ab; dynamisches Zitat (Hinweis); optional: zitiert ohne Belegstelle. Der Schweregrad kommt aus `bib.toml`. Die Meldung zu unbekannten Keys ist abschaltbar, weil tinymist Ähnliches meldet.
+**Diagnostics:** wording doesn't match (with page quality as the reason); unknown key; key missing from the `.bib` file; metadata diverges; dynamic citation (info); optionally: cited without an excerpt. Severity comes from `bib.toml`. The unknown-key diagnostic can be turned off, since tinymist reports something similar.
 
-**Hover** auf Key oder Attribution: Metadaten, Anzahl und Prüfstatus der Belegstellen, Tags, PDF vorhanden, Alter des Zotero-Stands.
+**Hover** on a key or attribution: metadata, count and verification status of excerpts, tags, whether a PDF exists, age of the Zotero snapshot.
 
-**Vervollständigung:** nach `@` die Keys, sortiert nach Verwendung im Projekt; innerhalb von `#quote(attribution: <key>)[` die Belegstellen dieser Quelle. Letzteres ersetzt `quote_inserter.sh`.
+**Completion:** after `@`, the keys, sorted by usage in the project; inside `#quote(attribution: <key>)[`, the excerpts of that source. The latter replaces `quote_inserter.sh`.
 
-**Aktionen:** „Diesen Wortlaut als Korrektur der Textschicht übernehmen" (braucht kein Eingabefeld, der Text steht schon im Dokument); „Belegstelle als von mir bestätigt markieren"; „Als Belegstelle speichern" mit Kapitel-Label aus der umgebenden Überschrift; „PDF an dieser Stelle öffnen" über `zotero://open-pdf/…`.
+**Actions:** "adopt this wording as a text-layer correction" (needs no input field, the text is already in the document); "mark excerpt as confirmed by me"; "save as excerpt" with a chapter label taken from the surrounding heading; "open PDF at this location" via `zotero://open-pdf/…`.
 
-**Navigation:** References auf `@key` über Paper und Folien (Multibuffer, ersetzt `pres-all-used-citations`); Definition öffnet den extrahierten Text der Quelle aus dem Cache an der zitierten Stelle; Gliederung aus den Überschriften.
+**Navigation:** references on `@key` across paper and slides (multibuffer, replaces `pres-all-used-citations`); go-to-definition opens the source's extracted text from the cache at the cited location; outline built from the headings.
 
-**Innenleben:** Der Server hält die Datenbankverbindung, beobachtet `.bib` und `bib.toml`, stößt beim Öffnen einen Abgleich an, erledigt Schweres im Hintergrund und meldet Fortschritt über `$/progress`. Die Zed-Extension meldet nur `bib lsp` für Typst an.
+**Internals:** the server holds the database connection, watches `.bib` and `bib.toml`, triggers a sync on open, does heavy work in the background, and reports progress via `$/progress`. The Zed extension only registers `bib lsp` for Typst.
 
-**Auslieferung des Programms:** In dieser Version sucht die Extension `bib` im `PATH` oder unter einem in den Zed-Einstellungen konfigurierten Pfad; installiert wird per `cargo install`. Fehlt das Programm, zeigt die Extension einen Hinweis mit dem Installationsbefehl. Später lädt die Extension ein passendes Binary aus GitHub-Releases, wie es viele Zed-Extensions für ihre Language Server tun.
+**Shipping the program:** in this version, the extension looks for `bib` on `PATH` or at a path configured in Zed's settings; it is installed via `cargo install`. If the program is missing, the extension shows a hint with the install command. Later, the extension will download a matching binary from GitHub releases, as many Zed extensions do for their language servers.
 
 ---
 
@@ -234,11 +234,11 @@ Tested in step 0b (Zed 1.20.2, tinymist 0.15.8, `docs/research/14-zed-two-langua
 
 `bib init`, `sync`, `index`, `check`, `cites`, `search`, `text`, `excerpt`, `patch`, `review`, `export`, `import`, `backup`, `doctor`.
 
-Durchgängig `--json` für Skripte, Git-Hooks und Claude Code, dazu sinnvolle Exit-Codes. `bib check` verhält sich wie das bestehende Skript: still bei Erfolg, Fehlercode bei echtem Fehlschlag, `-v` zeigt auch Bestandenes, Ausgabe als `datei:zeile` mit nächstliegendem Kandidaten.
+`--json` throughout, for scripts, git hooks, and Claude Code, plus sensible exit codes. `bib check` behaves like the existing script: silent on success, an error code on a real failure, `-v` also shows passes, output as `file:line` with the nearest candidate.
 
-### Konfiguration
+### Configuration
 
-`~/.config/bib/config.toml` für Voreinstellungen, `bib.toml` im Projekt hat Vorrang und wird versioniert. Zugangsdaten stehen in keiner der beiden Dateien.
+`~/.config/bib/config.toml` for defaults, `bib.toml` in the project takes precedence and is versioned. Credentials live in neither file.
 
 ```toml
 id = "0193f2a1-…"
@@ -253,7 +253,7 @@ path = "presentation/slides.typ"
 kind = "slides"
 
 [zotero]
-libraries = ["user", "group:6573630"]   # Auflösungsreihenfolge für Citation Keys
+libraries = ["user", "group:6573630"]   # resolution order for citation keys
 
 [bibliography]
 path = "ehr_privacy.bib"
@@ -271,122 +271,122 @@ cloud = false
 logging = "required"
 ```
 
-Die Datei ist Pflicht und gewinnt gegen die Datenbank. Taucht dieselbe ID an zwei Pfaden auf, fragt die Prüfliste nach verschoben oder kopiert.
+The file is mandatory and takes precedence over the database. If the same ID shows up at two paths, the review queue asks whether it was moved or copied.
 
 ---
 
-## 11. Import und Abnahme
+## 11. Import and Acceptance
 
-Für jeden Eintrag aus `quote_verification.json`: Key auflösen; Wortlaut in der Textschicht suchen (exakt, normalisiert, unscharf); daraus Anker mit Kontext bauen, den die JSON-Datei nicht hat. Einordnung: Quelle ohne PDF → Belegstelle mit *unverankertem* Anker, nicht prüfbar; Key nicht in Zotero → Prüfliste mit „in Zotero anlegen, dann `bib import` erneut ausführen" (der Import ist idempotent, ein zweiter Lauf legt nichts doppelt an); gefunden → *deterministisch geprüft*; mehrere Treffer → Prüfliste mit Kandidaten; nicht gefunden mit `validated` → *von dir bestätigt, nicht maschinell verankert*; nicht gefunden ohne `validated` → Prüfliste. Das Label wird zur Verwendung, bei passender Überschrift mit Verweis auf das Kapitel. Vorhandene `#quote`-Stellen werden über ihren Wortlaut mit den Belegstellen verknüpft.
+For each entry from `quote_verification.json`: resolve the key; search for the wording in the text layer (exact, normalized, fuzzy); build an anchor with context from that, which the JSON file doesn't have. Classification: source without a PDF → excerpt with an *unanchored* anchor, not verifiable; key not in Zotero → review queue with "add to Zotero, then run `bib import` again" (the import is idempotent, a second run doesn't create duplicates); found → *deterministically verified*; multiple matches → review queue with candidates; not found but marked `validated` → *confirmed by you, not machine-anchored*; not found and not marked `validated` → review queue. The label becomes the usage, with a reference to the chapter when a matching heading exists. Existing `#quote` locations are linked to the excerpts via their wording.
 
-Am Ende ein Bericht mit Zahlen je Kategorie. **Nichts wird still verworfen.** Optional übernimmt `bib import triage --from-dirs literatur/` die Ebenen `A_kern`, `B_belege`, `C_rest` als Tags.
+At the end, a report with counts per category. **Nothing is silently discarded.** Optionally, `bib import triage --from-dirs literatur/` imports the `A_kern`, `B_belege`, `C_rest` tiers as tags.
 
-**Abnahme:** das Seminarprojekt als schreibgeschützte Kopie, **erst nach dem 23.09.2026** (laufende benotete Arbeit mit eigenen KI-Regeln). Oracle ist `check_quotes.py`: `bib check` muss dieselben Zitate durchwinken und dieselben bemängeln. Bis dahin wird gegen ein eigenes Testprojekt mit frei zugänglichen Papers entwickelt.
-
----
-
-## 12. Verantwortungsvolle KI-Nutzung
-
-Verbindliche Prinzipien für alle Teilprojekte:
-
-1. **Kein Modelltext im Dokument.** LLM-Funktionen recherchieren, ordnen und prüfen. In eine `.typ`-Datei gelangt nur Wortlaut aus Quellen. Es gibt keinen Codepfad, der das umgeht.
-2. **Herkunft an jedem Eintrag** (siehe Abschnitt 5). Ein LLM-Urteil wird nie automatisch wahr, sondern zeigt die Belegstelle und wartet auf Bestätigung.
-3. **Keine erfundenen Quellen.** Vorschläge stammen ausschließlich aus der eigenen Bibliothek, immer mit verankerter Stelle.
-4. **Reproduzierbarkeit:** Zu jedem LLM-Aufruf werden Modell, Version, Parameter, Prompt und Eingabe-Prüfsumme gespeichert, dazu die Prüfsumme der geltenden `[ai]`-Richtlinie.
-5. **Dokumentationspflicht automatisieren:** vollständiges Protokoll mit Tool, Version, Datum, URL, Prompt, Ergebnis und Art der Nutzung; daraus wird eine Anhangstabelle deterministisch erzeugt, nicht formuliert.
-6. **Richtlinie pro Projekt** im Abschnitt `[ai]` der `bib.toml`, vom Tool durchgesetzt.
-7. **Datenabfluss sichtbar machen:** Bei Cloud-Aufrufen wird festgehalten, welcher eigene Text das Gerät verlassen hat.
-8. **Lesen nicht wegautomatisieren:** Hinweise wie „zitiert, aber nie gelesen" sind erwünscht, Skimming-Hilfen bleiben Lesehilfe.
-
-**In dieser Version umgesetzt:** Herkunftsfelder (2), die Tabelle `llm_call` (leer, aber verbindlich für spätere Funktionen), der Abschnitt `[ai]` in `bib.toml`. Prinzip 1 gilt trivial, weil kein LLM enthalten ist.
+**Acceptance:** the seminar project as a read-only copy, **only after 2026-09-23** (an ongoing graded paper with its own AI rules). The oracle is `check_quotes.py`: `bib check` must wave through the same citations and flag the same ones. Until then, development happens against a separate test project using freely accessible papers.
 
 ---
 
-## 13. Fehlerbehandlung
+## 12. Responsible AI Use
 
-Grundsatz: nichts still verwerfen, alles Unklare in die Prüfliste, `bib review` ist der einzige Ausgang.
+Binding principles for all subprojects:
 
-| Problem | Verhalten |
+1. **No model-generated text in the document.** LLM features research, organize, and verify. Only wording from sources ever goes into a `.typ` file. There is no code path that bypasses this.
+2. **Provenance on every entry** (see section 5). An LLM judgment is never automatically treated as true; it shows the excerpt and waits for confirmation.
+3. **No fabricated sources.** Suggestions come exclusively from the user's own library, always with an anchored location.
+4. **Reproducibility:** for every LLM call, the model, version, parameters, prompt, and input checksum are stored, along with the checksum of the `[ai]` policy in effect.
+5. **Automate the documentation obligation:** a complete log with tool, version, date, URL, prompt, result, and type of use; from this, an appendix table is generated deterministically, not written by hand.
+6. **Policy per project** in the `[ai]` section of `bib.toml`, enforced by the tool.
+7. **Make data flow visible:** for cloud calls, it is recorded which of the user's own text left the device.
+8. **Don't automate away reading.** Hints like "cited but never read" are welcome; skimming aids remain reading aids.
+
+**Implemented in this version:** provenance fields (2), the `llm_call` table (empty, but mandatory for later features), the `[ai]` section in `bib.toml`. Principle 1 holds trivially, since no LLM is included.
+
+---
+
+## 13. Error Handling
+
+Principle: nothing is silently discarded, everything unclear goes to the review queue, `bib review` is the only way out.
+
+| Problem | Behavior |
 |---|---|
-| Zotero läuft nicht | letzter Stand, Alter sichtbar |
-| PDF fehlt | Quelle zitierbar, Prüfung meldet „kein PDF" |
-| Extraktion scheitert an einer Seite | Seite markiert, Rest nutzbar |
-| Backend stürzt ab (`pdf-extract` bricht bei kaputten Dateien hart ab) | isoliert ausgeführt, Fehlschlag am Anhang vermerkt |
-| Fehler im Language Server | kein Absturz: Hintergrundarbeit, Fehler als Meldung, Zeitlimits für Zotero-Anfragen |
+| Zotero isn't running | last known state, age shown |
+| PDF missing | source is citable, verification reports "no PDF" |
+| Extraction fails on a page | page flagged, rest remains usable |
+| Backend crashes (`pdf-extract` aborts hard on corrupt files) | run in isolation, failure recorded on the attachment |
+| Error in the language server | no crash: background work, error surfaced as a diagnostic, timeouts on Zotero requests |
 
-Datenbank: WAL für gleichzeitigen Zugriff von CLI und Server, versionierte Migrationen, automatische Sicherung vor jeder Migration.
+Database: WAL for concurrent access from the CLI and the server, versioned migrations, automatic backup before every migration.
 
 ---
 
 ## 14. Tests
 
-- **Einheitentests** für Normalisierung (inklusive Idempotenz), Ankersuche gegen absichtlich veränderte Texte, Typst-Parser über alle vier Zitatformen samt Escapes und dynamischem Fall.
-- **Beispiel-PDFs** nicht im Repo, sondern per Skript mit festen Prüfsummen geladen: altes LaTeX ohne Unicode-Zuordnung, modernes zweispaltiges Paper, gescanntes Dokument, Tabellen.
-- **Backend-Benchmark** als eigenes Werkzeug mit arXiv-LaTeX-Quellen als Referenz; wiederholbar nach Updates.
-- **Language-Server-Tests** gegen ein Beispielprojekt mit Skript-Client.
-- **Abnahme** gegen das Seminarprojekt (siehe Abschnitt 11).
+- **Unit tests** for normalization (including idempotence), anchor search against deliberately altered texts, the Typst parser across all four citation forms including escapes and the dynamic case.
+- **Sample PDFs**, not in the repo but downloaded via a script with fixed checksums: old LaTeX without Unicode mapping, a modern two-column paper, a scanned document, tables.
+- **Backend benchmark** as a standalone tool, using arXiv LaTeX sources as ground truth; repeatable after updates.
+- **Language server tests** against a sample project using a scripted client.
+- **Acceptance** against the seminar project (see section 11).
 
-Entwickelt wird testgetrieben.
+Development is test-driven.
 
 ---
 
-## 15. Reihenfolge
+## 15. Implementation Order
 
-| Schritt | Ergebnis | Nutzbar |
+| Step | Result | Usable |
 |---|---|---|
-| 0a | Backend-Benchmark | entscheidet Abschnitt 7 |
-| 0b | Zed-Test: Minimal-Language-Server neben tinymist, prüft Hover, References, Definition, Diagnostics | bestätigt oder korrigiert Abschnitt 9 |
-| 1 | Datenmodell, Migrationen | `bib init`, `bib doctor` |
-| 2 | Zotero-Abgleich, `.bib` lesen | `bib sync` |
-| 3 | Extraktion, Normalisierung | `bib index`, `bib text`, `bib search` |
-| 4 | Anker, Belegstellen, Korrekturen | `bib excerpt`, `bib review`, `bib patch` |
-| 5 | Typst-Parser | `bib cites`, `bib check` |
-| 6 | Import | 143 Belegstellen übernommen |
-| 7 | Language Server | Arbeit in Zed |
-| 8 | Zed-Extension, Export | erste Version fertig |
+| 0a | Backend benchmark | decides section 7 |
+| 0b | Zed test: minimal language server alongside tinymist, checks hover, references, definition, diagnostics | confirms or corrects section 9 |
+| 1 | Data model, migrations | `bib init`, `bib doctor` |
+| 2 | Zotero sync, reading `.bib` | `bib sync` |
+| 3 | Extraction, normalization | `bib index`, `bib text`, `bib search` |
+| 4 | Anchors, excerpts, corrections | `bib excerpt`, `bib review`, `bib patch` |
+| 5 | Typst parser | `bib cites`, `bib check` |
+| 6 | Import | 143 excerpts imported |
+| 7 | Language server | work in Zed |
+| 8 | Zed extension, export | first version done |
 
-Jeder Schritt ist für sich nutzbar; ab Schritt 3 ersetzt das Tool bereits Teile des Alltags.
+Each step is usable on its own; from step 3 onward, the tool already replaces parts of daily use.
 
 ---
 
 ## 16. Future Work
 
-**Abbildungen, Diagramme und Tabellen.** Weitgehend additiv: `block` (Layout-Bereiche), `media` (Bilder), abgeleitete Artefakte (Tabellenzellen, Plot-Werte). Vorgesehen ist dafür bereits: Anker mit Seitenbereich, Verwendung am Anker statt am Textausschnitt, Seitengeometrie mit Größe, Drehung und Koordinatensystem. Eine andere Serialisierung von Tabellen verschiebt Offsets — dagegen schützen versionierte Textschichten und Anker über Wortlaut plus Kontext.
+**Figures, diagrams, and tables.** Largely additive: `block` (layout regions), `media` (images), derived artifacts (table cells, plot values). Already provided for: anchors with a page range, usage attached to the anchor instead of a text excerpt, page geometry with size, rotation, and coordinate system. A different serialization of tables shifts offsets — versioned text layers and anchors based on wording plus context guard against that.
 
-**Leseoberfläche.** Eigener PDF-Leser mit CiteSee-Färbung (Zitate markiert nach *in Bibliothek / Triage-Ebene / selbst zitiert / ungelesen / fehlt*), CiteRead-Randnotizen (was zitierende Papers über eine Stelle sagen) und Anzeige von Ankern, Belegstellen und Notizen. Setzt Zitatmarker aus GROBID und Zitatkontexte aus Teilprojekt 5 voraus.
+**Reading interface.** A dedicated PDF reader with CiteSee-style coloring (citations marked by *in library / triage tier / self-cited / unread / missing*), CiteRead-style margin notes (what citing papers say about a passage), and a display of anchors, excerpts, and notes. Requires citation markers from GROBID and citation contexts from subproject 5.
 
-**Fremde oder geteilte `.bib` ohne Zotero.** Bewusst nicht modelliert. Wird es nötig (etwa bei gemeinsamen Papers mit häufig aktualisierter, von Hand gepflegter `.bib`), kommt es als eigenes Thema zurück; bis dahin ist der Weg eine eigene Zotero-Bibliothek oder eine Gruppenbibliothek.
+**Third-party or shared `.bib` without Zotero.** Deliberately not modeled. If it becomes necessary (for instance, for joint papers with a frequently updated, hand-maintained `.bib`), it will come back as its own topic; until then, the way forward is a personal Zotero library or a group library.
 
-**Öffentliche Bibliographie als interaktive Webseite.** Eigene Paper, ausgewählte Notizen und Verknüpfungen als statisch erzeugte, durchsuchbare Seite mit Graph-Ansicht. Voraussetzungen fürs Datenmodell: Sichtbarkeit pro Notiz und Link (Standard *privat*, Veröffentlichung nur ausdrücklich), und beim Export keine Volltexte oder Ausschnitte über das Zitatrecht hinaus. Setzt Teilprojekt 4 (Notizen) und 5 (Graph) voraus.
+**Public bibliography as an interactive website.** Own papers, selected notes, and links as a statically generated, searchable page with a graph view. Data-model requirements: per-note and per-link visibility (default *private*, publication only explicit), and no full texts or excerpts beyond fair-use quotation limits on export. Requires subproject 4 (notes) and 5 (graph).
 
-**Weitere Teilprojekte:** Notizen und Discourse Graph (4); hybride Suche aus BM25 und Embeddings, SPECTER2 auf Paper-Ebene (3); Zitationsgraph, Zitatkontexte zitierender Papers, Co-Autoren, Retraction-Check, Metadaten-Lint (5); Zitat-Prüfung inhaltlich per LLM, Extraktions-Matrix (6); Zurückschreiben nach Zotero, MCP-Server, Erfassung der Claude-Sessions eines Projekts (7).
+**Further subprojects:** notes and discourse graph (4); hybrid search combining BM25 and embeddings, SPECTER2 at the paper level (3); citation graph, citation contexts of citing papers, co-authors, retraction check, metadata lint (5); content-level quote verification via LLM, extraction matrix (6); writing back to Zotero, MCP server, capturing a project's Claude sessions (7).
 
 ---
 
-## 17. Recherchegrundlage
+## 17. Research Basis
 
-Eigene Messungen (September 2026):
+Own measurements (September 2026):
 
-| Prüfung | Ergebnis |
+| Check | Result |
 |---|---|
-| ε in Dwork 2006 (altes LaTeX ohne Unicode-Zuordnung) | pdftotext 0, pdfplumber 0, pdfium 0, `pdf_oxide` 0 (Zeichen fällt weg), **`mupdf-rs` 28, `pdf-extract` 28** |
-| ε in Abadi 2016 (modern) | alle Backends 92. *Vorbehalt:* `file` meldete für den Download 2 Seiten; bei rund 11.500 extrahierten Wörtern ist eher die Seitenzählung von `file` falsch. Nicht nachgeprüft, der Benchmark nutzt frisch geladene Dateien. |
-| NFKC auf ε-Varianten | `ϵ` (U+03F5), `𝜖` (U+1D716), `𝜀` (U+1D700) werden alle zu `ε` (U+03B5), `ﬀ` zu `ff` |
-| Übereinstimmung der Extraktoren untereinander | 64–89 % bei zufälligen 8-Wort-Ausschnitten, ohne Referenz keine Aussage über Richtigkeit → Benchmark nötig |
-| Semantic Scholar zur Hauptquelle des Seminars | 79 zitierende Papers, 41 mit Zitat-Satz, 3 „influential", **0 mit Zitationsabsicht** → Absichten sind zu dünn für Teilprojekt 5 |
-| Zotero 9.0.1 (Snap), lokale API, nur lesend abgefragt | erreichbar, 168 Haupteinträge; `citationKey` als natives Feld gefüllt; **`version` überall 0, `Last-Modified-Version: 0`, kein `/deleted`-Endpunkt** → kein inkrementeller Abgleich; PDF-Pfad über Link `enclosure` (`file://…/Zotero/storage/<key>/…`); 274 Annotationen mit Text, Kommentar, Position und Seitenlabel lesbar; 14 Collections. Schreiben geht nur über die Web-API. |
-| Gruppenbibliotheken über die lokale API | `/api/users/0/groups` liefert 3 Gruppen, `/api/groups/<id>/items` funktioniert inklusive Anhängen und Annotationen (81 + 41 Haupteinträge, eine Gruppe leer). **17 Citation Keys kommen in mehr als einer Bibliothek vor** (16 zwischen eigener und einer Gruppenbibliothek). Ein Gruppeneintrag ohne Citation Key. |
-| Benchmark (Schritt 0a): 7 Dokumente, 21 Sätze, 7 Reihenfolge-Paare, `bench/results/2026-09-17.md` | Sätze: `pdf_oxide` 20/21, `pdf-extract` 21/21, `mutool` 21/21, pdfium 18/21; Reihenfolge überall 7/7. `pdf_oxide` fehlt ε in 2 Dokumenten (Dwork 2006, Shokri 2017), `pdf-extract` liefert es dort; `mutool` 191 × U+FFFD, pdfium 1128 Steuerzeichen (in den nachgezählten Dokumenten devlin2019 und abadi2016 überwiegend U+0002 als Trennmarke am Zeilenende, 527 der dort gezählten 573). → **Standard `pdf_oxide`, Kaskade `pdf-extract`** (Regel 1) |
+| ε in Dwork 2006 (old LaTeX without Unicode mapping) | pdftotext 0, pdfplumber 0, pdfium 0, `pdf_oxide` 0 (character drops out), **`mupdf-rs` 28, `pdf-extract` 28** |
+| ε in Abadi 2016 (modern) | all backends 92. *Caveat:* `file` reported 2 pages for the download; at roughly 11,500 extracted words, `file`'s page count is more likely wrong. Not re-checked; the benchmark uses freshly downloaded files. |
+| NFKC on ε variants | `ϵ` (U+03F5), `𝜖` (U+1D716), `𝜀` (U+1D700) all become `ε` (U+03B5), `ﬀ` becomes `ff` |
+| Agreement between extractors | 64–89% on random 8-word excerpts; without a reference, no statement about correctness is possible → benchmark needed |
+| Semantic Scholar on the seminar's main source | 79 citing papers, 41 with a citation sentence, 3 "influential", **0 with a citation intent** → intents are too sparse for subproject 5 |
+| Zotero 9.0.1 (Snap), local API, queried read-only | reachable, 168 top-level entries; `citationKey` populated as a native field; **`version` is 0 everywhere, `Last-Modified-Version: 0`, no `/deleted` endpoint** → no incremental sync; PDF path via the `enclosure` link (`file://…/Zotero/storage/<key>/…`); 274 annotations with text, comment, position, and page label readable; 14 collections. Writing only works via the web API. |
+| Group libraries via the local API | `/api/users/0/groups` returns 3 groups, `/api/groups/<id>/items` works including attachments and annotations (81 + 41 top-level entries, one group empty). **17 citation keys occur in more than one library** (16 between the personal library and a group library). One group entry without a citation key. |
+| Benchmark (step 0a): 7 documents, 21 sentences, 7 order pairs, `bench/results/2026-09-17.md` | Sentences: `pdf_oxide` 20/21, `pdf-extract` 21/21, `mutool` 21/21, pdfium 18/21; reading order 7/7 everywhere. `pdf_oxide` is missing ε in 2 documents (Dwork 2006, Shokri 2017), `pdf-extract` delivers it there; `mutool` 191 × U+FFFD, pdfium 1128 control characters (in the recounted documents devlin2019 and abadi2016, mostly U+0002 as a line-end hyphenation marker, 527 of the 573 counted there). → **default `pdf_oxide`, cascade `pdf-extract`** (rule 1) |
 | Zed with two language servers (step 0b), `docs/research/14-zed-two-language-servers.md` | Both servers start without settings change; diagnostics, hover and completion are merged; at `@key` tinymist provides no hover, definition, references or completion; merging of definition/references untested (tinymist had no results) |
 
-Fremde Quellen, die das Design geprägt haben: Jergas & Baethge (Zitatfehlerquote rund 25 %, Update 2025 ohne Verbesserung) als Begründung der Prüfung; W3C Web Annotation und Hypothesis für robuste Anker; PaperMage für das Schichtenmodell (Forschungsprototyp, seit 11/2024 ohne Pflege, nutzt pdfplumber und hätte das ε-Problem geerbt); CiteSee, CiteRead, Scim, ScholarPhi, Threddy, Synergi als Ideengeber für spätere Teilprojekte; SemanticCite für die vier Prüfstufen; Discourse Graphs für das Notizmodell.
+External sources that shaped the design: Jergas & Baethge (quote error rate around 25%, a 2025 update showed no improvement) as the rationale for verification; W3C Web Annotation and Hypothesis for robust anchors; PaperMage for the layer model (a research prototype, unmaintained since 11/2024, uses pdfplumber and would have inherited the ε problem); CiteSee, CiteRead, Scim, ScholarPhi, Threddy, Synergi as sources of ideas for later subprojects; SemanticCite for the four verification stages; Discourse Graphs for the note model.
 
 ---
 
-## 18. Offene Punkte
+## 18. Open Questions
 
-- Öffnet Zed einen externen Link (`zotero://…`), den der Language Server über `window/showDocument` schickt? Falls nicht, übernimmt das CLI.
-- Unterstützt die lokale Zotero-API `sort=dateModified`? Die Abfrage lieferte als „neueste" Einträge solche vom Juni, obwohl im September Einträge hinzugekommen sind. Für den Vollabgleich unerheblich, für eine spätere Optimierung zu klären.
-- Beitrag an `pdf_oxide` für Glyphennamen aus eingebetteten Type1-Schriften: wünschenswert, nicht eingeplant.
-- Der Verdachtsprüfer aus §7 Schritt 2 erkennt nur Zeichen-Signale (Steuerzeichen, `(cid:…)`, kein Text). Der einzige verfehlte Satz von `pdf_oxide` im Benchmark (20/21: vaswani2017, Überschrift „Abstract“ mitten im Absatz statt davor) ist ein Reihenfolgefehler, den er nicht erkennen kann. Ob die separate Schrift-Heuristik (Mathe-Schrift wie CMMI ohne ein einziges griechisches Zeichen) auf den Seiten anschlägt, auf denen `pdf_oxide` ε stillschweigend verliert (dwork2006, shokri2017: 0 Steuerzeichen, 0 `(cid:`, 0 U+FFFD), ist ungemessen → wird in Plan 2 geklärt. Siehe `bench/results/2026-09-17.md`.
-- Testkorpus: Jede Korpus-PDF hat MediaBox-Ursprung (0,0), keine eigene CropBox und kein `/Rotate`; die Kreuz-Backend-Koordinatentests können deshalb eine versetzte MediaBox, eine von der MediaBox abweichende CropBox oder gedrehte Seiten nicht erkennen (siehe Kommentare in `crates/bib-extract/src/backends/pdfium.rs` und `stext.rs`). Plan 2 braucht eine synthetische Testdatei mit versetzter MediaBox, eigener CropBox und `/Rotate 90` sowie eine Entscheidung, ob Spans in gedrehtem oder ungedrehtem Seitenraum gemeldet werden.
+- Does Zed open an external link (`zotero://…`) sent by the language server via `window/showDocument`? If not, the CLI takes over.
+- Does the local Zotero API support `sort=dateModified`? The query returned entries from June as "newest," even though entries had been added in September. Irrelevant for the full sync, but worth clarifying for a later optimization.
+- A contribution to `pdf_oxide` for glyph names from embedded Type1 fonts: desirable, not planned.
+- The suspicion detector from §7 step 2 only detects character-level signals (control characters, `(cid:…)`, no text). The one sentence `pdf_oxide` missed in the benchmark (20/21: vaswani2017, heading "Abstract" mid-paragraph instead of before it) is a reading-order error, which it cannot detect. Whether the separate font heuristic (math font like CMMI without a single Greek character) fires on the pages where `pdf_oxide` silently loses ε (dwork2006, shokri2017: 0 control characters, 0 `(cid:`, 0 U+FFFD) is unmeasured → to be clarified in plan 2. See `bench/results/2026-09-17.md`.
+- Test corpus: every corpus PDF has a MediaBox origin of (0,0), no separate CropBox, and no `/Rotate`; the cross-backend coordinate tests therefore cannot detect an offset MediaBox, a CropBox that differs from the MediaBox, or rotated pages (see the comments in `crates/bib-extract/src/backends/pdfium.rs` and `stext.rs`). Plan 2 needs a synthetic test file with an offset MediaBox, its own CropBox, and `/Rotate 90`, plus a decision on whether spans are reported in rotated or unrotated page space.

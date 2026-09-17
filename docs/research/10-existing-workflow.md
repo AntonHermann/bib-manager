@@ -1,53 +1,53 @@
-# Bestehender Arbeitsablauf: EHR-Seminar als Anforderungsquelle
+# Existing workflow: the EHR seminar as a requirements source
 
-Beobachtet am 2026-09-14 durch reines Lesen von `~/Documents/seminar_ehr_ss26`.
-Nur Struktur und Werkzeuge sind hier festgehalten, keine Inhalte der Arbeit.
+Observed on 2026-09-14 by reading only, from `~/Documents/seminar_ehr_ss26`.
+Only structure and tools are recorded here, no content of the paper itself.
 
-**Wichtig:** Das Projekt ist eine benotete Arbeit mit eigenen KI-Regeln (Abgabe 2026-09-23).
-Bis dahin wird es aus diesem Projekt heraus nicht mehr gelesen oder getestet.
-Erst danach wird es Referenzprojekt für die Abnahme der ersten Version.
+**Important:** the project is a graded paper with its own AI rules (due 2026-09-23).
+Until then, it will not be read or tested again from this project.
+Only after that does it become the reference project for the first version's acceptance.
 
-## Projektaufbau
+## Project structure
 
-- Typst-Arbeit: `paper.typ`, `template.typ`, `chapters/*.typ` (eine Datei pro Abschnitt), daneben `chapters/*.md` als Belegsammlungen vor dem Schreiben.
-- Folien: `presentation/slides.typ` (Touying), gleiche `.bib`.
-- `ehr_privacy.bib`: Zotero-Export, 56 Einträge. **Darf von Werkzeugen nicht umgeschrieben werden.**
-- `literatur/`: 65 PDFs + 65 `pdftotext`-Volltexte (3,2 MB, versioniert), sortiert nach Triage-Stufen.
-- Obsidian-Vault im selben Ordner (Plugin `obsidian-pandoc-reference-list`), Pandoc-CSL und Zotero-JSON-Exporte unter `.pandoc/`.
-- `Justfile` und `.zed/tasks.json` für Befehle.
+- Typst paper: `paper.typ`, `template.typ`, `chapters/*.typ` (one file per section), alongside `chapters/*.md` as excerpt collections used before writing.
+- Slides: `presentation/slides.typ` (Touying), same `.bib`.
+- `ehr_privacy.bib`: a Zotero export, 56 entries. **Must not be rewritten by tools.**
+- `literatur/`: 65 PDFs + 65 `pdftotext` full texts (3.2 MB, version-controlled), sorted by triage stage.
+- An Obsidian vault in the same folder (plugin `obsidian-pandoc-reference-list`), Pandoc CSL and Zotero JSON exports under `.pandoc/`.
+- `Justfile` and `.zed/tasks.json` for commands.
 
-## Werkzeuge, die das Tool ersetzen soll
+## Tools the tool is meant to replace
 
-| Heute | Zweck | Im Tool |
+| Today | Purpose | In the tool |
 |---|---|---|
-| `notes/quote_verification.json`: 143 Einträge `{key, label, quote}`, optional `validated: <session>` | Belegstellen-Sammlung mit Kapitel-Label | Belegstelle (global, verankert) + Verwendung (Projekt, Label) |
-| `notes/check_quotes.py` (91 Zeilen) | prüft Wortlaut gegen Volltexte; feste Tabelle Key → Textdatei; Normalisierung: NFKC, weiche Trennstriche, Silbentrennung am Zeilenende, Striche/Anführungszeichen vereinheitlichen, Leerraum, Kleinschreibung | automatische Prüfung für alle Quellen, Pfade aus Zotero, Treffer mit Seite |
-| `notes/check_slide_quotes.py` (210 Zeilen), `just pres-check-quotes` | Kette Folie → Sammlung → Quelle; `PARSER:`-Zeilen bei nicht erkannten `#quote`-Formen | Diagnostics im Editor, echter Typst-Parser |
-| `notes/quote_inserter.sh` (Zed-Task, `jq` + `fzf`, schreibt per `awk` an `ZED_ROW`/`ZED_COLUMN`) | Belegstelle als `#quote(attribution: <key>)[…]` einfügen | Vervollständigung / Code Action |
-| `just pres-all-used-citations` (`rg`) | verwendete Keys eines Dokuments | „Find All References" |
-| `grep` über `literatur/text/` | Volltextsuche | Suchindex (Teilprojekt 3) |
-| Ordner `A_kern` / `B_belege` / `C_rest` + Rollen (Hauptquelle, backward, forward, Reserve, aussortiert) | Triage | Status und Rolle pro Quelle und Projekt |
-| `notes/Quellenauswahl.md`: Backward-Referenzen der Hauptquelle, Forward-Recherche über Semantic Scholar (Zitat-Sätze durchgesehen), Co-Autor-Checks, Selbstzitationen | Zitationsgraph von Hand | Teilprojekt 5 |
-| `literatur/zotero_korrekturen.md`: Formalcheck (Venue/Volume/Issue vollständig? begutachtete Fassung statt arXiv?) | Metadatenqualität | mögliche Metadaten-Prüfung |
-| `tool_usage/`, `jsonl2md.sh`, Anhang-Tabelle | Dokumentation der KI-Nutzung | Nutzungsprotokoll + Anhang-Generator (siehe `11`) |
+| `notes/quote_verification.json`: 143 entries `{key, label, quote}`, optional `validated: <session>` | excerpt collection with a chapter label | excerpt (global, anchored) + usage (project, label) |
+| `notes/check_quotes.py` (91 lines) | verifies wording against full texts; fixed table key → text file; normalization: NFKC, soft hyphens, line-end hyphenation, unify dashes/quotation marks, whitespace, lowercase | automatic verification for all sources, paths from Zotero, hits with page number |
+| `notes/check_slide_quotes.py` (210 lines), `just pres-check-quotes` | chain slide → collection → source; `PARSER:` lines for unrecognized `#quote` forms | diagnostics in the editor, a real Typst parser |
+| `notes/quote_inserter.sh` (Zed task, `jq` + `fzf`, writes via `awk` at `ZED_ROW`/`ZED_COLUMN`) | insert an excerpt as `#quote(attribution: <key>)[…]` | completion / code action |
+| `just pres-all-used-citations` (`rg`) | keys used in a document | "Find All References" |
+| `grep` over `literatur/text/` | full-text search | search index (subproject 3) |
+| folders `A_kern` / `B_belege` / `C_rest` + roles (primary source, backward, forward, reserve, discarded) | triage | status and role per source and project |
+| `notes/Quellenauswahl.md`: backward references of the primary source, forward search via Semantic Scholar (citation sentences reviewed), co-author checks, self-citations | citation graph by hand | subproject 5 |
+| `literatur/zotero_korrekturen.md`: formal check (venue/volume/issue complete? peer-reviewed version instead of arXiv?) | metadata quality | possible metadata check |
+| `tool_usage/`, `jsonl2md.sh`, appendix table | documentation of AI use | usage log + appendix generator (see `11`) |
 
-## Dokumentierte Fallen (aus `literatur/README.md`)
+## Documented pitfalls (from `literatur/README.md`)
 
-- Tabellen ohne `-layout` zerlegt → falsche Zahl in Notizen.
-- ε fehlt in mehreren DP-Volltexten; Zitate mit ε nur aus dem PDF übernommen.
-- Mathematisch-kursives `𝜖` in einem Buch; Suche braucht `ε|𝜖`.
-- Einige Quellen nicht aus Zotero (über Cited-by-Recherche dazugekommen), vier Zotero-Einträge ohne PDF, ein Duplikat.
+- Tables broken apart without `-layout` → wrong number in notes.
+- ε missing in several DP full texts; quotations with ε taken directly from the PDF instead.
+- Math-italic `𝜖` in one book; search needs `ε|𝜖`.
+- Some sources not from Zotero (added via cited-by research), four Zotero entries without a PDF, one duplicate.
 
-## Arbeitsgewohnheiten, die das Design beeinflussen
+## Work habits that influence the design
 
-- **Klartext in Git** für Volltexte und Zitatsammlung, damit Claude in Web-Sessions darauf zugreifen kann → Export-Befehl im CLI nötig, obwohl die Daten zentral liegen.
-- Zitate werden **wörtlich** und mit Prüfkette verwendet; manuelle Bestätigung wird im Datensatz vermerkt (`validated`).
-- Notizen zu Quellen auch direkt in Zotero (z. B. „earlier version of …").
-- Zed als Editor, Tasks statt Extensions.
+- **Plain text in git** for full texts and the quote collection, so Claude can access them in web sessions → an export command in the CLI is needed even though the data lives centrally.
+- Quotations are used **verbatim** with a verification chain; manual confirmation is recorded in the dataset (`validated`).
+- Notes on sources also directly in Zotero (e.g. "earlier version of …").
+- Zed as editor, tasks instead of extensions.
 
-## Folgerungen für den Import (Abnahmetest)
+## Implications for the import (acceptance test)
 
-- Die 143 Einträge haben **keinen Kontext und keine Position**; Anker müssen durch Suche in der neuen Textschicht erzeugt werden.
-- Diese Textschicht ist nicht die, gegen die geprüft wurde: Zitate mit ε passen evtl. jetzt, andere evtl. nicht mehr.
-- Einträge mit `validated` wurden nie maschinell gefunden.
-- → Herkunft **pro Eintrag** vergeben (deterministisch geprüft / vom Nutzer bestätigt, nicht maschinell verankert / ungeklärt) und nicht auflösbare Anker in eine Prüfliste. Ohne Git-Diff ist die Prüfliste das einzige Sicherheitsnetz.
+- The 143 entries have **no context and no position**; anchors must be created by searching in the new text layer.
+- This text layer is not the one against which verification was originally done: quotations with ε may now match, others may no longer.
+- Entries with `validated` were never found by machine.
+- → assign **provenance per entry** (deterministically verified / confirmed by the user, not machine-anchored / unresolved) and put unresolvable anchors into a review list. Without a git diff, the review list is the only safety net.

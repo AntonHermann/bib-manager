@@ -1,3 +1,3 @@
-//! Kern des Bibliography Managers.
+//! Core of the Bibliography Manager.
 
 pub mod normalize;

@@ -1,11 +1,11 @@
-//! Backend auf Basis von `pdf-extract` (MIT). Liefert nur Text, keine Geometrie,
-//! liest aber Glyphennamen aus eingebetteten Type1-Schriften (ε in altem LaTeX).
+//! Backend based on `pdf-extract` (MIT). Returns only text, no geometry,
+//! but reads glyph names from embedded Type1 fonts (ε in old LaTeX).
 
 use std::path::Path;
 
 use crate::{Backend, ExtractError, Extraction, Page, PageContent, guard};
 
-/// Muss zur exakten Version in `Cargo.toml` (`=0.12.0`) passen.
+/// Must match the exact version in `Cargo.toml` (`=0.12.0`).
 const VERSION: &str = "0.12.0";
 
 pub struct PdfExtract;

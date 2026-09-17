@@ -1,80 +1,80 @@
-# Werkzeuglandschaft: Was es schon gibt
+# Tool landscape: what already exists
 
-Recherche 2026-09-14. Bezug zu den Punkten in `IDEA.md` jeweils am Ende.
+Research 2026-09-14. Related points from `IDEA.md` are noted at the end of each section.
 
-## Zitationsgraphen und Entdecken von Literatur
+## Citation graphs and literature discovery
 
-| Tool | Besonderheit |
+| Tool | Distinguishing feature |
 |---|---|
-| **Connected Papers** | Ein Start-Paper, Ähnlichkeitsgraph ohne Achsen. Keine Sammlungen aus mehreren Papers, keine Co-Autoren-Ansicht. |
-| **Litmaps** | Frei wählbare Achsen (z. B. Jahr × Zitationen), mehrere Start-Papers pro Karte, damit ganze Forschungsfelder abbildbar. |
-| **ResearchRabbit** | Sammlungen aus mehreren Papers, Co-Autoren über dem Zitationsgraphen eingeblendet. |
-| **Inciteful** | Kostenlos, ohne Anmeldung. „Literature Connector" findet den **kürzesten Zitationspfad zwischen zwei Papers**. |
+| **Connected Papers** | A single seed paper, similarity graph without axes. No collections from multiple papers, no co-author view. |
+| **Litmaps** | Freely chosen axes (e.g. year × citations), multiple seed papers per map, so whole research fields can be mapped. |
+| **ResearchRabbit** | Collections from multiple papers, co-authors overlaid on the citation graph. |
+| **Inciteful** | Free, no sign-up. "Literature Connector" finds the **shortest citation path between two papers**. |
 
-Die Tools ergänzen sich und werden in der Praxis oft kombiniert.
+The tools complement each other and are often combined in practice.
 
-→ Bezug: *Visualize Dependencies* (Co-Autoren, Zitationsgraph). Neue Ideen: frei wählbare Achsen, kürzester Pfad zwischen zwei Quellen.
+→ Relation: *Visualize Dependencies* (co-authors, citation graph). New ideas: freely chosen axes, shortest path between two sources.
 
-Quellen: [Effortless Academic: Litmaps vs ResearchRabbit vs Connected Papers](https://effortlessacademic.com/litmaps-vs-researchrabbit-vs-connected-papers-the-best-literature-review-tool-in-2025/) · [HKUST: Vergleich der Mapping-Tools](https://libguides.hkust.edu.hk/citation-chaining/citation-mapping-tools-comparison) · [Ponder: ResearchRabbit-Alternativen](https://ponder.ing/blog/research-rabbit-alternatives)
+Sources: [Effortless Academic: Litmaps vs ResearchRabbit vs Connected Papers](https://effortlessacademic.com/litmaps-vs-researchrabbit-vs-connected-papers-the-best-literature-review-tool-in-2025/) · [HKUST: comparison of mapping tools](https://libguides.hkust.edu.hk/citation-chaining/citation-mapping-tools-comparison) · [Ponder: ResearchRabbit alternatives](https://ponder.ing/blog/research-rabbit-alternatives)
 
 ## scite: Smart Citations
 
-- Jede zitierende Aussage wird per Deep Learning eingeordnet: **stützt / widerspricht / erwähnt**.
-- Angezeigt wird der Satz, in dem zitiert wird, zusammen mit der Einordnung.
-- Laut scite 1,4 Milliarden eingeordnete Zitat-Aussagen aus über 38 Millionen Papers.
-- Motivation: Eine Zitation, die widerspricht, zählt in klassischen Indizes genauso wie eine, die stützt.
+- Every citing statement is classified by deep learning: **supporting / contradicting / mentioning**.
+- The sentence in which the citation occurs is shown together with the classification.
+- scite claims 1.4 billion classified citation statements from over 38 million papers.
+- Motivation: a citation that contradicts counts the same as one that supports in classic indices.
 
-→ Bezug: Kanten im Zitationsgraphen bekommen einen Typ. Die Klassen passen auch zur Zitat-Prüfung.
+→ Relation: edges in the citation graph get a type. The classes also fit quote verification.
 
-Quellen: [scite (Quantitative Science Studies)](https://direct.mit.edu/qss/article/2/3/882/102990/scite-A-smart-citation-index-that-displays-the) · [scite Features](https://scite.ai/features)
+Sources: [scite (Quantitative Science Studies)](https://direct.mit.edu/qss/article/2/3/882/102990/scite-A-smart-citation-index-that-displays-the) · [scite Features](https://scite.ai/features)
 
-## Extraktions-Matrizen: Elicit und ORKG
+## Extraction matrices: Elicit and ORKG
 
-- **Elicit:** Zeilen sind Papers, Spalten frei definierbare Fragen (Methode, Datensatz, Ergebnis …). Das LLM füllt die Zellen, **jede mit Belegzitat**. Spaltenvorlagen werden vorgeschlagen oder selbst gebaut.
-- **ORKG (Open Research Knowledge Graph):** Papers werden als strukturierte „Contributions" beschrieben (Forschungsproblem, Materialien, Methoden, Ergebnisse). Daraus entstehen halbautomatisch Vergleichstabellen.
-- Praxis-Tipp aus einem Guide: mit sechs Kernspalten starten (Zitat, Ziel, Methode, Ergebnisse, Limitationen, Relevanz), neue Spalten erst, wenn ein Thema in drei oder mehr Quellen vorkommt.
+- **Elicit:** rows are papers, columns are freely defined questions (method, dataset, result, …). The LLM fills the cells, **each with a supporting citation**. Column templates are suggested or built by hand.
+- **ORKG (Open Research Knowledge Graph):** papers are described as structured "contributions" (research problem, materials, methods, results). Comparison tables emerge semi-automatically from these.
+- Practical tip from a guide: start with six core columns (citation, goal, method, results, limitations, relevance); add new columns only once a topic appears in three or more sources.
 
-→ Bezug: fehlt in `IDEA.md`, ist aber ein Standardwerkzeug für Literatur-Reviews.
+→ Relation: missing from `IDEA.md`, but a standard tool for literature reviews.
 
-Quellen: [Elicit Systematic Review](https://elicit.com/solutions/systematic-review) · [Aaron Tay: Research Matrix Tools](https://aarontay.medium.com/three-tools-that-can-help-you-create-a-literature-review-research-matrix-of-papers-scholarcy-a05af8ae5339) · [ORKG System Walkthrough](https://arxiv.org/pdf/2206.01439) · [PaperSynapse: Literature Review Tables](https://papersynapse.com/blog/how-to-structure-literature-review-data-tables)
+Sources: [Elicit Systematic Review](https://elicit.com/solutions/systematic-review) · [Aaron Tay: Research Matrix Tools](https://aarontay.medium.com/three-tools-that-can-help-you-create-a-literature-review-research-matrix-of-papers-scholarcy-a05af8ae5339) · [ORKG System Walkthrough](https://arxiv.org/pdf/2206.01439) · [PaperSynapse: Literature Review Tables](https://papersynapse.com/blog/how-to-structure-literature-review-data-tables)
 
-## Canvas- und Annotationswerkzeuge
+## Canvas and annotation tools
 
-- **LiquidText:** unendliche Arbeitsfläche, mehrere Dokumente nebeneinander, Ausschnitte bleiben mit der Stelle im PDF verlinkt.
-- **MarginNote:** Ausschnitte werden zu Mindmaps und Karteikarten.
-- **Heptabase:** Karten auf Whiteboards, getrennt in „Research Canvas" (verstehen) und „Creative Canvas" (daraus etwas bauen).
-- Verbreitete Kombination im Studium: Zotero plus Obsidian/Heptabase zur Synthese.
+- **LiquidText:** infinite canvas, several documents side by side, excerpts stay linked to their spot in the PDF.
+- **MarginNote:** excerpts turn into mind maps and flashcards.
+- **Heptabase:** cards on whiteboards, split into "Research Canvas" (understanding) and "Creative Canvas" (building from it).
+- Common combination in academia: Zotero plus Obsidian/Heptabase for synthesis.
 
-→ Bezug: *Integrated note-taking*, freie Arbeitsfläche als spätere Ansicht.
+→ Relation: *Integrated note-taking*, a free canvas as a later view.
 
-Quellen: [Paperlike: LiquidText vs MarginNote](https://paperlike.com/blogs/paperlikers-insights/liquidtext-vs-marginnote) · [Storyflow: Heptabase-Alternativen](https://storyflow.so/blog/best-heptabase-alternatives-2026) · [Myflexnote: Note-Taking für Forschende](https://myflexnote.com/blog/best-note-taking-apps-for-researchers)
+Sources: [Paperlike: LiquidText vs MarginNote](https://paperlike.com/blogs/paperlikers-insights/liquidtext-vs-marginnote) · [Storyflow: Heptabase alternatives](https://storyflow.so/blog/best-heptabase-alternatives-2026) · [Myflexnote: note-taking for researchers](https://myflexnote.com/blog/best-note-taking-apps-for-researchers)
 
 ## Discourse Graphs (Joel Chan)
 
-- Notizen haben einen Typ: **Frage, Behauptung, Beleg**.
-- Verknüpfungen haben einen Typ: **stützt, widerspricht, beantwortet**.
-- Widersprüchliche Behauptungen dürfen nebeneinander stehen, weil jede mit ihren Belegen verbunden ist.
-- Literatursuchen werden dadurch strukturiert und wiederverwendbar.
+- Notes have a type: **question, claim, evidence**.
+- Links have a type: **supports, contradicts, answers**.
+- Contradicting claims may coexist, because each is connected to its own evidence.
+- This structures literature searches and makes them reusable.
 
-→ Bezug: Die drei Notiz-Ebenen aus `IDEA.md` lassen sich darauf abbilden. Die Sätze im eigenen Paper sind Behauptungen, die Zitat-Prüfung prüft die Kante „Beleg stützt Behauptung".
+→ Relation: the three note levels from `IDEA.md` map onto this. The sentences in one's own paper are claims; quote verification checks the "evidence supports claim" edge.
 
-Quellen: [Protocol Labs: Discourse Graphs and the Future of Science](https://research.protocol.ai/blog/2023/discourse-graphs-and-the-future-of-science/) · [Scaling Synthesis: decentralized discourse graph](https://scalingsynthesis.com/q-what-is-a-decentralized-discourse-graph/)
+Sources: [Protocol Labs: Discourse Graphs and the Future of Science](https://research.protocol.ai/blog/2023/discourse-graphs-and-the-future-of-science/) · [Scaling Synthesis: decentralized discourse graph](https://scalingsynthesis.com/q-what-is-a-decentralized-discourse-graph/)
 
-## Zurückgezogene Papers (Retraction Watch)
+## Retracted papers (Retraction Watch)
 
-- Die Retraction-Watch-Datenbank gehört seit 2023 zu **Crossref**. Über 63.000 dokumentierte Rückzüge.
-- Ein Paper kann nur bei Retraction Watch, nur bei Crossref oder bei beiden als zurückgezogen markiert sein.
-- **Zotero** warnt seit 2019 bei zurückgezogenen Einträgen in der Bibliothek und beim Zitieren über das Textverarbeitungs-Plugin.
+- The Retraction Watch database has belonged to **Crossref** since 2023. Over 63,000 documented retractions.
+- A paper can be flagged as retracted only in Retraction Watch, only in Crossref, or in both.
+- **Zotero** has warned about retracted entries in the library and when citing via the word-processor plugin since 2019.
 
-→ Bezug: fehlt in `IDEA.md`, geringer Aufwand, hoher Nutzen.
+→ Relation: missing from `IDEA.md`, low effort, high value.
 
-Quellen: [Zotero Blog: Retracted item notifications](https://www.zotero.org/blog/retracted-item-notifications/) · [TU Hamburg zu Retraction Watch](https://www.tub.tuhh.de/en/2026/02/23/retraction-watch-retracted-articles/) · [Zotero Forum: Retraction Watch vs Crossref](https://forums.zotero.org/discussion/130655/retracted-articles-solely-identified-by-the-retraction-watch-database-or-also-by-crossref-api)
+Sources: [Zotero Blog: Retracted item notifications](https://www.zotero.org/blog/retracted-item-notifications/) · [TU Hamburg on Retraction Watch](https://www.tub.tuhh.de/en/2026/02/23/retraction-watch-retracted-articles/) · [Zotero Forum: Retraction Watch vs Crossref](https://forums.zotero.org/discussion/130655/retracted-articles-solely-identified-by-the-retraction-watch-database-or-also-by-crossref-api)
 
-## Eigene Feature-Ideen aus dem Brainstorming
+## Own feature ideas from the brainstorming
 
-- Zitat-Vorschläge beim Schreiben aus der eigenen Bibliothek, ausdrücklich auch widersprechende Quellen.
-- Warnung „zitiert, aber nie gelesen" (keine Markierung, keine Notiz in der Quelle).
-- Lücken in der Bibliothek: Papers, die viele eigene Quellen zitieren, aber fehlen.
-- Abgleich zwischen Paper und Präsentation: Was zitiert die eine, was das andere nicht; Prüfstatus wird geteilt.
-- Suchtreffer als Belegstellen im Multibuffer-Stil statt als Paper-Liste.
-- Metadaten-Prüfung (Venue/Volume/Issue vollständig? Preprint statt begutachteter Fassung?), abgeleitet aus dem Formalcheck im EHR-Seminar.
+- Citation suggestions while writing, drawn from one's own library, explicitly including contradicting sources.
+- "Cited but never read" warning (no highlight, no note on the source).
+- Gaps in the library: papers that many of one's own sources cite but which are missing.
+- Comparison between paper and presentation: what one cites that the other doesn't; verification status is shared.
+- Search hits as excerpts in multibuffer style instead of a list of papers.
+- Metadata check (venue/volume/issue complete? preprint instead of peer-reviewed version?), derived from the formal check in the EHR seminar.

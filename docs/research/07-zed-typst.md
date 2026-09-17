@@ -1,72 +1,72 @@
-# Zed und Typst
+# Zed and Typst
 
-Recherche 2026-09-14.
+Research 2026-09-14.
 
-## Was Zed-Extensions können
+## What Zed extensions can do
 
-Laut Doku ([zed.dev/docs/extensions](https://zed.dev/docs/extensions)):
+Per the docs ([zed.dev/docs/extensions](https://zed.dev/docs/extensions)):
 
-- Languages, **Language Server**, Themes, Icon Themes, Debugger, Snippets, **MCP-Server**.
-- Extensions sind Rust, kompiliert zu WebAssembly, gegen versionierte WIT-Schnittstellen.
-- **Keine eigenen Panels, Webviews oder freien UI-Elemente.** Dazu gibt es nur Diskussionen/RFCs (deklaratives Protokoll, nativ über GPUI gerendert statt Webview), nichts fest eingeplant.
+- Languages, **language servers**, themes, icon themes, debuggers, snippets, **MCP servers**.
+- Extensions are Rust, compiled to WebAssembly, against versioned WIT interfaces.
+- **No custom panels, webviews, or free-form UI elements.** Only discussions/RFCs exist for this (a declarative protocol, rendered natively via GPUI instead of a webview), nothing firmly planned.
 
-Quellen: [Extension Capabilities](https://zed.dev/docs/extensions/capabilities) · [RFC: Visual Extension API](https://github.com/zed-industries/zed/discussions/53403) · [Discussion: UI via GPUI](https://github.com/zed-industries/zed/discussions/48015) · [Issue: Webview via Extensions](https://github.com/zed-industries/zed/issues/21208) · [Discussion: Custom read-only previews](https://github.com/zed-industries/zed/discussions/59598) · [Discussion: Custom rendering](https://github.com/zed-industries/zed/discussions/37270)
+Sources: [Extension Capabilities](https://zed.dev/docs/extensions/capabilities) · [RFC: Visual Extension API](https://github.com/zed-industries/zed/discussions/53403) · [Discussion: UI via GPUI](https://github.com/zed-industries/zed/discussions/48015) · [Issue: Webview via Extensions](https://github.com/zed-industries/zed/issues/21208) · [Discussion: Custom read-only previews](https://github.com/zed-industries/zed/discussions/59598) · [Discussion: Custom rendering](https://github.com/zed-industries/zed/discussions/37270)
 
-## Mehrere Language Server für dieselbe Sprache
+## Multiple language servers for the same language
 
-Relevant, weil tinymist Typst schon bedient und unser Server daneben laufen soll.
+Relevant because tinymist already serves Typst and our server is meant to run alongside it.
 
-| LSP-Funktion | Verhalten in Zed |
+| LSP feature | Behavior in Zed |
 |---|---|
-| Hover | fragt alle Server, zeigt Antworten kombiniert |
-| Definition, References | `request_multiple_lsp_locally()`: an alle Server, Ergebnisse zusammengeführt und dedupliziert → **„Find All References" als Multibuffer funktioniert** |
-| Diagnostics | von allen Servern |
-| Document Highlights | **nur der erste fähige Server** ([Issue #61865](https://github.com/zed-industries/zed/issues/61865)) — für uns irrelevant |
+| Hover | queries all servers, shows combined answers |
+| Definition, References | `request_multiple_lsp_locally()`: sent to all servers, results merged and deduplicated → **"Find All References" as a multibuffer works** |
+| Diagnostics | from all servers |
+| Document Highlights | **only the first capable server** ([Issue #61865](https://github.com/zed-industries/zed/issues/61865)) — irrelevant for us |
 
-Reihenfolge/Priorität über `languages.<Sprache>.language_servers` in den Settings.
+Order/priority via `languages.<language>.language_servers` in settings.
 
-**Nicht praktisch getestet**, nur aus Doku, Issue und Beschreibungen abgeleitet (siehe `13`).
+**Not practically tested**, derived only from docs, issues, and descriptions (see `13`).
 
-Quellen: [Configuring Languages](https://zed.dev/docs/configuring-languages) · [Discussion #24100](https://github.com/zed-industries/zed/discussions/24100) · [PR #23473](https://github.com/zed-industries/zed/pull/23473) · [Tracking Issue #10906](https://github.com/zed-industries/zed/issues/10906)
+Sources: [Configuring Languages](https://zed.dev/docs/configuring-languages) · [Discussion #24100](https://github.com/zed-industries/zed/discussions/24100) · [PR #23473](https://github.com/zed-industries/zed/pull/23473) · [Tracking Issue #10906](https://github.com/zed-industries/zed/issues/10906)
 
-## Zed-Tasks
+## Zed tasks
 
-- `.zed/tasks.json`, Variablen u. a. `ZED_FILE`, `ZED_ROW`, `ZED_COLUMN`, `ZED_SELECTED_TEXT`.
-- Optionen wie `reveal_target: center`, `hide: on_success`, `save: current`.
-- Im EHR-Seminar schon genutzt (fzf-basierter Zitat-Einfüger, siehe `10`).
-- Günstiger Weg, CLI-Befehle ohne Extension an den Editor zu hängen.
+- `.zed/tasks.json`, variables including `ZED_FILE`, `ZED_ROW`, `ZED_COLUMN`, `ZED_SELECTED_TEXT`.
+- Options such as `reveal_target: center`, `hide: on_success`, `save: current`.
+- Already used in the EHR seminar (an fzf-based citation inserter, see `10`).
+- A cheap way to hook CLI commands into the editor without an extension.
 
-## MCP vs. CLI (Diskussionsergebnis)
+## MCP vs. CLI (discussion outcome)
 
-| MCP-Server | CLI |
+| MCP server | CLI |
 |---|---|
-| Agent kennt Funktionen automatisch (Name, Beschreibung, Parameter) | muss erklärt werden (Regeldatei, `--help`) |
-| feinere Rechte ohne Shell-Freigabe | für Menschen direkt nutzbar, Skripte, Git-Hooks, Zed-Tasks |
-| strukturierte Ein-/Ausgabe | JSON-Ausgabe möglich |
-| laufender Prozess hält Modelle im Speicher | kostet keinen Kontext, bis es genutzt wird |
+| agent knows functions automatically (name, description, parameters) | must be explained (rules file, `--help`) |
+| finer-grained permissions without shell access | directly usable by humans, scripts, git hooks, Zed tasks |
+| structured input/output | JSON output possible |
+| running process keeps models in memory | costs no context until used |
 
-Entscheidung: **CLI zuerst**, MCP später als dünne Hülle, falls vermisst.
+Decision: **CLI first**, MCP later as a thin wrapper if it turns out to be missed.
 
 ## Typst
 
-- Installiert: `typst 0.15.0` (über cargo).
-- Crate **`typst-syntax` 0.15.1** (offizieller Parser, Apache-2.0) passt zur Version.
-- **tinymist** (Apache-2.0, aktiv) ist der gängige Language Server; vervollständigt Zitat-Keys schon.
-- Alternative `tree-sitter-typst` (MIT, Community, letzter Push 2025-04-02) → nicht robust genug als Grundlage.
+- Installed: `typst 0.15.0` (via cargo).
+- Crate **`typst-syntax` 0.15.1** (official parser, Apache-2.0) matches the version.
+- **tinymist** (Apache-2.0, active) is the standard language server; already completes citation keys.
+- Alternative `tree-sitter-typst` (MIT, community, last push 2025-04-02) → not robust enough as a foundation.
 
-Zitatformen, die im EHR-Seminar vorkommen:
+Citation forms occurring in the EHR seminar:
 
-| Form | Beispiel |
+| Form | Example |
 |---|---|
-| nackt | `@jonnagaddala2025` (227 Vorkommen) |
-| Funktion | `#cite(<jonnagaddala2025>, form: "prose")` |
-| Zitat mit Label-Attribution | `#quote(attribution: <dwork2006>)[…]` |
-| Blockzitat mit Content-Attribution | `#quote(block: true, attribution: [@yoon2023])[…]` |
+| bare | `@jonnagaddala2025` (227 occurrences) |
+| function | `#cite(<jonnagaddala2025>, form: "prose")` |
+| quote with label attribution | `#quote(attribution: <dwork2006>)[…]` |
+| block quote with content attribution | `#quote(block: true, attribution: [@yoon2023])[…]` |
 
-Weitere Eigenheiten:
-- Literaturverzeichnis per `#bibliography("/ehr_privacy.bib", style: …)`; in Kapiteln über eine Template-Funktion `#chapter-bib()`, die nur bei Einzelkompilierung (auch im Language Server) ein Verzeichnis erzeugt.
-- `#include` hat eigenen Scope → Imports pro Kapiteldatei.
-- Folien mit Touying 0.7.3, zitiert aus derselben `.bib`.
-- Ein Regex-basiertes Prüfskript meldet schon Fälle, die es nicht parsen kann (`PARSER:`-Zeilen) → echter Parser nötig.
+Further quirks:
+- Bibliography via `#bibliography("/ehr_privacy.bib", style: …)`; in chapters via a template function `#chapter-bib()` that produces a list only on standalone compilation (also within the language server).
+- `#include` has its own scope → imports per chapter file.
+- Slides with Touying 0.7.3, citing from the same `.bib`.
+- A regex-based check script already reports cases it can't parse (`PARSER:` lines) → a real parser is needed.
 
-Quellen: [typst-syntax](https://crates.io/crates/typst-syntax) · [tinymist](https://github.com/Myriad-Dreamin/tinymist) · [tree-sitter-typst](https://github.com/uben0/tree-sitter-typst)
+Sources: [typst-syntax](https://crates.io/crates/typst-syntax) · [tinymist](https://github.com/Myriad-Dreamin/tinymist) · [tree-sitter-typst](https://github.com/uben0/tree-sitter-typst)

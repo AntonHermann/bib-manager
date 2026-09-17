@@ -1,55 +1,55 @@
-# Zitatprüfung: Wie groß ist das Problem, was gibt es?
+# Quote verification: how big is the problem, what exists?
 
-Recherche 2026-09-14.
+Research 2026-09-14.
 
-## Häufigkeit von Zitierfehlern (Medizin)
+## Frequency of citation errors (medicine)
 
-**Jergas & Baethge 2015** (PeerJ), systematischer Review und Meta-Analyse über 28 Studien:
+**Jergas & Baethge 2015** (PeerJ), systematic review and meta-analysis across 28 studies:
 
-| Fehlerart | Rate | 95-%-KI |
+| Error type | Rate | 95% CI |
 |---|---|---|
-| grob (major) | 11,9 % | 8,4–16,6 |
-| gering (minor) | 11,5 % | 8,3–15,7 |
-| **gesamt** | **25,4 %** | 19,5–32,4 |
+| major | 11.9% | 8.4–16.6 |
+| minor | 11.5% | 8.3–15.7 |
+| **total** | **25.4%** | 19.5–32.4 |
 
-- Große Heterogenität, aber selbst die niedrigste Gesamtschätzung lag bei 6,7 %.
-- Indirekte Zitate (Zitat aus zweiter Hand) machen weniger als ein Sechstel der Probleme aus.
+- High heterogeneity, but even the lowest overall estimate was 6.7%.
+- Indirect citations (quoting at second hand) account for less than a sixth of the problems.
 
-**Update 2025** (Research Integrity and Peer Review):
+**2025 update** (Research Integrity and Peer Review):
 
-- 16,9 % der Zitate fehlerhaft (KI 14,1–20,0 %), davon etwa die Hälfte grob: 8,0 % (KI 6,4–10,0 %).
-- Meta-Regression: **keine Verbesserung über die Jahre.**
+- 16.9% of citations were erroneous (CI 14.1–20.0%), about half of them major: 8.0% (CI 6.4–10.0%).
+- Meta-regression: **no improvement over the years.**
 
-Das ist das stärkste Argument für eine eingebaute Zitat-Prüfung.
+This is the strongest argument for built-in quote verification.
 
-Quellen: [Jergas & Baethge 2015 (PeerJ)](https://peerj.com/articles/1364/) · [PMC-Fassung](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4627914/) · [Update 2025 (Springer)](https://link.springer.com/article/10.1186/s41073-025-00173-z) · [PMC-Fassung Update](https://pmc.ncbi.nlm.nih.gov/articles/PMC12285159/) · [Methodik-Kritik und Neuberechnung (PubMed)](https://pubmed.ncbi.nlm.nih.gov/28910404/)
+Sources: [Jergas & Baethge 2015 (PeerJ)](https://peerj.com/articles/1364/) · [PMC version](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4627914/) · [2025 update (Springer)](https://link.springer.com/article/10.1186/s41073-025-00173-z) · [PMC version of the update](https://pmc.ncbi.nlm.nih.gov/articles/PMC12285159/) · [Methodology critique and recalculation (PubMed)](https://pubmed.ncbi.nlm.nih.gov/28910404/)
 
-## Prüfsysteme
+## Verification systems
 
-Zwei verschiedene Fragen werden oft vermischt:
+Two different questions are often conflated:
 
-1. **Existiert die Quelle, und stimmen die Angaben?** (Problem v. a. bei LLM-generierten Texten)
-2. **Stützt die Quelle die Aussage?** (das, was uns interessiert)
+1. **Does the source exist, and are the details correct?** (mainly a problem with LLM-generated text)
+2. **Does the source support the claim?** (what we care about)
 
-| System | Frage | Ansatz | Ergebnis |
+| System | Question | Approach | Result |
 |---|---|---|---|
-| **SemanticCite** (Haan 2025) | 2 | Volltextprüfung, vier Klassen: *supported / partially supported / unsupported / uncertain*; kleine feinjustierte Modelle | 84 % gewichtete Genauigkeit |
-| **CiteGuard** (Choi et al. 2026) | 2 (Zuordnung) | Retrieval-gestützte Validierung der Zitationszuordnung | 68 % auf CiteME, Menschen 70 % |
-| **CiteCheck** | 1 | drei Schweregrade: exakt / kleinere Metadatenfehler / erfunden; Suche + LLM-Bewertung + automatische Korrektur | – |
-| **CiteAudit** (Yuan et al. 2026) | 1 | Multi-Agent-Verifikation, Benchmark | – |
-| Abbonato (2026) | 1 | Abgleich gegen bibliografische Metadaten | – |
+| **SemanticCite** (Haan 2025) | 2 | Full-text verification, four classes: *supported / partially supported / unsupported / uncertain*; small fine-tuned models | 84% weighted accuracy |
+| **CiteGuard** (Choi et al. 2026) | 2 (attribution) | Retrieval-assisted validation of citation attribution | 68% on CiteME, humans 70% |
+| **CiteCheck** | 1 | three severity levels: exact / minor metadata errors / fabricated; search + LLM scoring + automatic correction | – |
+| **CiteAudit** (Yuan et al. 2026) | 1 | multi-agent verification, benchmark | – |
+| Abbonato (2026) | 1 | matching against bibliographic metadata | – |
 
-- LLMs erzeugen je nach Studie bis zu 78–90 % erfundene Zitate.
-- Die vier Klassen von SemanticCite passen gut zu „Score + Status-Übersicht" aus `IDEA.md`.
-- Kleine Modelle reichen für die Einordnung → lokal realistisch (siehe `09`).
+- Depending on the study, LLMs produce up to 78–90% fabricated citations.
+- SemanticCite's four classes fit well with the "score + status overview" idea from `IDEA.md`.
+- Small models suffice for classification → locally feasible (see `09`).
 
-Quellen: [CiteCheck](https://arxiv.org/html/2605.27700v1) · [CiteAudit](https://arxiv.org/html/2602.23452v3) · [CiteGuard](https://arxiv.org/html/2510.17853v4) · [Cited but Not Verified](https://arxiv.org/html/2605.06635v1) · [Reference Hallucinations in Deep Research Agents](https://arxiv.org/pdf/2604.03173) · [INRA.AI Blog](https://www.inra.ai/blog/citation-accuracy)
+Sources: [CiteCheck](https://arxiv.org/html/2605.27700v1) · [CiteAudit](https://arxiv.org/html/2602.23452v3) · [CiteGuard](https://arxiv.org/html/2510.17853v4) · [Cited but Not Verified](https://arxiv.org/html/2605.06635v1) · [Reference Hallucinations in Deep Research Agents](https://arxiv.org/pdf/2604.03173) · [INRA.AI Blog](https://www.inra.ai/blog/citation-accuracy)
 
-## Folgerungen für das Design
+## Design implications
 
-- Stufe 0 (erste Version, ohne LLM): **Wortlaut-Prüfung** wörtlicher Zitate gegen die Textschicht. Deterministisch.
-- Stufe 1: passende Stelle in der Quelle finden (Suche/Embeddings), grob einordnen, lokal.
-- Stufe 2: gründlicher Bericht per LLM, lokal im Hintergrund oder per Cloud.
-- Jedes LLM-Urteil zeigt die Belegstelle und wird nie automatisch „wahr" (siehe `11`).
-- Seitenangaben im Zitat (`supplement`) grenzen die Suche stark ein.
-- Empirische Aussagen sind verlässlicher prüfbar als sinngemäße Wiedergaben von Argumenten.
+- Stage 0 (first version, no LLM): **wording verification** of literal quotations against the text layer. Deterministic.
+- Stage 1: find the matching spot in the source (search/embeddings), classify roughly, locally.
+- Stage 2: thorough report via LLM, locally in the background or via the cloud.
+- Every LLM judgment shows the excerpt and is never automatically treated as "true" (see `11`).
+- Page numbers in the citation (`supplement`) narrow the search significantly.
+- Empirical statements are more reliably verifiable than paraphrased arguments.

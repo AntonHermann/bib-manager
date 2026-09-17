@@ -1,11 +1,11 @@
-//! Parser für mutools strukturiertes Textformat (`mutool draw -F stext`).
-//! Koordinaten sind dort bereits oben links verankert.
+//! Parser for mutool's structured text format (`mutool draw -F stext`).
+//! Coordinates there are already anchored top-left.
 //!
-//! Koordinatenannahme: `mutool stext` liefert Koordinaten im Device Space der Seite, also
-//! relativ zur CropBox und entlang der Seiten-Rotation ausgerichtet. Geprüft ist im
-//! Benchmark-Korpus nur der Fall MediaBox-Ursprung (0,0) ohne eigene CropBox und ohne
-//! `/Rotate`; eine abweichende CropBox oder eine versetzte MediaBox würde hier unbemerkt zu
-//! falschen Koordinaten führen (siehe Spec §18).
+//! Coordinate assumption: `mutool stext` returns coordinates in the page's device space, i.e.
+//! relative to the CropBox and aligned along the page rotation. The benchmark corpus only
+//! exercises the case of a MediaBox origin at (0,0) without its own CropBox and without
+//! `/Rotate`; a differing CropBox or an offset MediaBox would silently lead to wrong
+//! coordinates here (see Spec §18).
 
 use crate::{Page, PageContent, PageSize, Rect, Span};
 
@@ -57,9 +57,9 @@ pub fn parse_stext(xml: &str) -> Vec<Page> {
     pages
 }
 
-/// Inhalte aller Tags ohne spitze Klammern. `<` ist in XML-Attributen immer maskiert,
-/// `>` nicht zwingend (etwa `c=">"`); deshalb wird am letzten `>` vor dem nächsten `<` getrennt.
-/// Zwischen den Tags steht in mutools Ausgabe nur Leerraum.
+/// Contents of all tags without angle brackets. `<` is always escaped in XML attributes,
+/// `>` is not necessarily (e.g. `c=">"`); so we split at the last `>` before the next `<`.
+/// Between the tags, mutool's output only has whitespace.
 fn tags(xml: &str) -> impl Iterator<Item = &str> {
     xml.split('<').skip(1).filter_map(|chunk| chunk.rsplit_once('>').map(|(tag, _)| tag.trim_end_matches('/').trim_end()))
 }
@@ -138,7 +138,7 @@ mod tests {
         let pages = parse_stext(SAMPLE);
         assert_eq!(pages.len(), 2);
         assert_eq!(pages[0].size, Some(PageSize { width: 612.0, height: 792.0, rotation: None }));
-        let PageContent::Spans(spans) = &pages[0].content else { panic!("keine Spans") };
+        let PageContent::Spans(spans) = &pages[0].content else { panic!("no spans") };
         assert_eq!(spans.len(), 2);
         assert_eq!(spans[0].text, "D&>");
         assert_eq!(spans[0].font, "CMBX12");

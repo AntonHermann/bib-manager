@@ -1,4 +1,4 @@
-//! Korpus-Beschreibung (`bench/corpus.toml`) und Prüfsummen (`bench/corpus.lock`).
+//! Corpus description (`bench/corpus.toml`) and checksums (`bench/corpus.lock`).
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -20,16 +20,16 @@ pub struct Doc {
     pub expect: Expect,
 }
 
-/// Handkuratierte Aussagen über den Text eines Dokuments.
+/// Hand-curated assertions about a document's text.
 #[derive(Debug, Default, Deserialize)]
 pub struct Expect {
-    /// Sätze, die zusammenhängend im normalisierten Text stehen müssen.
+    /// Sentences that must appear contiguously in the normalized text.
     #[serde(default)]
     pub sentences: Vec<String>,
-    /// Satzpaare: der erste muss vor dem zweiten stehen (Leserichtung).
+    /// Sentence pairs: the first must come before the second (reading order).
     #[serde(default)]
     pub before: Vec<(String, String)>,
-    /// Zeichen, die mindestens einmal vorkommen müssen (z. B. "ε").
+    /// Characters that must occur at least once (e.g. "ε").
     #[serde(default)]
     pub chars: Vec<String>,
 }
@@ -79,8 +79,8 @@ mod tests {
             url = "https://example.org/a.pdf"
             category = "test"
             [doc.expect]
-            sentences = ["Eins zwei drei."]
-            before = [["Eins", "drei"]]
+            sentences = ["One two three."]
+            before = [["One", "three"]]
             chars = ["ε"]
 
             [[doc]]
@@ -91,8 +91,8 @@ mod tests {
         )
         .unwrap();
         assert_eq!(corpus.docs.len(), 2);
-        assert_eq!(corpus.docs[0].expect.sentences, vec!["Eins zwei drei."]);
-        assert_eq!(corpus.docs[0].expect.before, vec![("Eins".to_string(), "drei".to_string())]);
+        assert_eq!(corpus.docs[0].expect.sentences, vec!["One two three."]);
+        assert_eq!(corpus.docs[0].expect.before, vec![("One".to_string(), "three".to_string())]);
         assert_eq!(corpus.docs[0].expect.chars, vec!["ε"]);
         assert!(corpus.docs[1].expect.sentences.is_empty());
     }

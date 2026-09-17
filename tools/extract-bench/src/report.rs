@@ -1,4 +1,4 @@
-//! Markdown-Bericht: eine Zeile je Dokument und Backend, darunter eine Summe je Backend.
+//! Markdown report: one row per document and backend, followed by a total per backend.
 
 use crate::metrics::TextScores;
 
@@ -16,7 +16,7 @@ pub struct Row {
 pub fn render_markdown(rows: &[Row]) -> String {
     let mut md = String::new();
     md.push_str("## Details\n\n");
-    md.push_str("| Dokument | Backend | Sätze | Reihenfolge | fehlende Zeichen | Steuerzeichen | (cid:) | U+FFFD | Seiten mit Geometrie | ms |\n");
+    md.push_str("| Document | Backend | Sentences | Order | Missing chars | Control chars | (cid:) | U+FFFD | Pages with geometry | ms |\n");
     md.push_str("|---|---|---|---|---|---|---|---|---|---|\n");
     for row in rows {
         match (&row.scores, &row.error) {
@@ -37,16 +37,16 @@ pub fn render_markdown(rows: &[Row]) -> String {
                 row.millis,
             )),
             (None, error) => md.push_str(&format!(
-                "| {} | {} | Fehler: {} |\n",
+                "| {} | {} | error: {} |\n",
                 row.doc,
                 row.backend,
-                error.as_deref().unwrap_or("unbekannt")
+                error.as_deref().unwrap_or("unknown")
             )),
         }
     }
 
-    md.push_str("\n## Summe je Backend\n\n");
-    md.push_str("| Backend | Sätze | Reihenfolge | Dokumente mit fehlenden Zeichen | Steuerzeichen | (cid:) | U+FFFD | Fehler |\n");
+    md.push_str("\n## Totals per backend\n\n");
+    md.push_str("| Backend | Sentences | Order | Docs with missing chars | Control chars | (cid:) | U+FFFD | Errors |\n");
     md.push_str("|---|---|---|---|---|---|---|---|\n");
     let mut backends: Vec<&str> = Vec::new();
     for row in rows {
@@ -101,10 +101,10 @@ mod tests {
         let md = render_markdown(&[
             row("a", "pdf_oxide", Some(scores(2, 3, 1)), None),
             row("b", "pdf_oxide", Some(scores(3, 3, 0)), None),
-            row("a", "mutool", None, Some("nicht installiert")),
+            row("a", "mutool", None, Some("not installed")),
         ]);
         assert!(md.contains("| a | pdf_oxide | 2/3 | 1/1 | ε | 2 | 0 | 0 | 6/6 | 120 |"), "{md}");
-        assert!(md.contains("| a | mutool | Fehler: nicht installiert |"), "{md}");
+        assert!(md.contains("| a | mutool | error: not installed |"), "{md}");
         assert!(md.contains("| pdf_oxide | 5/6 | 1/2 | 2 | 4 | 0 | 0 | 0 |"), "{md}");
     }
 }

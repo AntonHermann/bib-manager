@@ -1,7 +1,7 @@
-//! Backend auf Basis von `pdf_oxide` (MIT/Apache-2.0, reines Rust).
+//! Backend based on `pdf_oxide` (MIT/Apache-2.0, pure Rust).
 //!
-//! `pdf_oxide` liefert Boxen in PDF-Koordinaten (Ursprung unten links, `y` ist die
-//! Unterkante). Umrechnung: top = ury - (y + height), bottom = ury - y.
+//! `pdf_oxide` returns boxes in PDF coordinates (origin bottom-left, `y` is the
+//! bottom edge). Conversion: top = ury - (y + height), bottom = ury - y.
 
 use std::path::Path;
 
@@ -36,9 +36,9 @@ fn extract_page(doc: &pdf_oxide::PdfDocument, index: usize) -> Result<Page, Extr
     let raw_spans = doc.extract_spans(index).map_err(page_error)?;
     let raw_spans: Vec<_> = raw_spans.into_iter().filter(|s| !s.text.trim().is_empty()).collect();
 
-    // pdf_oxide löst geerbte Attribute selbst auf (get_page_media_box sieht auch eine von einem
-    // Vorfahrenknoten geerbte MediaBox); dieser Zweig greift nur, wenn die MediaBox ganz fehlt
-    // oder fehlerhaft ist. Dann nur Text, ehrlich ohne Geometrie.
+    // pdf_oxide resolves inherited attributes itself (get_page_media_box also sees a MediaBox
+    // inherited from an ancestor node); this branch only triggers when the MediaBox is entirely
+    // missing or invalid. In that case, text only, honestly without geometry.
     let Ok((llx, lly, urx, ury)) = doc.get_page_media_box(index) else {
         let spans: Vec<Span> = raw_spans
             .into_iter()

@@ -1,40 +1,40 @@
-# Verantwortungsvolle KI-Nutzung als Designprinzip
+# Responsible AI use as a design principle
 
-Ergebnis aus dem Brainstorming (2026-09-14), vom Nutzer als Aufteilung bestätigt.
-Ausgangspunkt waren die KI-Regeln des EHR-Seminars (FU Berlin, „Guidelines on AI usage,
-presentation & report"), die Prinzipien gelten aber allgemein.
+Result of the brainstorming (2026-09-14), confirmed by the user as the breakdown below.
+Starting point was the EHR seminar's AI rules (FU Berlin, "Guidelines on AI usage,
+presentation & report"), but the principles apply generally.
 
-## A. Das Tool schreibt keinen Text für den Nutzer
+## A. The tool never writes text for the user
 
-1. **Grundregel im Datenmodell:** LLM-Funktionen recherchieren, ordnen und prüfen nur. In Dokumente gelangt ausschließlich Wortlaut aus Quellen, nie Modell-Wortlaut. Technisch erzwungen: Es gibt keinen Pfad von LLM-Ausgabe in eine `.typ`-Datei.
-2. **Ähnlichkeitswarnung:** Der Language Server vergleicht eigene Sätze mit protokollierten LLM-Ausgaben und warnt („ähnelt Modell-Ausgabe vom …: kennzeichnen oder umformulieren"). Setzt Kennzeichnungspflichten direkt im Editor um.
+1. **Basic rule in the data model:** LLM features only research, organize, and verify. Only wording taken from sources ever ends up in documents, never model-generated wording. Technically enforced: there is no path from LLM output into a `.typ` file.
+2. **Similarity warning:** the language server compares the user's own sentences with logged LLM outputs and warns ("resembles model output from …: mark it or rephrase"). Enforces the labeling requirement directly in the editor.
 
-## B. Nachvollziehbarkeit statt Vertrauen
+## B. Traceability instead of trust
 
-3. **Herkunft an jedem Datenobjekt:** *vom Nutzer*, *deterministisch geprüft*, *importiert, Herkunft unbekannt*, *LLM-Einschätzung* (Modell, Version, Datum), *vom Nutzer bestätigt*. LLM-Urteile werden nie automatisch „wahr", zeigen immer die Belegstelle und warten auf Bestätigung.
-4. **Keine erfundenen Quellen:** Vorschläge nur aus der eigenen Bibliothek, immer mit verankerter Textstelle.
-5. **Reproduzierbarkeit:** Prompt, Modell, Parameter und Hash der Eingabe werden zu jeder LLM-Einschätzung gespeichert.
+3. **Provenance on every data object:** *from the user*, *deterministically verified*, *imported, provenance unknown*, *LLM assessment* (model, version, date), *confirmed by the user*. LLM judgments are never automatically treated as "true," always show the excerpt, and wait for confirmation.
+4. **No fabricated sources:** suggestions only from one's own library, always with an anchored passage.
+5. **Reproducibility:** prompt, model, parameters, and a hash of the input are stored with every LLM assessment.
 
-## C. Dokumentationspflicht automatisieren
+## C. Automating the documentation requirement
 
-6. **Vollständiges Nutzungsprotokoll** jedes LLM-Aufrufs: Tool, Version, Datum, URL, Prompt, Ergebnis, Art der Nutzung (Recherche, Prüfung, Struktur …).
-7. **Anhang-Generator:** Typst-Tabelle deterministisch aus dem Protokoll, nicht von einem LLM formuliert → „geschönte" Angaben strukturell ausgeschlossen.
-8. **Claude-Code-Sessions erfassen (Idee):** erkennen, welche Sessions in `~/.claude/projects/` ein Projekt berührt haben, und zählen.
+6. **Complete usage log** of every LLM call: tool, version, date, URL, prompt, result, type of use (research, verification, structuring, …).
+7. **Appendix generator:** a Typst table built deterministically from the log, not phrased by an LLM → "polished" entries structurally excluded.
+8. **Capture Claude Code sessions (idea):** detect which sessions under `~/.claude/projects/` touched a project, and count them.
 
-## D. Regeln pro Projekt
+## D. Rules per project
 
-9. **Richtlinie pro Projekt:** erlaubte LLM-Funktionen, Cloud ja/nein, Protokollpflicht; vom Tool durchgesetzt.
-10. **Datenabfluss sichtbar:** Bei Cloud-Aufrufen festhalten, welcher eigene Text das Gerät verlassen hat.
+9. **Per-project policy:** allowed LLM features, cloud yes/no, logging requirement; enforced by the tool.
+10. **Visible data flow:** for cloud calls, record which of the user's own text left the device.
 
-## E. Lesen nicht wegautomatisieren
+## E. Don't automate reading away
 
-11. **„Zitiert, aber nie gelesen"-Hinweis;** Skimming-Hilfen (Scim-Stil) als Lesehilfe, nicht als Ersatz.
+11. **"Cited but never read" indicator;** skimming aids (Scim-style) as a reading aid, not a replacement.
 
-## Umfang in der ersten Version
+## Scope in the first version
 
-Die erste Version enthält kein LLM. Trotzdem von Anfang an:
+The first version contains no LLM. Nonetheless, from the start:
 
-- **Herkunftsfelder im Datenmodell (3).**
-- **Tabelle für das Nutzungsprotokoll (6)**, zunächst leer; jede spätere LLM-Funktion muss sie nutzen.
+- **Provenance fields in the data model (3).**
+- **Table for the usage log (6),** initially empty; every later LLM feature must use it.
 
-Alles andere als verbindliche Designprinzipien in der Spec, umgesetzt mit den LLM-Features.
+Everything else stays a binding design principle in the spec, implemented alongside the LLM features.

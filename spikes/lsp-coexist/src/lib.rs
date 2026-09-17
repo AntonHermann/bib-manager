@@ -1,5 +1,5 @@
-//! Wegwerf-Code für Schritt 0b: findet `@key`-Referenzen in Typst-Text.
-//! Spalten in UTF-16-Codeeinheiten, wie LSP sie verlangt.
+//! Throwaway code for step 0b: finds `@key` references in Typst text.
+//! Columns in UTF-16 code units, as LSP requires.
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyHit {
@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn finds_keys_and_strips_trailing_punctuation() {
-        let hits = find_keys("Laut @dwork2006.\nUnd @a:b-c_d, fertig.");
+        let hits = find_keys("Read @dwork2006.\nAnd @a:b-c_d, done.");
         assert_eq!(
             hits,
             vec![
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn ignores_emails_and_escaped_at() {
-        assert!(find_keys("mail an a@b.de und \\@nicht").is_empty());
+        assert!(find_keys("mail to a@b.de and \\@not").is_empty());
     }
 
     #[test]
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn key_at_hits_inside_and_at_edges() {
-        let text = "siehe @dwork2006 hier";
+        let text = "check @dwork2006 here";
         assert_eq!(key_at(text, 0, 6).unwrap().key, "dwork2006");
         assert_eq!(key_at(text, 0, 16).unwrap().key, "dwork2006");
         assert!(key_at(text, 0, 2).is_none());

@@ -1,7 +1,7 @@
-"""Vergleicht die Ausgaben der Extraktoren: Wortanzahl und Übereinstimmung zufälliger 8-Wort-Fenster.
+"""Compares the extractors' outputs: word count and agreement of random 8-word windows.
 
-Aufruf: python3 compare.py <out-verzeichnis>
-Erwartet Dateien <doc>_<tool>.txt für doc in {dwork2006, abadi2016}.
+Usage: python3 compare.py <out-directory>
+Expects files <doc>_<tool>.txt for doc in {dwork2006, abadi2016}.
 """
 import random
 import re

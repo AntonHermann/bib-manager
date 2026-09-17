@@ -10,30 +10,30 @@ fn extracts_every_page_with_geometry() {
     assert_eq!(extraction.backend, "pdf_oxide");
     assert!(!extraction.pages.is_empty());
     for page in &extraction.pages {
-        assert!(page.has_geometry(), "Seite {} ohne Geometrie", page.index);
+        assert!(page.has_geometry(), "page {} without geometry", page.index);
     }
 }
 
 #[test]
 fn first_page_size_is_plausible() {
     let extraction = PdfOxide.extract(&common::fixture("dwork2006")).unwrap();
-    let size = extraction.pages[0].size.expect("Seitengröße");
-    assert!((500.0..700.0).contains(&size.width), "Breite {}", size.width);
-    assert!((700.0..900.0).contains(&size.height), "Höhe {}", size.height);
+    let size = extraction.pages[0].size.expect("page size");
+    assert!((500.0..700.0).contains(&size.width), "width {}", size.width);
+    assert!((700.0..900.0).contains(&size.height), "height {}", size.height);
 }
 
 #[test]
 fn title_is_near_the_top_in_top_left_coordinates() {
     let extraction = PdfOxide.extract(&common::fixture("dwork2006")).unwrap();
     let page = &extraction.pages[0];
-    let PageContent::Spans(spans) = &page.content else { panic!("keine Spans") };
+    let PageContent::Spans(spans) = &page.content else { panic!("no spans") };
     let title_top = spans
         .iter()
         .filter(|s| s.text.contains("Differential"))
         .map(|s| s.bbox.top)
         .fold(f32::INFINITY, f32::min);
     let height = page.size.unwrap().height;
-    assert!(title_top < 0.25 * height, "Titel bei top={title_top}, Seitenhöhe {height}");
+    assert!(title_top < 0.25 * height, "title at top={title_top}, page height {height}");
 }
 
 #[test]

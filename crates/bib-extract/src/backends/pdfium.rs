@@ -1,11 +1,11 @@
-//! Backend auf Basis von pdfium (Chromes PDF-Engine) über `pdfium-render`.
-//! Braucht `libpdfium.so` zur Laufzeit; Pfad über `BIB_PDFIUM_LIB_DIR`.
+//! Backend based on pdfium (Chrome's PDF engine) via `pdfium-render`.
+//! Needs `libpdfium.so` at runtime; path via `BIB_PDFIUM_LIB_DIR`.
 //!
-//! Koordinatenannahme: pdfium liefert Seitengröße und Koordinaten bezogen auf die CropBox
-//! (nicht die MediaBox) und bereits rotationsbereinigt (Breite/Höhe bei 90°/270° vertauscht).
-//! Geprüft ist im Benchmark-Korpus nur der Fall MediaBox-Ursprung (0,0) ohne eigene CropBox und
-//! ohne `/Rotate`; eine abweichende CropBox oder eine versetzte MediaBox würde hier unbemerkt zu
-//! falschen Koordinaten führen (siehe Spec §18).
+//! Coordinate assumption: pdfium returns page size and coordinates relative to the CropBox
+//! (not the MediaBox) and already rotation-corrected (width/height swapped at 90°/270°).
+//! The benchmark corpus only exercises the case of a MediaBox origin at (0,0) without its own
+//! CropBox and without `/Rotate`; a differing CropBox or an offset MediaBox would silently lead
+//! to wrong coordinates here (see Spec §18).
 
 use std::path::{Path, PathBuf};
 
@@ -13,7 +13,7 @@ use pdfium_render::prelude::{PdfPageRenderRotation, Pdfium as PdfiumLib, PdfiumE
 
 use crate::{Backend, ExtractError, Extraction, Page, PageContent, PageSize, Rect, Span, guard};
 
-/// Muss zur exakten Version in `Cargo.toml` (`=0.9.4`) passen.
+/// Must match the exact version in `Cargo.toml` (`=0.9.4`).
 const PDFIUM_RENDER_VERSION: &str = "0.9.4";
 
 pub struct Pdfium {
@@ -25,10 +25,10 @@ impl Pdfium {
         std::env::var_os("BIB_PDFIUM_LIB_DIR").map(|dir| Self { lib_dir: PathBuf::from(dir) })
     }
 
-    /// Bindet die native `libpdfium`. `pdfium-render` hält die Bindings prozessweit in einer
-    /// globalen `OnceCell`; ein zweiter Bindungsversuch (z. B. paralleler Testlauf in
-    /// diesem Prozess) schlägt fehl, obwohl die Bibliothek bereits geladen ist. In diesem
-    /// Fall greifen wir wie `Pdfium::default()` auf die bereits gebundene Instanz zurück.
+    /// Binds the native `libpdfium`. `pdfium-render` keeps the bindings process-wide in a
+    /// global `OnceCell`; a second binding attempt (e.g. a parallel test run in this
+    /// process) fails even though the library is already loaded. In that case we fall
+    /// back to the already-bound instance, same as `Pdfium::default()`.
     fn bind(&self) -> Result<PdfiumLib, ExtractError> {
         let lib = PdfiumLib::pdfium_platform_library_name_at_path(&self.lib_dir);
         match PdfiumLib::bind_to_library(lib) {
@@ -47,7 +47,7 @@ impl Backend for Pdfium {
     fn version(&self) -> String {
         match read_libpdfium_build(&self.lib_dir) {
             Some(build) => format!("pdfium-render {PDFIUM_RENDER_VERSION}, libpdfium {build}"),
-            None => format!("pdfium-render {PDFIUM_RENDER_VERSION}, libpdfium aus {}", self.lib_dir.display()),
+            None => format!("pdfium-render {PDFIUM_RENDER_VERSION}, libpdfium from {}", self.lib_dir.display()),
         }
     }
 
@@ -95,10 +95,10 @@ impl Backend for Pdfium {
     }
 }
 
-/// `pdfium-render` 0.9.4 hat keine API, um die tatsächlich geladene `libpdfium`-Version zur
-/// Laufzeit abzufragen (`PdfiumApiVersion` spiegelt nur das zur Kompilierzeit gewählte
-/// `pdfium_*`-Feature wider, nicht das reale Binary). Stattdessen lesen wir die `VERSION`-Datei,
-/// die die `pdfium-binaries`-Releases neben `lib/` mitliefern (`MAJOR`/`MINOR`/`BUILD`/`PATCH`).
+/// `pdfium-render` 0.9.4 has no API to query the actually loaded `libpdfium` version at
+/// runtime (`PdfiumApiVersion` only reflects the `pdfium_*` feature chosen at compile time,
+/// not the real binary). Instead we read the `VERSION` file that `pdfium-binaries` releases
+/// ship alongside `lib/` (`MAJOR`/`MINOR`/`BUILD`/`PATCH`).
 fn read_libpdfium_build(lib_dir: &Path) -> Option<String> {
     let content = std::fs::read_to_string(lib_dir.parent()?.join("VERSION")).ok()?;
     let field = |key: &str| content.lines().find_map(|line| line.split_once('=').filter(|(k, _)| k.trim() == key).map(|(_, v)| v.trim()));

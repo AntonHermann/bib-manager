@@ -1,4 +1,4 @@
-//! Extraktions-Benchmark (Spec §15, Schritt 0a).
+//! Extraction benchmark (Spec §15, step 0a).
 
 mod corpus;
 mod metrics;
@@ -17,7 +17,7 @@ use clap::{Parser, Subcommand};
 use corpus::{LockStatus, bench_dir, cache_path, check_lock, parse_corpus, sha256_hex};
 
 #[derive(Parser)]
-#[command(about = "Misst PDF-Backends an einem kuratierten Korpus")]
+#[command(about = "Measures PDF backends against a curated corpus")]
 struct Cli {
     #[command(subcommand)]
     command: Cmd,
@@ -25,14 +25,14 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// Lädt alle Korpus-Dokumente nach bench/cache/ und prüft ihre SHA-256-Summen.
+    /// Downloads all corpus documents to bench/cache/ and checks their SHA-256 sums.
     Fetch,
-    /// Extrahiert alle Korpus-Dokumente mit allen verfügbaren Backends und schreibt einen Bericht.
+    /// Extracts all corpus documents with all available backends and writes a report.
     Run {
-        /// Zieldatei des Markdown-Berichts, z. B. bench/results/2026-09-18.md
+        /// Target file for the Markdown report, e.g. bench/results/2026-09-18.md
         #[arg(long)]
         out: PathBuf,
-        /// Kommagetrennte Auswahl: pdf_oxide,pdf-extract,mutool,pdfium
+        /// Comma-separated selection: pdf_oxide,pdf-extract,mutool,pdfium
         #[arg(long, value_delimiter = ',')]
         backends: Option<Vec<String>>,
     },
@@ -62,17 +62,17 @@ fn fetch() -> anyhow::Result<()> {
     for doc in &corpus.docs {
         let path = cache_path(&doc.id);
         if !path.exists() {
-            println!("lade {} …", doc.id);
+            println!("downloading {} …", doc.id);
             let temp_path = path.with_extension("pdf.part");
             let status = Command::new("curl")
                 .args(["-sSfL", "--retry", "3", "-o"])
                 .arg(&temp_path)
                 .arg(&doc.url)
                 .status()
-                .context("curl nicht ausführbar")?;
+                .context("curl not executable")?;
             if !status.success() {
                 let _ = std::fs::remove_file(&temp_path);
-                bail!("Download von {} fehlgeschlagen ({})", doc.id, doc.url);
+                bail!("download of {} failed ({})", doc.id, doc.url);
             }
             std::fs::rename(&temp_path, &path)?;
         }
@@ -80,12 +80,12 @@ fn fetch() -> anyhow::Result<()> {
         match check_lock(&lock, &doc.id, &sha) {
             LockStatus::Match => println!("ok    {}", doc.id),
             LockStatus::New => {
-                println!("neu   {} {sha}", doc.id);
+                println!("new   {} {sha}", doc.id);
                 lock.insert(doc.id.clone(), sha);
             }
             LockStatus::Mismatch { expected } => bail!(
-                "Prüfsumme von {} weicht ab: erwartet {expected}, gefunden {sha}. \
-                 Datei löschen und neu laden, oder corpus.lock bewusst anpassen.",
+                "checksum of {} differs: expected {expected}, found {sha}. \
+                 Delete the file and re-download, or deliberately adjust corpus.lock.",
                 doc.id
             ),
         }
@@ -100,12 +100,12 @@ fn available_backends(selection: Option<Vec<String>>) -> anyhow::Result<Vec<Box<
     if mutool.is_available() {
         all.push(Box::new(mutool));
     } else {
-        eprintln!("mutool nicht installiert, übersprungen");
+        eprintln!("mutool not installed, skipped");
     }
     #[cfg(feature = "pdfium")]
     match bib_extract::backends::pdfium::Pdfium::from_env() {
         Some(pdfium) => all.push(Box::new(pdfium)),
-        None => eprintln!("BIB_PDFIUM_LIB_DIR nicht gesetzt, pdfium übersprungen"),
+        None => eprintln!("BIB_PDFIUM_LIB_DIR not set, pdfium skipped"),
     }
     match selection {
         Some(names) => {
@@ -113,7 +113,7 @@ fn available_backends(selection: Option<Vec<String>>) -> anyhow::Result<Vec<Box<
                 names.iter().filter(|n| !all.iter().any(|b| n.as_str() == b.name())).map(String::as_str).collect();
             if !unknown.is_empty() {
                 bail!(
-                    "unbekannte oder nicht verfügbare Backends: {} (verfügbar: {})",
+                    "unknown or unavailable backends: {} (available: {})",
                     unknown.join(", "),
                     all.iter().map(|b| b.name()).collect::<Vec<_>>().join(", ")
                 );
@@ -130,7 +130,7 @@ fn run(out: PathBuf, selection: Option<Vec<String>>) -> anyhow::Result<()> {
     let mut rows = Vec::new();
     for doc in &corpus.docs {
         let path = cache_path(&doc.id);
-        anyhow::ensure!(path.exists(), "{} fehlt, zuerst `fetch` ausführen", doc.id);
+        anyhow::ensure!(path.exists(), "{} missing, run `fetch` first", doc.id);
         for backend in &backends {
             let started = Instant::now();
             let result = backend.extract(&path);
@@ -159,11 +159,11 @@ fn run(out: PathBuf, selection: Option<Vec<String>>) -> anyhow::Result<()> {
             rows.push(row);
         }
     }
-    let mut header = String::from("# Extraktions-Benchmark\n\n## Backends\n\n");
+    let mut header = String::from("# Extraction benchmark\n\n## Backends\n\n");
     for backend in &backends {
         header.push_str(&format!("- {} {}\n", backend.name(), backend.version()));
     }
-    header.push_str("\n## Dokumente\n\n");
+    header.push_str("\n## Documents\n\n");
     for doc in &corpus.docs {
         header.push_str(&format!("- {}: {}\n", doc.id, doc.category));
     }
@@ -172,6 +172,6 @@ fn run(out: PathBuf, selection: Option<Vec<String>>) -> anyhow::Result<()> {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(&out, header + &report::render_markdown(&rows))?;
-    println!("Bericht: {}", out.display());
+    println!("report: {}", out.display());
     Ok(())
 }

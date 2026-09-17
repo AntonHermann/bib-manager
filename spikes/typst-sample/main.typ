@@ -1,10 +1,10 @@
 #set heading(numbering: "1.")
 
-= Testdokument für bib-spike
+= Test document for bib-spike
 
-Differential Privacy nach @dwork2006 und nochmals @dwork2006.
+Differential Privacy according to @dwork2006 and again @dwork2006.
 
-Ein unbekannter Key: @unbekannt2020.
+An unknown key: @unknown2020.
 
 == Label target <intro>
 

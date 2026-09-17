@@ -1,4 +1,4 @@
-//! Bewertung eines extrahierten Textes gegen die kuratierten Aussagen.
+//! Evaluation of an extracted text against the curated assertions.
 
 use bib_core::normalize::normalize;
 
@@ -11,11 +11,11 @@ pub struct TextScores {
     pub order_ok: usize,
     pub order_total: usize,
     pub chars_missing: Vec<String>,
-    /// Steuerzeichen außer \n, \r, \t und Seitenvorschub.
+    /// Control characters other than \n, \r, \t, and form feed.
     pub control_chars: usize,
-    /// Vorkommen von `(cid:`.
+    /// Occurrences of `(cid:`.
     pub cid_markers: usize,
-    /// Vorkommen von U+FFFD.
+    /// Occurrences of U+FFFD.
     pub replacement_chars: usize,
 }
 

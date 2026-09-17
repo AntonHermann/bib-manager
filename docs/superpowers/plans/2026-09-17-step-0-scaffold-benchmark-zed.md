@@ -1,35 +1,35 @@
-# Schritt 0: Grundgerüst, Extraktions-Benchmark und Zed-Test — Implementierungsplan
+# Step 0: Scaffold, Extraction Benchmark, and Zed Test — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rust-Workspace mit Normalisierung und austauschbaren PDF-Backends aufsetzen, die Backends an einem kuratierten Korpus messen (Schritt 0a) und prüfen, ob Zed einen zweiten Typst-Language-Server neben tinymist sauber zusammenführt (Schritt 0b).
+**Goal:** Set up a Rust workspace with normalization and swappable PDF backends, measure the backends against a curated corpus (step 0a), and check whether Zed cleanly merges a second Typst language server alongside tinymist (step 0b).
 
-**Architecture:** Ein Cargo-Workspace. `bib-core` enthält vorerst nur die Normalisierung (Vergleichsform mit Rückweg zum Rohtext). `bib-extract` definiert die Backend-Schnittstelle (Text Pflicht, Spans optional, ein gemeinsames Koordinatensystem) mit vier Backends: `pdf_oxide`, `pdf-extract`, `mutool` als externer Prozess und `pdfium` hinter einem Feature. `tools/extract-bench` lädt den Korpus, misst jedes Backend gegen handkuratierte Aussagen und schreibt einen Markdown-Bericht. `spikes/` enthält Wegwerf-Code für den Zed-Test.
+**Architecture:** A Cargo workspace. `bib-core` contains only the normalization for now (comparison form with mapping back to the raw text). `bib-extract` defines the backend interface (text mandatory, spans optional, a shared coordinate system) with four backends: `pdf_oxide`, `pdf-extract`, `mutool` as an external process, and `pdfium` behind a feature. `tools/extract-bench` loads the corpus, measures each backend against hand-curated assertions, and writes a Markdown report. `spikes/` contains throwaway code for the Zed test.
 
-**Tech Stack:** Rust (Edition 2024, rustc 1.95), `unicode-normalization`, `pdf_oxide` 0.3.78, `pdf-extract` 0.12.0, `pdfium-render` 0.9.4, `thiserror`, `anyhow`, `clap`, `serde`, `toml`, `sha2`, `tempfile`, `tower-lsp-server` 0.23, `tokio`, `zed_extension_api` 0.7.0; externe Programme `curl`, `mutool` (optional).
+**Tech Stack:** Rust (Edition 2024, rustc 1.95), `unicode-normalization`, `pdf_oxide` 0.3.78, `pdf-extract` 0.12.0, `pdfium-render` 0.9.4, `thiserror`, `anyhow`, `clap`, `serde`, `toml`, `sha2`, `tempfile`, `tower-lsp-server` 0.23, `tokio`, `zed_extension_api` 0.7.0; external programs `curl`, `mutool` (optional).
 
-**Spec:** `docs/superpowers/specs/2026-09-16-library-core-typst-design.md` (Abschnitte 7, 9, 14, 15, 17, 18)
+**Spec:** `docs/superpowers/specs/2026-09-16-library-core-typst-design.md` (sections 7, 9, 14, 15, 17, 18)
 
-**Folgepläne** (werden mit den Ergebnissen dieses Plans geschrieben): Plan 2 = Spec-Schritte 1–3 (Datenmodell, Zotero-Abgleich, Extraktion mit Kaskade), Plan 3 = Schritte 4–6 (Anker, Typst-Parser, Import), Plan 4 = Schritte 7–8 (Language Server, Zed-Extension, Export).
+**Follow-up plans** (to be written using the results of this plan): Plan 2 = spec steps 1–3 (data model, Zotero sync, extraction with cascade), Plan 3 = steps 4–6 (anchors, Typst parser, import), Plan 4 = steps 7–8 (language server, Zed extension, export).
 
 ## Global Constraints
 
-- Lizenz des Projekts: `MIT OR Apache-2.0`. **Keine AGPL-Abhängigkeit im Workspace** (kein `mupdf-rs`, kein PyMuPDF). `mutool` nur als optionaler externer Prozess.
+- Project license: `MIT OR Apache-2.0`. **No AGPL dependency in the workspace** (no `mupdf-rs`, no PyMuPDF). `mutool` only as an optional external process.
 - Rust: Edition 2024, `rust-version = "1.95"`.
-- Normalisierung (Vergleichsform), in dieser Reihenfolge und kompatibel zu `check_quotes.py`: NFKC; weiche Trennstriche (U+00AD) entfernen; `-\s*\n\s*` (nur ASCII-Bindestrich) entfernen; `‐‑‒–—` → `-`; `‘’‚‛` → `'`; `“”„‟` → `"`; Leerraum zu einem Leerzeichen zusammenfassen; vorn und hinten trimmen; Kleinschreibung.
-- Koordinaten in `bib-extract`: Punkte, Ursprung oben links, y wächst nach unten, relativ zur MediaBox.
-- Backend-Schnittstelle: Text ist Pflicht, Geometrie optional (Spec §7).
-- Zed: Die Sprache heißt exakt `Typst`; Extensions werden für `wasm32-wasip2` gebaut; `zed_extension_api` 0.7.0 verlangt Edition 2024.
-- Das Seminar-Repo `~/Documents/seminar_ehr_ss26` wird bis einschließlich 23.09.2026 **nicht** gelesen oder benutzt.
-- Änderungen an der Zed-Installation oder `~/.config/zed/settings.json` nur nach ausdrücklicher Zustimmung des Nutzers.
-- Doku und Kommentare auf Deutsch, Bezeichner auf Englisch.
-- Jeder Commit endet mit:
+- Normalization (comparison form), in this order and compatible with `check_quotes.py`: NFKC; remove soft hyphens (U+00AD); remove `-\s*\n\s*` (ASCII hyphen only); `‐‑‒–—` → `-`; `‘’‚‛` → `'`; `“”„‟` → `"`; collapse whitespace to a single space; trim leading and trailing whitespace; lowercase.
+- Coordinates in `bib-extract`: points, origin top-left, y grows downward, relative to the MediaBox.
+- Backend interface: text is mandatory, geometry optional (spec §7).
+- Zed: the language is named exactly `Typst`; extensions are built for `wasm32-wasip2`; `zed_extension_api` 0.7.0 requires edition 2024.
+- The seminar repo `~/Documents/seminar_ehr_ss26` is **not** read or used through 2026-09-23 inclusive.
+- Changes to the Zed installation or `~/.config/zed/settings.json` only with the user's explicit consent.
+- Documentation and comments in German, identifiers in English.
+- Every commit ends with:
   ```
   Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
   Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE
   ```
 
-## Dateistruktur
+## File Structure
 
 ```
 Cargo.toml                         Workspace
@@ -37,41 +37,41 @@ LICENSE-MIT, LICENSE-APACHE
 .gitignore
 crates/bib-core/
   Cargo.toml
-  src/lib.rs                       Modulliste
-  src/normalize.rs                 Vergleichsform + Rückweg (Task 1)
+  src/lib.rs                       Module list
+  src/normalize.rs                 Comparison form + mapping back (Task 1)
 crates/bib-extract/
   Cargo.toml
-  src/lib.rs                       Typen, Backend-Trait, Panik-Schutz (Task 3)
-  src/join.rs                      Spans → Text (Task 3)
+  src/lib.rs                       Types, backend trait, panic guard (Task 3)
+  src/join.rs                      Spans → text (Task 3)
   src/backends/mod.rs
   src/backends/oxide.rs            pdf_oxide (Task 3)
-  src/backends/pdf_extract.rs      pdf-extract, nur Text (Task 4)
-  src/backends/mutool.rs           mutool als Prozess (Task 5)
-  src/backends/stext.rs            Parser für mutools stext-XML (Task 5)
-  src/backends/pdfium.rs           pdfium, Feature `pdfium` (Task 6)
-  tests/common/mod.rs              Fixture-Pfade
+  src/backends/pdf_extract.rs      pdf-extract, text only (Task 4)
+  src/backends/mutool.rs           mutool as a process (Task 5)
+  src/backends/stext.rs            parser for mutool's stext XML (Task 5)
+  src/backends/pdfium.rs           pdfium, feature `pdfium` (Task 6)
+  tests/common/mod.rs              Fixture paths
   tests/oxide.rs, tests/pdf_extract.rs, tests/coordinates.rs, tests/pdfium.rs
 tools/extract-bench/
   Cargo.toml
   src/main.rs                      CLI: fetch, run
   src/corpus.rs                    corpus.toml + corpus.lock (Task 2)
-  src/metrics.rs                   Bewertung eines Textes (Task 8)
-  src/report.rs                    Markdown-Bericht (Task 8)
+  src/metrics.rs                   Scoring a text (Task 8)
+  src/report.rs                    Markdown report (Task 8)
 bench/
-  corpus.toml                      Korpus + erwartete Aussagen (Task 2, 7)
-  corpus.lock                      SHA-256 je Dokument (Task 2, 7)
-  README.md                        Kurationsregeln, Entscheidungsregel (Task 7, 10)
-  results/                         Berichte (Task 10)
-  cache/                           Downloads, nicht versioniert
-spikes/lsp-coexist/                Wegwerf-Language-Server (Task 9)
-spikes/zed-coexist-ext/            Wegwerf-Zed-Extension, eigener Workspace (Task 9)
-spikes/typst-sample/               Testdokument für Zed (Task 9)
-docs/research/14-zed-two-language-servers.md   Protokoll des Zed-Tests (Task 9)
+  corpus.toml                      Corpus + expected assertions (Task 2, 7)
+  corpus.lock                      SHA-256 per document (Task 2, 7)
+  README.md                        Curation rules, decision rule (Task 7, 10)
+  results/                         Reports (Task 10)
+  cache/                           Downloads, not version-controlled
+spikes/lsp-coexist/                Throwaway language server (Task 9)
+spikes/zed-coexist-ext/            Throwaway Zed extension, separate workspace (Task 9)
+spikes/typst-sample/               Test document for Zed (Task 9)
+docs/research/14-zed-two-language-servers.md   Log of the Zed test (Task 9)
 ```
 
 ---
 
-### Task 1: Workspace-Grundgerüst und Normalisierung
+### Task 1: Workspace Scaffold and Normalization
 
 **Files:**
 - Create: `Cargo.toml`, `.gitignore`, `LICENSE-MIT`, `LICENSE-APACHE`
@@ -81,9 +81,9 @@ docs/research/14-zed-two-language-servers.md   Protokoll des Zed-Tests (Task 9)
 - Produces:
   - `bib_core::normalize::NORMALIZATION_VERSION: u32`
   - `bib_core::normalize::normalize(input: &str) -> Normalized`
-  - `bib_core::normalize::Normalized { pub text: String }` mit `fn source_range(&self, out: std::ops::Range<usize>) -> Option<std::ops::Range<usize>>` (Byte-Bereich im Rohtext zu einem Byte-Bereich in `text`)
+  - `bib_core::normalize::Normalized { pub text: String }` with `fn source_range(&self, out: std::ops::Range<usize>) -> Option<std::ops::Range<usize>>` (byte range in the raw text for a byte range in `text`)
 
-- [ ] **Step 1: Workspace anlegen**
+- [ ] **Step 1: Create the workspace**
 
 `Cargo.toml`:
 
@@ -133,12 +133,12 @@ unicode-normalization.workspace = true
 `crates/bib-core/src/lib.rs`:
 
 ```rust
-//! Kern des Bibliography Managers.
+//! Core of the Bibliography Manager.
 
 pub mod normalize;
 ```
 
-Lizenzdateien:
+License files:
 
 ```bash
 curl -sSfL https://www.apache.org/licenses/LICENSE-2.0.txt -o LICENSE-APACHE
@@ -167,25 +167,25 @@ SOFTWARE.
 EOF
 ```
 
-- [ ] **Step 2: Tests für die Normalisierung schreiben**
+- [ ] **Step 2: Write tests for normalization**
 
-`crates/bib-core/src/normalize.rs` (zunächst nur Tests und leere Signaturen, damit es kompiliert, aber fehlschlägt):
+`crates/bib-core/src/normalize.rs` (tests and empty signatures only for now, so it compiles but fails):
 
 ```rust
-//! Vergleichsform für die Wortlaut-Suche (Spec §7, „Normalisierung").
+//! Comparison form for wording search (spec §7, "normalization").
 //!
-//! Gesucht wird immer in der Vergleichsform; über [`Normalized::source_range`]
-//! führt jeder Treffer zurück zum Rohtext, an dem Anker und Boxen hängen.
+//! Search always happens in the comparison form; [`Normalized::source_range`]
+//! maps every match back to the raw text that anchors and boxes attach to.
 
 use std::ops::Range;
 
-/// Wird erhöht, sobald sich das Ergebnis von [`normalize`] für irgendeine Eingabe ändert.
+/// Incremented whenever the result of [`normalize`] changes for any input.
 pub const NORMALIZATION_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Normalized {
     pub text: String,
-    /// Für jedes Byte von `text`: Byte-Bereich im Rohtext, aus dem es stammt.
+    /// For each byte of `text`: the byte range in the raw text it came from.
     spans: Vec<(usize, usize)>,
 }
 
@@ -276,20 +276,20 @@ mod tests {
             "",
         ] {
             let once = normalize(s).text;
-            assert_eq!(normalize(&once).text, once, "Eingabe: {s:?}");
+            assert_eq!(normalize(&once).text, once, "input: {s:?}");
         }
     }
 }
 ```
 
-- [ ] **Step 3: Tests laufen lassen, Fehlschlag prüfen**
+- [ ] **Step 3: Run tests, confirm failure**
 
 Run: `cargo test -p bib-core`
-Expected: FAIL, alle Tests brechen mit `not yet implemented` ab.
+Expected: FAIL, all tests abort with `not yet implemented`.
 
-- [ ] **Step 4: Normalisierung implementieren**
+- [ ] **Step 4: Implement normalization**
 
-In `crates/bib-core/src/normalize.rs` den Import und die beiden `todo!()`-Körper ersetzen:
+In `crates/bib-core/src/normalize.rs`, replace the import and the two `todo!()` bodies:
 
 ```rust
 use std::ops::Range;
@@ -308,7 +308,7 @@ impl Normalized {
     }
 }
 
-/// Ein Zeichen der Zwischenstufe: Zeichen, Quellbereich, darf an Zeilenende verbunden werden.
+/// A character of the intermediate stage: character, source range, may be joined at line end.
 struct Unit {
     ch: char,
     start: usize,
@@ -321,7 +321,7 @@ pub fn normalize(input: &str) -> Normalized {
     collapse(&units)
 }
 
-/// NFKC je Segment (Basiszeichen + kombinierende Zeichen), Ersetzungen, Kleinschreibung.
+/// NFKC per segment (base character + combining marks), replacements, lowercasing.
 fn map_characters(input: &str) -> Vec<Unit> {
     let mut units = Vec::with_capacity(input.len());
     let mut chars = input.char_indices().peekable();
@@ -357,7 +357,7 @@ fn map_characters(input: &str) -> Vec<Unit> {
     units
 }
 
-/// Trennung am Zeilenende verbinden, Leerraum zusammenfassen, trimmen.
+/// Join line-end hyphenation, collapse whitespace, trim.
 fn collapse(units: &[Unit]) -> Normalized {
     let mut text = String::with_capacity(units.len());
     let mut spans = Vec::with_capacity(units.len());
@@ -399,10 +399,10 @@ fn push_char(text: &mut String, spans: &mut Vec<(usize, usize)>, ch: char, start
 }
 ```
 
-- [ ] **Step 5: Tests laufen lassen**
+- [ ] **Step 5: Run tests**
 
 Run: `cargo test -p bib-core`
-Expected: PASS, 12 Tests.
+Expected: PASS, 12 tests.
 
 - [ ] **Step 6: Commit**
 
@@ -416,10 +416,10 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 2: Benchmark-Werkzeug mit Korpus-Download
+### Task 2: Benchmark Tool with Corpus Download
 
 **Files:**
-- Modify: `Cargo.toml` (Member, Abhängigkeiten)
+- Modify: `Cargo.toml` (members, dependencies)
 - Create: `tools/extract-bench/Cargo.toml`, `tools/extract-bench/src/main.rs`, `tools/extract-bench/src/corpus.rs`
 - Create: `bench/corpus.toml`, `bench/corpus.lock`
 
@@ -431,11 +431,11 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
   - `corpus::LockStatus { New, Match, Mismatch { expected: String } }`, `corpus::check_lock(lock: &BTreeMap<String, String>, id: &str, sha: &str) -> LockStatus`
   - `corpus::bench_dir() -> PathBuf`, `corpus::cache_path(id: &str) -> PathBuf`
   - CLI: `cargo run -p extract-bench -- fetch`
-  - Datei `bench/cache/<id>.pdf` für jedes Korpus-Dokument
+  - File `bench/cache/<id>.pdf` for each corpus document
 
-- [ ] **Step 1: Crate anlegen**
+- [ ] **Step 1: Create the crate**
 
-In `Cargo.toml` `members` ergänzen und Abhängigkeiten hinzufügen:
+In `Cargo.toml`, add to `members` and add dependencies:
 
 ```toml
 members = [
@@ -474,12 +474,12 @@ sha2.workspace = true
 bib-core = { path = "../../crates/bib-core" }
 ```
 
-- [ ] **Step 2: Tests für Korpus und Lock-Datei schreiben**
+- [ ] **Step 2: Write tests for the corpus and lock file**
 
 `tools/extract-bench/src/corpus.rs`:
 
 ```rust
-//! Korpus-Beschreibung (`bench/corpus.toml`) und Prüfsummen (`bench/corpus.lock`).
+//! Corpus description (`bench/corpus.toml`) and checksums (`bench/corpus.lock`).
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -501,16 +501,16 @@ pub struct Doc {
     pub expect: Expect,
 }
 
-/// Handkuratierte Aussagen über den Text eines Dokuments.
+/// Hand-curated assertions about a document's text.
 #[derive(Debug, Default, Deserialize)]
 pub struct Expect {
-    /// Sätze, die zusammenhängend im normalisierten Text stehen müssen.
+    /// Sentences that must appear contiguously in the normalized text.
     #[serde(default)]
     pub sentences: Vec<String>,
-    /// Satzpaare: der erste muss vor dem zweiten stehen (Leserichtung).
+    /// Sentence pairs: the first must come before the second (reading order).
     #[serde(default)]
     pub before: Vec<(String, String)>,
-    /// Zeichen, die mindestens einmal vorkommen müssen (z. B. "ε").
+    /// Characters that must occur at least once (e.g. "ε").
     #[serde(default)]
     pub chars: Vec<String>,
 }
@@ -555,8 +555,8 @@ mod tests {
             url = "https://example.org/a.pdf"
             category = "test"
             [doc.expect]
-            sentences = ["Eins zwei drei."]
-            before = [["Eins", "drei"]]
+            sentences = ["One two three."]
+            before = [["One", "three"]]
             chars = ["ε"]
 
             [[doc]]
@@ -567,8 +567,8 @@ mod tests {
         )
         .unwrap();
         assert_eq!(corpus.docs.len(), 2);
-        assert_eq!(corpus.docs[0].expect.sentences, vec!["Eins zwei drei."]);
-        assert_eq!(corpus.docs[0].expect.before, vec![("Eins".to_string(), "drei".to_string())]);
+        assert_eq!(corpus.docs[0].expect.sentences, vec!["One two three."]);
+        assert_eq!(corpus.docs[0].expect.before, vec![("One".to_string(), "three".to_string())]);
         assert_eq!(corpus.docs[0].expect.chars, vec!["ε"]);
         assert!(corpus.docs[1].expect.sentences.is_empty());
     }
@@ -594,7 +594,7 @@ mod tests {
 }
 ```
 
-`tools/extract-bench/src/main.rs` (vorläufig):
+`tools/extract-bench/src/main.rs` (temporary):
 
 ```rust
 mod corpus;
@@ -602,14 +602,14 @@ mod corpus;
 fn main() {}
 ```
 
-- [ ] **Step 3: Tests laufen lassen, Fehlschlag prüfen**
+- [ ] **Step 3: Run tests, confirm failure**
 
 Run: `cargo test -p extract-bench`
-Expected: FAIL mit `not yet implemented`.
+Expected: FAIL with `not yet implemented`.
 
-- [ ] **Step 4: Korpus-Funktionen implementieren**
+- [ ] **Step 4: Implement corpus functions**
 
-In `corpus.rs` die drei `todo!()`-Funktionen ersetzen:
+In `corpus.rs`, replace the three `todo!()` functions:
 
 ```rust
 pub fn parse_corpus(s: &str) -> anyhow::Result<Corpus> {
@@ -631,14 +631,14 @@ pub fn check_lock(lock: &BTreeMap<String, String>, id: &str, sha: &str) -> LockS
 ```
 
 Run: `cargo test -p extract-bench`
-Expected: PASS, 3 Tests.
+Expected: PASS, 3 tests.
 
-- [ ] **Step 5: Befehl `fetch` implementieren**
+- [ ] **Step 5: Implement the `fetch` command**
 
 `tools/extract-bench/src/main.rs`:
 
 ```rust
-//! Extraktions-Benchmark (Spec §15, Schritt 0a).
+//! Extraction benchmark (spec §15, step 0a).
 
 mod corpus;
 
@@ -651,7 +651,7 @@ use clap::{Parser, Subcommand};
 use corpus::{LockStatus, bench_dir, cache_path, check_lock, parse_corpus, sha256_hex};
 
 #[derive(Parser)]
-#[command(about = "Misst PDF-Backends an einem kuratierten Korpus")]
+#[command(about = "Measures PDF backends against a curated corpus")]
 struct Cli {
     #[command(subcommand)]
     command: Cmd,
@@ -659,7 +659,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// Lädt alle Korpus-Dokumente nach bench/cache/ und prüft ihre SHA-256-Summen.
+    /// Downloads all corpus documents into bench/cache/ and checks their SHA-256 sums.
     Fetch,
 }
 
@@ -686,27 +686,27 @@ fn fetch() -> anyhow::Result<()> {
     for doc in &corpus.docs {
         let path = cache_path(&doc.id);
         if !path.exists() {
-            println!("lade {} …", doc.id);
+            println!("loading {} …", doc.id);
             let status = Command::new("curl")
                 .args(["-sSfL", "--retry", "3", "-o"])
                 .arg(&path)
                 .arg(&doc.url)
                 .status()
-                .context("curl nicht ausführbar")?;
+                .context("curl not executable")?;
             if !status.success() {
-                bail!("Download von {} fehlgeschlagen ({})", doc.id, doc.url);
+                bail!("download of {} failed ({})", doc.id, doc.url);
             }
         }
         let sha = sha256_hex(&std::fs::read(&path)?);
         match check_lock(&lock, &doc.id, &sha) {
             LockStatus::Match => println!("ok    {}", doc.id),
             LockStatus::New => {
-                println!("neu   {} {sha}", doc.id);
+                println!("new   {} {sha}", doc.id);
                 lock.insert(doc.id.clone(), sha);
             }
             LockStatus::Mismatch { expected } => bail!(
-                "Prüfsumme von {} weicht ab: erwartet {expected}, gefunden {sha}. \
-                 Datei löschen und neu laden, oder corpus.lock bewusst anpassen.",
+                "checksum for {} does not match: expected {expected}, found {sha}. \
+                 Delete the file and re-download it, or edit corpus.lock deliberately.",
                 doc.id
             ),
         }
@@ -716,17 +716,17 @@ fn fetch() -> anyhow::Result<()> {
 }
 ```
 
-- [ ] **Step 6: Anfangskorpus anlegen und laden**
+- [ ] **Step 6: Create and load the initial corpus**
 
 `bench/corpus.toml`:
 
 ```toml
-# Korpus für den Extraktions-Benchmark. Kurationsregeln: bench/README.md.
+# Corpus for the extraction benchmark. Curation rules: bench/README.md.
 
 [[doc]]
 id = "dwork2006"
 url = "https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/dwork.pdf"
-category = "altes LaTeX, Type1-Mathe-Schrift ohne Unicode-Zuordnung"
+category = "old LaTeX, Type1 math font without Unicode mapping"
 [doc.expect]
 sentences = ["This is captured by differential privacy."]
 chars = ["ε"]
@@ -734,11 +734,11 @@ chars = ["ε"]
 [[doc]]
 id = "abadi2016"
 url = "https://arxiv.org/pdf/1607.00133v2"
-category = "modernes zweispaltiges ACM-Paper mit Formeln"
+category = "modern two-column ACM paper with formulas"
 ```
 
 Run: `cargo run -p extract-bench -- fetch`
-Expected: zwei Zeilen `neu   <id> <sha>`; `bench/corpus.lock` enthält beide Summen. Ein zweiter Lauf gibt zweimal `ok` aus.
+Expected: two lines `new   <id> <sha>`; `bench/corpus.lock` contains both sums. A second run prints `ok` twice.
 
 - [ ] **Step 7: Commit**
 
@@ -752,7 +752,7 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 3: Backend-Schnittstelle und `pdf_oxide`
+### Task 3: Backend Interface and `pdf_oxide`
 
 **Files:**
 - Modify: `Cargo.toml`
@@ -760,23 +760,23 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 - Test: `crates/bib-extract/tests/common/mod.rs`, `crates/bib-extract/tests/oxide.rs`
 
 **Interfaces:**
-- Consumes: `bib_core::normalize::normalize` (nur in Tests); Fixture `bench/cache/dwork2006.pdf` aus Task 2
+- Consumes: `bib_core::normalize::normalize` (tests only); fixture `bench/cache/dwork2006.pdf` from Task 2
 - Produces:
   - `bib_extract::Rect { left: f32, top: f32, right: f32, bottom: f32 }`
   - `bib_extract::Span { text: String, bbox: Rect, font: String }`
   - `bib_extract::PageSize { width: f32, height: f32, rotation: Option<u16> }`
   - `bib_extract::PageContent { Spans(Vec<Span>), Plain(String) }`
-  - `bib_extract::Page { index: usize, size: Option<PageSize>, content: PageContent }` mit `fn text(&self) -> String`, `fn has_geometry(&self) -> bool`
-  - `bib_extract::Extraction { backend: &'static str, backend_version: String, pages: Vec<Page> }` mit `fn text(&self) -> String`
+  - `bib_extract::Page { index: usize, size: Option<PageSize>, content: PageContent }` with `fn text(&self) -> String`, `fn has_geometry(&self) -> bool`
+  - `bib_extract::Extraction { backend: &'static str, backend_version: String, pages: Vec<Page> }` with `fn text(&self) -> String`
   - `bib_extract::ExtractError { Open(String), Page { index: usize, message: String }, Panicked(String), Unavailable(String) }`
   - `trait bib_extract::Backend { fn name(&self) -> &'static str; fn version(&self) -> String; fn extract(&self, path: &Path) -> Result<Extraction, ExtractError>; }`
   - `bib_extract::join_spans(spans: &[Span]) -> String`
-  - `bib_extract::backends::oxide::PdfOxide` (Unit-Struct, implementiert `Backend`)
-  - Testhilfe `common::fixture(id: &str) -> PathBuf`
+  - `bib_extract::backends::oxide::PdfOxide` (unit struct, implements `Backend`)
+  - Test helper `common::fixture(id: &str) -> PathBuf`
 
-- [ ] **Step 1: Crate anlegen**
+- [ ] **Step 1: Create the crate**
 
-`Cargo.toml`: `"crates/bib-extract"` zu `members`; Abhängigkeiten ergänzen:
+`Cargo.toml`: add `"crates/bib-extract"` to `members`; add dependencies:
 
 ```toml
 thiserror = "2.0"
@@ -802,12 +802,12 @@ pdf_oxide.workspace = true
 bib-core = { path = "../bib-core" }
 ```
 
-- [ ] **Step 2: Tests für das Zusammenfügen von Spans schreiben**
+- [ ] **Step 2: Write tests for joining spans**
 
 `crates/bib-extract/src/lib.rs`:
 
 ```rust
-//! PDF-Textextraktion hinter einer austauschbaren Schnittstelle (Spec §7).
+//! PDF text extraction behind a swappable interface (spec §7).
 
 pub mod backends;
 mod join;
@@ -816,8 +816,8 @@ use std::path::Path;
 
 pub use join::join_spans;
 
-/// Rechteck in Punkten, **Ursprung oben links, y wächst nach unten**, relativ zur MediaBox.
-/// Jedes Backend rechnet in dieses System um.
+/// Rectangle in points, **origin top-left, y grows downward**, relative to the MediaBox.
+/// Every backend converts into this system.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Rect {
     pub left: f32,
@@ -826,7 +826,7 @@ pub struct Rect {
     pub bottom: f32,
 }
 
-/// Zusammenhängendes Textstück mit Box und Schrift, in Leserichtung.
+/// Contiguous piece of text with a box and font, in reading order.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Span {
     pub text: String,
@@ -838,11 +838,11 @@ pub struct Span {
 pub struct PageSize {
     pub width: f32,
     pub height: f32,
-    /// `None`, wenn das Backend die Drehung nicht kennt.
+    /// `None` if the backend doesn't know the rotation.
     pub rotation: Option<u16>,
 }
 
-/// Text ist Pflicht, Geometrie optional (Spec §7).
+/// Text is mandatory, geometry optional (spec §7).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PageContent {
     Spans(Vec<Span>),
@@ -877,7 +877,7 @@ pub struct Extraction {
 }
 
 impl Extraction {
-    /// Text aller Seiten, durch Zeilenumbrüche getrennt.
+    /// Text of all pages, separated by newlines.
     pub fn text(&self) -> String {
         self.pages.iter().map(Page::text).collect::<Vec<_>>().join("\n")
     }
@@ -885,13 +885,13 @@ impl Extraction {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ExtractError {
-    #[error("PDF konnte nicht geöffnet werden: {0}")]
+    #[error("could not open PDF: {0}")]
     Open(String),
-    #[error("Seite {index}: {message}")]
+    #[error("page {index}: {message}")]
     Page { index: usize, message: String },
-    #[error("Backend ist abgestürzt: {0}")]
+    #[error("backend panicked: {0}")]
     Panicked(String),
-    #[error("Werkzeug nicht verfügbar: {0}")]
+    #[error("tool not available: {0}")]
     Unavailable(String),
 }
 
@@ -901,7 +901,7 @@ pub trait Backend {
     fn extract(&self, path: &Path) -> Result<Extraction, ExtractError>;
 }
 
-/// Fängt Paniken eines Backends ab (`pdf-extract` bricht bei kaputten Dateien hart ab).
+/// Catches panics from a backend (`pdf-extract` aborts hard on corrupt files).
 pub(crate) fn guard<T>(f: impl FnOnce() -> Result<T, ExtractError>) -> Result<T, ExtractError> {
     match std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)) {
         Ok(result) => result,
@@ -910,7 +910,7 @@ pub(crate) fn guard<T>(f: impl FnOnce() -> Result<T, ExtractError>) -> Result<T,
                 .downcast_ref::<&str>()
                 .map(|s| s.to_string())
                 .or_else(|| payload.downcast_ref::<String>().cloned())
-                .unwrap_or_else(|| "unbekannte Ursache".to_string());
+                .unwrap_or_else(|| "unknown cause".to_string());
             Err(ExtractError::Panicked(message))
         }
     }
@@ -920,7 +920,7 @@ pub(crate) fn guard<T>(f: impl FnOnce() -> Result<T, ExtractError>) -> Result<T,
 `crates/bib-extract/src/join.rs`:
 
 ```rust
-//! Spans in Leserichtung zu Text zusammenfügen.
+//! Join spans into text in reading order.
 
 use crate::Span;
 
@@ -974,18 +974,18 @@ mod tests {
 pub mod oxide;
 ```
 
-`crates/bib-extract/src/backends/oxide.rs` (vorläufig leer bis Step 6):
+`crates/bib-extract/src/backends/oxide.rs` (empty for now, until Step 6):
 
 ```rust
-//! Backend auf Basis von `pdf_oxide` (MIT/Apache-2.0, reines Rust).
+//! Backend based on `pdf_oxide` (MIT/Apache-2.0, pure Rust).
 ```
 
-- [ ] **Step 3: Tests laufen lassen, Fehlschlag prüfen**
+- [ ] **Step 3: Run tests, confirm failure**
 
 Run: `cargo test -p bib-extract --lib`
-Expected: FAIL mit `not yet implemented` in vier Tests.
+Expected: FAIL with `not yet implemented` in four tests.
 
-- [ ] **Step 4: `join_spans` implementieren**
+- [ ] **Step 4: Implement `join_spans`**
 
 ```rust
 pub fn join_spans(spans: &[Span]) -> String {
@@ -1016,23 +1016,23 @@ fn separator(prev: &Span, next: &Span) -> &'static str {
 ```
 
 Run: `cargo test -p bib-extract --lib`
-Expected: PASS, 5 Tests.
+Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Integrationstest für `pdf_oxide` schreiben**
+- [ ] **Step 5: Write an integration test for `pdf_oxide`**
 
 `crates/bib-extract/tests/common/mod.rs`:
 
 ```rust
 use std::path::PathBuf;
 
-/// Pfad eines Korpus-Dokuments; bricht mit Anleitung ab, wenn es fehlt.
+/// Path of a corpus document; aborts with instructions if it is missing.
 pub fn fixture(id: &str) -> PathBuf {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../bench/cache")
         .join(format!("{id}.pdf"));
     assert!(
         path.exists(),
-        "Fixture {id} fehlt: zuerst `cargo run -p extract-bench -- fetch` ausführen"
+        "fixture {id} missing: run `cargo run -p extract-bench -- fetch` first"
     );
     path
 }
@@ -1053,30 +1053,30 @@ fn extracts_every_page_with_geometry() {
     assert_eq!(extraction.backend, "pdf_oxide");
     assert!(!extraction.pages.is_empty());
     for page in &extraction.pages {
-        assert!(page.has_geometry(), "Seite {} ohne Geometrie", page.index);
+        assert!(page.has_geometry(), "page {} without geometry", page.index);
     }
 }
 
 #[test]
 fn first_page_size_is_plausible() {
     let extraction = PdfOxide.extract(&common::fixture("dwork2006")).unwrap();
-    let size = extraction.pages[0].size.expect("Seitengröße");
-    assert!((500.0..700.0).contains(&size.width), "Breite {}", size.width);
-    assert!((700.0..900.0).contains(&size.height), "Höhe {}", size.height);
+    let size = extraction.pages[0].size.expect("page size");
+    assert!((500.0..700.0).contains(&size.width), "width {}", size.width);
+    assert!((700.0..900.0).contains(&size.height), "height {}", size.height);
 }
 
 #[test]
 fn title_is_near_the_top_in_top_left_coordinates() {
     let extraction = PdfOxide.extract(&common::fixture("dwork2006")).unwrap();
     let page = &extraction.pages[0];
-    let PageContent::Spans(spans) = &page.content else { panic!("keine Spans") };
+    let PageContent::Spans(spans) = &page.content else { panic!("no spans") };
     let title_top = spans
         .iter()
         .filter(|s| s.text.contains("Differential"))
         .map(|s| s.bbox.top)
         .fold(f32::INFINITY, f32::min);
     let height = page.size.unwrap().height;
-    assert!(title_top < 0.25 * height, "Titel bei top={title_top}, Seitenhöhe {height}");
+    assert!(title_top < 0.25 * height, "title at top={title_top}, page height {height}");
 }
 
 #[test]
@@ -1087,17 +1087,17 @@ fn text_contains_the_title_after_normalization() {
 ```
 
 Run: `cargo test -p bib-extract --test oxide`
-Expected: FAIL beim Kompilieren, `PdfOxide` existiert nicht.
+Expected: FAIL to compile, `PdfOxide` does not exist.
 
-- [ ] **Step 6: `pdf_oxide`-Backend implementieren**
+- [ ] **Step 6: Implement the `pdf_oxide` backend**
 
 `crates/bib-extract/src/backends/oxide.rs`:
 
 ```rust
-//! Backend auf Basis von `pdf_oxide` (MIT/Apache-2.0, reines Rust).
+//! Backend based on `pdf_oxide` (MIT/Apache-2.0, pure Rust).
 //!
-//! `pdf_oxide` liefert Boxen in PDF-Koordinaten (Ursprung unten links, `y` ist die
-//! Unterkante). Umrechnung: top = ury - (y + height), bottom = ury - y.
+//! `pdf_oxide` returns boxes in PDF coordinates (origin bottom-left, `y` is the
+//! bottom edge). Conversion: top = ury - (y + height), bottom = ury - y.
 
 use std::path::Path;
 
@@ -1132,7 +1132,7 @@ fn extract_page(doc: &pdf_oxide::PdfDocument, index: usize) -> Result<Page, Extr
     let raw_spans = doc.extract_spans(index).map_err(page_error)?;
     let raw_spans: Vec<_> = raw_spans.into_iter().filter(|s| !s.text.trim().is_empty()).collect();
 
-    // Ohne eigene MediaBox (z. B. geerbt) keine verlässliche Umrechnung: nur Text, ehrlich ohne Geometrie.
+    // Without its own MediaBox (e.g. inherited) there's no reliable conversion: text only, honestly without geometry.
     let Ok((llx, lly, urx, ury)) = doc.get_page_media_box(index) else {
         let spans: Vec<Span> = raw_spans
             .into_iter()
@@ -1167,12 +1167,12 @@ fn extract_page(doc: &pdf_oxide::PdfDocument, index: usize) -> Result<Page, Extr
 }
 ```
 
-Die Behelfsboxen im Zweig ohne MediaBox dienen nur `join_spans` (gleiche relative Lage, gespiegelte y-Achse), sie werden nicht gespeichert.
+The makeshift boxes in the branch without a MediaBox only serve `join_spans` (same relative position, mirrored y-axis); they are not stored.
 
-- [ ] **Step 7: Tests laufen lassen**
+- [ ] **Step 7: Run tests**
 
 Run: `cargo test -p bib-extract`
-Expected: PASS (5 Unit-Tests, 4 Integrationstests). Schlägt `title_is_near_the_top_in_top_left_coordinates` fehl, ist die Annahme über `pdf_oxide`s `y` falsch: den Wert von `s.bbox.y` für den Titel ausgeben (`dbg!`) und die Umrechnung sowie den Modulkommentar entsprechend korrigieren, nicht den Test.
+Expected: PASS (5 unit tests, 4 integration tests). If `title_is_near_the_top_in_top_left_coordinates` fails, the assumption about `pdf_oxide`'s `y` is wrong: print the value of `s.bbox.y` for the title (`dbg!`) and correct the conversion and the module comment accordingly, not the test.
 
 - [ ] **Step 8: Commit**
 
@@ -1186,7 +1186,7 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 4: `pdf-extract`-Backend (nur Text)
+### Task 4: `pdf-extract` Backend (Text Only)
 
 **Files:**
 - Modify: `Cargo.toml`, `crates/bib-extract/Cargo.toml`, `crates/bib-extract/src/backends/mod.rs`
@@ -1194,10 +1194,10 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 - Test: `crates/bib-extract/tests/pdf_extract.rs`
 
 **Interfaces:**
-- Consumes: `Backend`, `Extraction`, `Page`, `PageContent`, `ExtractError`, `guard` aus Task 3
-- Produces: `bib_extract::backends::pdf_extract::PdfExtract` (Unit-Struct, `Backend`), Name `"pdf-extract"`, Seiten immer `PageContent::Plain`, `size: None`
+- Consumes: `Backend`, `Extraction`, `Page`, `PageContent`, `ExtractError`, `guard` from Task 3
+- Produces: `bib_extract::backends::pdf_extract::PdfExtract` (unit struct, `Backend`), name `"pdf-extract"`, pages always `PageContent::Plain`, `size: None`
 
-- [ ] **Step 1: Abhängigkeiten ergänzen**
+- [ ] **Step 1: Add dependencies**
 
 `Cargo.toml` → `[workspace.dependencies]`:
 
@@ -1219,7 +1219,7 @@ bib-core = { path = "../bib-core" }
 tempfile.workspace = true
 ```
 
-- [ ] **Step 2: Test schreiben**
+- [ ] **Step 2: Write the test**
 
 `crates/bib-extract/tests/pdf_extract.rs`:
 
@@ -1242,24 +1242,24 @@ fn pages_are_text_only() {
 
 #[test]
 fn recovers_epsilon_from_type1_math_font() {
-    // Gemessen im Brainstorming: 28 ε in Dwork 2006 (pdf_oxide: 0).
+    // Measured during brainstorming: 28 ε in Dwork 2006 (pdf_oxide: 0).
     let extraction = PdfExtract.extract(&common::fixture("dwork2006")).unwrap();
     let epsilons = normalize(&extraction.text()).text.matches('ε').count();
-    assert!(epsilons >= 25, "nur {epsilons} ε gefunden");
+    assert!(epsilons >= 25, "only {epsilons} ε found");
 }
 
 #[test]
 fn broken_pdf_is_an_error_not_a_panic() {
     let mut file = tempfile::Builder::new().suffix(".pdf").tempfile().unwrap();
-    file.write_all(b"%PDF-1.4\nkein echtes PDF\n").unwrap();
+    file.write_all(b"%PDF-1.4\nnot a real PDF\n").unwrap();
     assert!(PdfExtract.extract(file.path()).is_err());
 }
 ```
 
 Run: `cargo test -p bib-extract --test pdf_extract`
-Expected: FAIL beim Kompilieren, Modul `pdf_extract` fehlt.
+Expected: FAIL to compile, module `pdf_extract` is missing.
 
-- [ ] **Step 3: Backend implementieren**
+- [ ] **Step 3: Implement the backend**
 
 `crates/bib-extract/src/backends/mod.rs`:
 
@@ -1271,14 +1271,14 @@ pub mod pdf_extract;
 `crates/bib-extract/src/backends/pdf_extract.rs`:
 
 ```rust
-//! Backend auf Basis von `pdf-extract` (MIT). Liefert nur Text, keine Geometrie,
-//! liest aber Glyphennamen aus eingebetteten Type1-Schriften (ε in altem LaTeX).
+//! Backend based on `pdf-extract` (MIT). Returns text only, no geometry,
+//! but reads glyph names from embedded Type1 fonts (ε in old LaTeX).
 
 use std::path::Path;
 
 use crate::{Backend, ExtractError, Extraction, Page, PageContent, guard};
 
-/// Muss zur exakten Version in `Cargo.toml` (`=0.12.0`) passen.
+/// Must match the exact version in `Cargo.toml` (`=0.12.0`).
 const VERSION: &str = "0.12.0";
 
 pub struct PdfExtract;
@@ -1306,10 +1306,10 @@ impl Backend for PdfExtract {
 }
 ```
 
-- [ ] **Step 4: Tests laufen lassen**
+- [ ] **Step 4: Run tests**
 
 Run: `cargo test -p bib-extract --test pdf_extract`
-Expected: PASS, 3 Tests. `pdf-extract` gibt dabei eventuell Warnungen und bei `broken_pdf…` eine Panik-Meldung auf stderr aus; entscheidend ist das Testergebnis.
+Expected: PASS, 3 tests. `pdf-extract` may print warnings, and for `broken_pdf…` a panic message on stderr; what matters is the test result.
 
 - [ ] **Step 5: Commit**
 
@@ -1323,7 +1323,7 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 5: `mutool`-Backend und Koordinatenabgleich
+### Task 5: `mutool` Backend and Coordinate Reconciliation
 
 **Files:**
 - Modify: `crates/bib-extract/Cargo.toml`, `crates/bib-extract/src/backends/mod.rs`
@@ -1331,12 +1331,12 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 - Test: `crates/bib-extract/tests/coordinates.rs`
 
 **Interfaces:**
-- Consumes: Typen aus Task 3, `PdfOxide`
+- Consumes: types from Task 3, `PdfOxide`
 - Produces:
-  - `bib_extract::backends::stext::parse_stext(xml: &str) -> Vec<Page>` (je `<font>`-Element innerhalb einer Zeile ein Span; `rotation: None`)
-  - `bib_extract::backends::mutool::Mutool { program: PathBuf }` mit `Default` (`"mutool"`) und `fn is_available(&self) -> bool`; Name `"mutool"`
+  - `bib_extract::backends::stext::parse_stext(xml: &str) -> Vec<Page>` (one span per `<font>` element within a line; `rotation: None`)
+  - `bib_extract::backends::mutool::Mutool { program: PathBuf }` with `Default` (`"mutool"`) and `fn is_available(&self) -> bool`; name `"mutool"`
 
-- [ ] **Step 1: Tests für den stext-Parser schreiben**
+- [ ] **Step 1: Write tests for the stext parser**
 
 `crates/bib-extract/src/backends/mod.rs`:
 
@@ -1350,8 +1350,8 @@ pub mod stext;
 `crates/bib-extract/src/backends/stext.rs`:
 
 ```rust
-//! Parser für mutools strukturiertes Textformat (`mutool draw -F stext`).
-//! Koordinaten sind dort bereits oben links verankert.
+//! Parser for mutool's structured text format (`mutool draw -F stext`).
+//! Coordinates there are already anchored top-left.
 
 use crate::Page;
 
@@ -1389,7 +1389,7 @@ mod tests {
         let pages = parse_stext(SAMPLE);
         assert_eq!(pages.len(), 2);
         assert_eq!(pages[0].size, Some(PageSize { width: 612.0, height: 792.0, rotation: None }));
-        let PageContent::Spans(spans) = &pages[0].content else { panic!("keine Spans") };
+        let PageContent::Spans(spans) = &pages[0].content else { panic!("no spans") };
         assert_eq!(spans.len(), 2);
         assert_eq!(spans[0].text, "D&>");
         assert_eq!(spans[0].font, "CMBX12");
@@ -1402,11 +1402,11 @@ mod tests {
 ```
 
 Run: `cargo test -p bib-extract --lib stext`
-Expected: FAIL mit `not yet implemented`.
+Expected: FAIL with `not yet implemented`.
 
-- [ ] **Step 2: Parser implementieren**
+- [ ] **Step 2: Implement the parser**
 
-`parse_stext` ersetzen und Hilfsfunktionen ergänzen:
+Replace `parse_stext` and add helper functions:
 
 ```rust
 use crate::{Page, PageContent, PageSize, Rect, Span};
@@ -1459,9 +1459,9 @@ pub fn parse_stext(xml: &str) -> Vec<Page> {
     pages
 }
 
-/// Inhalte aller Tags ohne spitze Klammern. `<` ist in XML-Attributen immer maskiert,
-/// `>` nicht zwingend (etwa `c=">"`); deshalb wird am letzten `>` vor dem nächsten `<` getrennt.
-/// Zwischen den Tags steht in mutools Ausgabe nur Leerraum.
+/// Contents of all tags without angle brackets. `<` is always escaped in XML attributes,
+/// `>` is not necessarily (e.g. `c=">"`); so splitting happens at the last `>` before the next `<`.
+/// Between tags, mutool's output contains only whitespace.
 fn tags(xml: &str) -> impl Iterator<Item = &str> {
     xml.split('<').skip(1).filter_map(|chunk| chunk.rsplit_once('>').map(|(tag, _)| tag.trim_end_matches('/').trim_end()))
 }
@@ -1511,19 +1511,19 @@ fn unescape(s: &str) -> String {
 }
 ```
 
-Den Import `use crate::Page;` oben durch die obige Zeile ersetzen.
+Replace the `use crate::Page;` import above with the line above.
 
 Run: `cargo test -p bib-extract --lib stext`
 Expected: PASS.
 
-- [ ] **Step 3: Koordinatentest schreiben**
+- [ ] **Step 3: Write the coordinate test**
 
-`crates/bib-extract/Cargo.toml` → `[dependencies]` um `tempfile.workspace = true` ergänzen (wird vom Backend gebraucht; in `[dev-dependencies]` kann es bleiben).
+`crates/bib-extract/Cargo.toml` → add `tempfile.workspace = true` to `[dependencies]` (needed by the backend; it can stay in `[dev-dependencies]` too).
 
 `crates/bib-extract/tests/coordinates.rs`:
 
 ```rust
-//! Dieselbe Textstelle muss in allen Backends mit Geometrie an derselben Stelle liegen (Spec §7).
+//! The same text passage must be at the same position in every backend with geometry (spec §7).
 
 mod common;
 
@@ -1534,12 +1534,12 @@ use bib_extract::{Backend, PageContent, Rect};
 const TOLERANCE: f32 = 6.0;
 
 pub fn first_box_containing(extraction: &bib_extract::Extraction, needle: &str) -> Rect {
-    let PageContent::Spans(spans) = &extraction.pages[0].content else { panic!("{}: keine Spans", extraction.backend) };
+    let PageContent::Spans(spans) = &extraction.pages[0].content else { panic!("{}: no spans", extraction.backend) };
     spans
         .iter()
         .filter(|s| s.text.contains(needle))
         .min_by(|a, b| a.bbox.top.total_cmp(&b.bbox.top))
-        .unwrap_or_else(|| panic!("{}: „{needle}“ nicht gefunden", extraction.backend))
+        .unwrap_or_else(|| panic!("{}: \"{needle}\" not found", extraction.backend))
         .bbox
 }
 
@@ -1547,7 +1547,7 @@ pub fn first_box_containing(extraction: &bib_extract::Extraction, needle: &str) 
 fn pdf_oxide_and_mutool_agree_on_title_position() {
     let mutool = Mutool::default();
     if !mutool.is_available() {
-        eprintln!("ÜBERSPRUNGEN: mutool nicht installiert");
+        eprintln!("SKIPPED: mutool not installed");
         return;
     }
     let path = common::fixture("dwork2006");
@@ -1559,15 +1559,15 @@ fn pdf_oxide_and_mutool_agree_on_title_position() {
 ```
 
 Run: `cargo test -p bib-extract --test coordinates`
-Expected: FAIL beim Kompilieren, `Mutool` fehlt.
+Expected: FAIL to compile, `Mutool` is missing.
 
-- [ ] **Step 4: `mutool`-Backend implementieren**
+- [ ] **Step 4: Implement the `mutool` backend**
 
 `crates/bib-extract/src/backends/mutool.rs`:
 
 ```rust
-//! `mutool` als externer Prozess (optional). mutool ist AGPL-lizenziert und wird
-//! deshalb nie gelinkt, nur aufgerufen.
+//! `mutool` as an external process (optional). mutool is AGPL-licensed and is
+//! therefore never linked, only invoked.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -1605,14 +1605,14 @@ impl Backend for Mutool {
                 let text = String::from_utf8_lossy(&out.stderr).into_owned() + &String::from_utf8_lossy(&out.stdout);
                 text.split_whitespace().skip_while(|w| *w != "version").nth(1).map(str::to_string)
             })
-            .unwrap_or_else(|| "unbekannt".to_string())
+            .unwrap_or_else(|| "unknown".to_string())
     }
 
     fn extract(&self, path: &Path) -> Result<Extraction, ExtractError> {
         let out_file = tempfile::Builder::new()
             .suffix(".xml")
             .tempfile()
-            .map_err(|e| ExtractError::Unavailable(format!("Temporärdatei: {e}")))?;
+            .map_err(|e| ExtractError::Unavailable(format!("temp file: {e}")))?;
         let output = Command::new(&self.program)
             .args(["draw", "-q", "-F", "stext", "-o"])
             .arg(out_file.path())
@@ -1628,10 +1628,10 @@ impl Backend for Mutool {
 }
 ```
 
-- [ ] **Step 5: Tests laufen lassen**
+- [ ] **Step 5: Run tests**
 
 Run: `cargo test -p bib-extract`
-Expected: PASS. `coordinates` darf nicht mit „ÜBERSPRUNGEN" enden, `mutool` ist auf dem Entwicklungsrechner installiert (`mutool version 1.25.1`). Schlägt der Koordinatentest fehl, ist die Umrechnung in `oxide.rs` falsch: korrigieren, nicht die Toleranz erhöhen.
+Expected: PASS. `coordinates` must not end with "SKIPPED"; `mutool` is installed on the development machine (`mutool version 1.25.1`). If the coordinate test fails, the conversion in `oxide.rs` is wrong: fix it, don't raise the tolerance.
 
 - [ ] **Step 6: Commit**
 
@@ -1645,7 +1645,7 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 6: pdfium-Backend hinter Feature
+### Task 6: pdfium Backend Behind a Feature
 
 **Files:**
 - Modify: `Cargo.toml`, `crates/bib-extract/Cargo.toml`, `crates/bib-extract/src/backends/mod.rs`
@@ -1653,10 +1653,10 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 - Test: `crates/bib-extract/tests/pdfium.rs`
 
 **Interfaces:**
-- Consumes: Typen aus Task 3, `Mutool` und `first_box_containing`-Logik aus Task 5
-- Produces: `bib_extract::backends::pdfium::Pdfium { lib_dir: PathBuf }` mit `fn from_env() -> Option<Self>` (liest `BIB_PDFIUM_LIB_DIR`); Name `"pdfium"`; nur mit Feature `pdfium`
+- Consumes: types from Task 3, `Mutool` and the `first_box_containing` logic from Task 5
+- Produces: `bib_extract::backends::pdfium::Pdfium { lib_dir: PathBuf }` with `fn from_env() -> Option<Self>` (reads `BIB_PDFIUM_LIB_DIR`); name `"pdfium"`; only with feature `pdfium`
 
-- [ ] **Step 1: pdfium-Bibliothek laden und Feature anlegen**
+- [ ] **Step 1: Download the pdfium library and create the feature**
 
 ```bash
 mkdir -p bench/cache/pdfium
@@ -1691,7 +1691,7 @@ pub mod pdfium;
 pub mod stext;
 ```
 
-- [ ] **Step 2: Test schreiben**
+- [ ] **Step 2: Write the test**
 
 `crates/bib-extract/tests/pdfium.rs`:
 
@@ -1705,7 +1705,7 @@ use bib_extract::backends::pdfium::Pdfium;
 use bib_extract::{Backend, PageContent};
 
 fn backend() -> Pdfium {
-    Pdfium::from_env().expect("BIB_PDFIUM_LIB_DIR setzen, z. B. auf bench/cache/pdfium/lib")
+    Pdfium::from_env().expect("set BIB_PDFIUM_LIB_DIR, e.g. to bench/cache/pdfium/lib")
 }
 
 #[test]
@@ -1719,12 +1719,12 @@ fn extracts_pages_with_geometry() {
 fn pdfium_and_mutool_agree_on_title_position() {
     let mutool = Mutool::default();
     if !mutool.is_available() {
-        eprintln!("ÜBERSPRUNGEN: mutool nicht installiert");
+        eprintln!("SKIPPED: mutool not installed");
         return;
     }
     let path = common::fixture("dwork2006");
     let top_of = |e: &bib_extract::Extraction| {
-        let PageContent::Spans(spans) = &e.pages[0].content else { panic!("keine Spans") };
+        let PageContent::Spans(spans) = &e.pages[0].content else { panic!("no spans") };
         spans.iter().filter(|s| s.text.contains("Differential")).map(|s| s.bbox.top).fold(f32::INFINITY, f32::min)
     };
     let reference = top_of(&mutool.extract(&path).unwrap());
@@ -1734,15 +1734,15 @@ fn pdfium_and_mutool_agree_on_title_position() {
 ```
 
 Run: `BIB_PDFIUM_LIB_DIR=$PWD/bench/cache/pdfium/lib cargo test -p bib-extract --features pdfium --test pdfium`
-Expected: FAIL beim Kompilieren, Modul `pdfium` fehlt.
+Expected: FAIL to compile, module `pdfium` is missing.
 
-- [ ] **Step 3: Backend implementieren**
+- [ ] **Step 3: Implement the backend**
 
 `crates/bib-extract/src/backends/pdfium.rs`:
 
 ```rust
-//! Backend auf Basis von pdfium (Chromes PDF-Engine) über `pdfium-render`.
-//! Braucht `libpdfium.so` zur Laufzeit; Pfad über `BIB_PDFIUM_LIB_DIR`.
+//! Backend based on pdfium (Chrome's PDF engine) via `pdfium-render`.
+//! Needs `libpdfium.so` at runtime; path via `BIB_PDFIUM_LIB_DIR`.
 
 use std::path::{Path, PathBuf};
 
@@ -1766,7 +1766,7 @@ impl Backend for Pdfium {
     }
 
     fn version(&self) -> String {
-        format!("pdfium-render 0.9.4, libpdfium aus {}", self.lib_dir.display())
+        format!("pdfium-render 0.9.4, libpdfium from {}", self.lib_dir.display())
     }
 
     fn extract(&self, path: &Path) -> Result<Extraction, ExtractError> {
@@ -1816,10 +1816,10 @@ impl Backend for Pdfium {
 }
 ```
 
-- [ ] **Step 4: Tests laufen lassen**
+- [ ] **Step 4: Run tests**
 
 Run: `BIB_PDFIUM_LIB_DIR=$PWD/bench/cache/pdfium/lib cargo test -p bib-extract --features pdfium`
-Expected: PASS, alle Tests inklusive `pdfium`. Außerdem `cargo test -p bib-extract` ohne Feature: PASS.
+Expected: PASS, all tests including `pdfium`. Also `cargo test -p bib-extract` without the feature: PASS.
 
 - [ ] **Step 5: Commit**
 
@@ -1833,94 +1833,94 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 7: Korpus kuratieren
+### Task 7: Curate the Corpus
 
-Reine Datenarbeit, kein Code. Ergebnis sind überprüfte Aussagen, gegen die Task 8 misst.
+Pure data work, no code. The result is verified assertions that Task 8 measures against.
 
 **Files:**
 - Modify: `bench/corpus.toml`, `bench/corpus.lock`
 - Create: `bench/README.md`
 
 **Interfaces:**
-- Consumes: Format `Expect` aus Task 2
-- Produces: sieben Dokumente mit je 3 Sätzen, 1 Reihenfolge-Paar und ggf. Zeichen
+- Consumes: the `Expect` format from Task 2
+- Produces: seven documents with 3 sentences each, 1 order pair, and characters where applicable
 
-- [ ] **Step 1: Kurationsregeln festhalten**
+- [ ] **Step 1: Record the curation rules**
 
 `bench/README.md`:
 
 ````markdown
-# Extraktions-Benchmark
+# Extraction Benchmark
 
-Misst PDF-Backends an handkuratierten Aussagen (Stil olmOCR-Bench): Stehen bekannte Sätze
-zusammenhängend und in der richtigen Reihenfolge im normalisierten Text? Sind erwartete
-Sonderzeichen vorhanden? Wie viel Datenmüll entsteht?
+Measures PDF backends against hand-curated assertions (olmOCR-Bench style): do known sentences
+appear contiguously and in the right order in the normalized text? Are expected special
+characters present? How much garbage data is produced?
 
 ```sh
 cargo run -p extract-bench -- fetch
 BIB_PDFIUM_LIB_DIR=$PWD/bench/cache/pdfium/lib \
-  cargo run --release -p extract-bench --features pdfium -- run --out bench/results/<datum>.md
+  cargo run --release -p extract-bench --features pdfium -- run --out bench/results/<date>.md
 ```
 
-## Kuration
+## Curation
 
-Pro Dokument:
+Per document:
 
-- **Drei Sätze:** (a) der erste Satz des Abstracts, (b) ein Satz aus der rechten Spalte
-  bzw. der zweiten Hälfte von Seite 2, (c) ein Satz aus dem letzten Absatz vor den Referenzen.
-- **Regeln für Sätze:** mindestens 8 Wörter, keine Formeln, keine Zitatmarker, keine
-  Fußnotenzeichen, endet mit Punkt. Wörtlich aus der LaTeX-Quelle, nicht aus einer
-  PDF-Extraktion kopiert (sonst misst der Benchmark das Werkzeug, mit dem kuratiert wurde).
-- **Ein Reihenfolge-Paar:** `before = [["<Anfang von b>", "<Anfang von c>"]]`, je ein
-  eindeutiges Stück von mindestens 5 Wörtern.
-- **Zeichen:** griechische Buchstaben, die im Fließtext gerendert werden (`\epsilon`,
+- **Three sentences:** (a) the first sentence of the abstract, (b) a sentence from the right
+  column or the second half of page 2, (c) a sentence from the last paragraph before the references.
+- **Rules for sentences:** at least 8 words, no formulas, no citation markers, no
+  footnote markers, ends with a period. Copied verbatim from the LaTeX source, not from a
+  PDF extraction (otherwise the benchmark would measure the tool used to curate it).
+- **One order pair:** `before = [["<start of b>", "<start of c>"]]`, each a
+  unique passage of at least 5 words.
+- **Characters:** Greek letters that get rendered in the body text (`\epsilon`,
   `\varepsilon` → `ε`; `\delta` → `δ`).
-- **Prüfung gegen die Quelle:** jeder Satz muss in der LaTeX-Quelle stehen:
-  `tr -s '[:space:]' ' ' < <datei>.tex | grep -F -c '<satz>'` ≥ 1.
-- **Prüfung im PDF:** jeden Satz im PDF-Viewer suchen und sichtbar finden (Makros können den
-  gerenderten Text verändern).
-- Dokumente ohne LaTeX-Quelle (Dwork 2006): Sätze nur aus dem PDF-Viewer, per Augenschein
-  gegen die Seite geprüft.
+- **Check against the source:** every sentence must appear in the LaTeX source:
+  `tr -s '[:space:]' ' ' < <file>.tex | grep -F -c '<sentence>'` ≥ 1.
+- **Check in the PDF:** search for and visually confirm every sentence in the PDF viewer (macros
+  can change the rendered text).
+- Documents without a LaTeX source (Dwork 2006): sentences taken only from the PDF viewer,
+  checked against the page by eye.
 
-Findet nach dem ersten Lauf **kein einziges** Backend einen Satz, ist vermutlich die Aussage
-falsch: im PDF prüfen und korrigieren, bevor Ergebnisse gewertet werden.
+If, after the first run, **not a single** backend finds a sentence, the assertion is
+probably wrong: check it against the PDF and fix it before results are scored.
 ````
 
-- [ ] **Step 2: Dokumente eintragen**
+- [ ] **Step 2: Add the documents**
 
-An `bench/corpus.toml` anhängen:
+Append to `bench/corpus.toml`:
 
 ```toml
 [[doc]]
 id = "vaswani2017"
 url = "https://arxiv.org/pdf/1706.03762v7"
-category = "einspaltig, NeurIPS, Tabellen und Formeln"
+category = "single-column, NeurIPS, tables and formulas"
 
 [[doc]]
 id = "devlin2019"
 url = "https://arxiv.org/pdf/1810.04805v2"
-category = "zweispaltig, ACL, Tabellen"
+category = "two-column, ACL, tables"
 
 [[doc]]
 id = "he2016"
 url = "https://arxiv.org/pdf/1512.03385v1"
-category = "zweispaltig, CVPR, Abbildungen und Tabellen"
+category = "two-column, CVPR, figures and tables"
 
 [[doc]]
 id = "shokri2017"
 url = "https://arxiv.org/pdf/1610.05820v2"
-category = "zweispaltig, IEEE S&P, Privacy-Thema"
+category = "two-column, IEEE S&P, privacy topic"
 
 [[doc]]
 id = "carlini2021"
 url = "https://arxiv.org/pdf/2012.07805v2"
-category = "zweispaltig, USENIX Security, lange Anhänge"
+category = "two-column, USENIX Security, long appendices"
 ```
 
 Run: `cargo run -p extract-bench -- fetch`
-Expected: fünf neue Einträge `neu …`, zwei `ok`.
+Expected: five new entries `new …`, two `ok`.
 
-- [ ] **Step 3: LaTeX-Quellen laden**
+- [ ] **Step 3: Download the LaTeX sources**
 
 ```bash
 for id in 1607.00133v2 1706.03762v7 1810.04805v2 1512.03385v1 1610.05820v2 2012.07805v2; do
@@ -1932,39 +1932,39 @@ for id in 1607.00133v2 1706.03762v7 1810.04805v2 1512.03385v1 1610.05820v2 2012.
 done
 ```
 
-Expected: je Dokument mindestens eine `.tex`-Datei.
+Expected: at least one `.tex` file per document.
 
-- [ ] **Step 4: Aussagen kuratieren**
+- [ ] **Step 4: Curate the assertions**
 
-Für `abadi2016`, `vaswani2017`, `devlin2019`, `he2016`, `shokri2017`, `carlini2021` je einen `[doc.expect]`-Block nach den Regeln aus `bench/README.md` unter den jeweiligen `[[doc]]` eintragen. Für `dwork2006` zwei weitere Sätze (b) und (c) und ein Reihenfolge-Paar aus dem PDF ergänzen. Form:
+For `abadi2016`, `vaswani2017`, `devlin2019`, `he2016`, `shokri2017`, `carlini2021`, add one `[doc.expect]` block each, following the rules in `bench/README.md`, under the respective `[[doc]]`. For `dwork2006`, add two more sentences (b) and (c) and an order pair from the PDF. Form:
 
 ```toml
 [doc.expect]
 sentences = [
-  "<Satz a>",
-  "<Satz b>",
-  "<Satz c>",
+  "<sentence a>",
+  "<sentence b>",
+  "<sentence c>",
 ]
-before = [["<Stück aus b>", "<Stück aus c>"]]
+before = [["<passage from b>", "<passage from c>"]]
 chars = ["ε", "δ"]
 ```
 
-Die Platzhalter in spitzen Klammern sind hier Formatbeschreibung; eingetragen werden die kuratierten Sätze.
+The placeholders in angle brackets here describe the format; the curated sentences go in their place.
 
-- [ ] **Step 5: Jeden Satz gegen die Quelle prüfen**
+- [ ] **Step 5: Check every sentence against the source**
 
 ```bash
 check() { tr -s '[:space:]' ' ' < "$1" | grep -F -c -- "$2"; }
-# Beispiel für einen Satz aus abadi2016:
-check <(cat bench/cache/src/1607.00133v2/*.tex) "<Satz>"
+# Example for a sentence from abadi2016:
+check <(cat bench/cache/src/1607.00133v2/*.tex) "<sentence>"
 ```
 
-Expected: für jeden Satz der sechs arXiv-Dokumente eine Zahl ≥ 1. Sätze mit 0 ersetzen.
+Expected: a number ≥ 1 for every sentence of the six arXiv documents. Replace any sentence with 0.
 
-- [ ] **Step 6: Korpus parsen lassen**
+- [ ] **Step 6: Have the corpus parsed**
 
 Run: `cargo run -p extract-bench -- fetch`
-Expected: siebenmal `ok`, kein Parse-Fehler.
+Expected: `ok` seven times, no parse errors.
 
 - [ ] **Step 7: Commit**
 
@@ -1978,22 +1978,22 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 8: Messung und Bericht
+### Task 8: Measurement and Report
 
 **Files:**
 - Modify: `tools/extract-bench/Cargo.toml`, `tools/extract-bench/src/main.rs`
 - Create: `tools/extract-bench/src/metrics.rs`, `tools/extract-bench/src/report.rs`
 
 **Interfaces:**
-- Consumes: `bib_core::normalize::normalize`; `bib_extract::{Backend, Extraction}`; alle Backends; `corpus::{Expect, cache_path}`; `load_corpus()` aus `main.rs` (Task 2)
+- Consumes: `bib_core::normalize::normalize`; `bib_extract::{Backend, Extraction}`; all backends; `corpus::{Expect, cache_path}`; `load_corpus()` from `main.rs` (Task 2)
 - Produces:
   - `metrics::TextScores { sentences_found, sentences_total, order_ok, order_total: usize, chars_missing: Vec<String>, control_chars, cid_markers, replacement_chars: usize }`
   - `metrics::evaluate(expect: &Expect, raw: &str) -> TextScores`
   - `report::Row { doc: String, backend: String, scores: Option<TextScores>, pages: usize, pages_with_geometry: usize, millis: u128, error: Option<String> }`
   - `report::render_markdown(rows: &[Row]) -> String`
-  - CLI: `extract-bench run --out <datei> [--backends <liste>]`
+  - CLI: `extract-bench run --out <file> [--backends <list>]`
 
-- [ ] **Step 1: Tests für die Bewertung schreiben**
+- [ ] **Step 1: Write tests for scoring**
 
 `tools/extract-bench/Cargo.toml` → `[dependencies]`:
 
@@ -2001,7 +2001,7 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 bib-extract = { path = "../../crates/bib-extract" }
 ```
 
-und
+and
 
 ```toml
 [features]
@@ -2011,7 +2011,7 @@ pdfium = ["bib-extract/pdfium"]
 `tools/extract-bench/src/metrics.rs`:
 
 ```rust
-//! Bewertung eines extrahierten Textes gegen die kuratierten Aussagen.
+//! Scoring an extracted text against the curated assertions.
 
 use crate::corpus::Expect;
 
@@ -2022,11 +2022,11 @@ pub struct TextScores {
     pub order_ok: usize,
     pub order_total: usize,
     pub chars_missing: Vec<String>,
-    /// Steuerzeichen außer \n, \r, \t und Seitenvorschub.
+    /// Control characters except \n, \r, \t and form feed.
     pub control_chars: usize,
-    /// Vorkommen von `(cid:`.
+    /// Occurrences of `(cid:`.
     pub cid_markers: usize,
-    /// Vorkommen von U+FFFD.
+    /// Occurrences of U+FFFD.
     pub replacement_chars: usize,
 }
 
@@ -2079,12 +2079,12 @@ mod tests {
 }
 ```
 
-`tools/extract-bench/src/main.rs`: unter `mod corpus;` die Zeile `mod metrics;` ergänzen.
+`tools/extract-bench/src/main.rs`: add the line `mod metrics;` under `mod corpus;`.
 
 Run: `cargo test -p extract-bench metrics`
-Expected: FAIL mit `not yet implemented`.
+Expected: FAIL with `not yet implemented`.
 
-- [ ] **Step 2: Bewertung implementieren**
+- [ ] **Step 2: Implement scoring**
 
 ```rust
 use bib_core::normalize::normalize;
@@ -2118,14 +2118,14 @@ pub fn evaluate(expect: &Expect, raw: &str) -> TextScores {
 ```
 
 Run: `cargo test -p extract-bench metrics`
-Expected: PASS, 4 Tests.
+Expected: PASS, 4 tests.
 
-- [ ] **Step 3: Tests für den Bericht schreiben**
+- [ ] **Step 3: Write tests for the report**
 
 `tools/extract-bench/src/report.rs`:
 
 ```rust
-//! Markdown-Bericht: eine Zeile je Dokument und Backend, darunter eine Summe je Backend.
+//! Markdown report: one row per document and backend, with a per-backend total below.
 
 use crate::metrics::TextScores;
 
@@ -2170,27 +2170,27 @@ mod tests {
         let md = render_markdown(&[
             row("a", "pdf_oxide", Some(scores(2, 3, 1)), None),
             row("b", "pdf_oxide", Some(scores(3, 3, 0)), None),
-            row("a", "mutool", None, Some("nicht installiert")),
+            row("a", "mutool", None, Some("not installed")),
         ]);
         assert!(md.contains("| a | pdf_oxide | 2/3 | 1/1 | ε | 2 | 0 | 0 | 6/6 | 120 |"), "{md}");
-        assert!(md.contains("| a | mutool | Fehler: nicht installiert |"), "{md}");
+        assert!(md.contains("| a | mutool | error: not installed |"), "{md}");
         assert!(md.contains("| pdf_oxide | 5/6 | 1/2 | 2 | 4 | 0 | 0 | 0 |"), "{md}");
     }
 }
 ```
 
-`tools/extract-bench/src/main.rs`: `mod report;` ergänzen.
+`tools/extract-bench/src/main.rs`: add `mod report;`.
 
 Run: `cargo test -p extract-bench report`
-Expected: FAIL mit `not yet implemented`.
+Expected: FAIL with `not yet implemented`.
 
-- [ ] **Step 4: Bericht implementieren**
+- [ ] **Step 4: Implement the report**
 
 ```rust
 pub fn render_markdown(rows: &[Row]) -> String {
     let mut md = String::new();
     md.push_str("## Details\n\n");
-    md.push_str("| Dokument | Backend | Sätze | Reihenfolge | fehlende Zeichen | Steuerzeichen | (cid:) | U+FFFD | Seiten mit Geometrie | ms |\n");
+    md.push_str("| Document | Backend | Sentences | Order | Missing chars | Control chars | (cid:) | U+FFFD | Pages with geometry | ms |\n");
     md.push_str("|---|---|---|---|---|---|---|---|---|---|\n");
     for row in rows {
         match (&row.scores, &row.error) {
@@ -2211,16 +2211,16 @@ pub fn render_markdown(rows: &[Row]) -> String {
                 row.millis,
             )),
             (None, error) => md.push_str(&format!(
-                "| {} | {} | Fehler: {} |\n",
+                "| {} | {} | error: {} |\n",
                 row.doc,
                 row.backend,
-                error.as_deref().unwrap_or("unbekannt")
+                error.as_deref().unwrap_or("unknown")
             )),
         }
     }
 
-    md.push_str("\n## Summe je Backend\n\n");
-    md.push_str("| Backend | Sätze | Reihenfolge | Dokumente mit fehlenden Zeichen | Steuerzeichen | (cid:) | U+FFFD | Fehler |\n");
+    md.push_str("\n## Totals per backend\n\n");
+    md.push_str("| Backend | Sentences | Order | Docs with missing chars | Control chars | (cid:) | U+FFFD | Errors |\n");
     md.push_str("|---|---|---|---|---|---|---|---|\n");
     let mut backends: Vec<&str> = Vec::new();
     for row in rows {
@@ -2253,9 +2253,9 @@ pub fn render_markdown(rows: &[Row]) -> String {
 Run: `cargo test -p extract-bench report`
 Expected: PASS.
 
-- [ ] **Step 5: Befehl `run` implementieren**
+- [ ] **Step 5: Implement the `run` command**
 
-In `tools/extract-bench/src/main.rs` ergänzen. Imports:
+Add to `tools/extract-bench/src/main.rs`. Imports:
 
 ```rust
 use std::path::PathBuf;
@@ -2265,27 +2265,27 @@ use bib_extract::Backend;
 use bib_extract::backends::{mutool::Mutool, oxide::PdfOxide, pdf_extract::PdfExtract};
 ```
 
-`Cmd` erweitern:
+Extend `Cmd`:
 
 ```rust
-    /// Extrahiert alle Korpus-Dokumente mit allen verfügbaren Backends und schreibt einen Bericht.
+    /// Extracts all corpus documents with all available backends and writes a report.
     Run {
-        /// Zieldatei des Markdown-Berichts, z. B. bench/results/2026-09-18.md
+        /// Target file for the markdown report, e.g. bench/results/2026-09-18.md
         #[arg(long)]
         out: PathBuf,
-        /// Kommagetrennte Auswahl: pdf_oxide,pdf-extract,mutool,pdfium
+        /// Comma-separated selection: pdf_oxide,pdf-extract,mutool,pdfium
         #[arg(long, value_delimiter = ',')]
         backends: Option<Vec<String>>,
     },
 ```
 
-`main` erweitern:
+Extend `main`:
 
 ```rust
         Cmd::Run { out, backends } => run(out, backends),
 ```
 
-Funktionen:
+Functions:
 
 ```rust
 fn available_backends(selection: Option<Vec<String>>) -> Vec<Box<dyn Backend>> {
@@ -2294,12 +2294,12 @@ fn available_backends(selection: Option<Vec<String>>) -> Vec<Box<dyn Backend>> {
     if mutool.is_available() {
         all.push(Box::new(mutool));
     } else {
-        eprintln!("mutool nicht installiert, übersprungen");
+        eprintln!("mutool not installed, skipped");
     }
     #[cfg(feature = "pdfium")]
     match bib_extract::backends::pdfium::Pdfium::from_env() {
         Some(pdfium) => all.push(Box::new(pdfium)),
-        None => eprintln!("BIB_PDFIUM_LIB_DIR nicht gesetzt, pdfium übersprungen"),
+        None => eprintln!("BIB_PDFIUM_LIB_DIR not set, pdfium skipped"),
     }
     match selection {
         Some(names) => all.into_iter().filter(|b| names.iter().any(|n| n == b.name())).collect(),
@@ -2313,7 +2313,7 @@ fn run(out: PathBuf, selection: Option<Vec<String>>) -> anyhow::Result<()> {
     let mut rows = Vec::new();
     for doc in &corpus.docs {
         let path = cache_path(&doc.id);
-        anyhow::ensure!(path.exists(), "{} fehlt, zuerst `fetch` ausführen", doc.id);
+        anyhow::ensure!(path.exists(), "{} missing, run `fetch` first", doc.id);
         for backend in &backends {
             let started = Instant::now();
             let result = backend.extract(&path);
@@ -2342,7 +2342,7 @@ fn run(out: PathBuf, selection: Option<Vec<String>>) -> anyhow::Result<()> {
             rows.push(row);
         }
     }
-    let mut header = String::from("# Extraktions-Benchmark\n\n## Backends\n\n");
+    let mut header = String::from("# Extraction Benchmark\n\n## Backends\n\n");
     for backend in &backends {
         header.push_str(&format!("- {} {}\n", backend.name(), backend.version()));
     }
@@ -2351,15 +2351,15 @@ fn run(out: PathBuf, selection: Option<Vec<String>>) -> anyhow::Result<()> {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(&out, header + &report::render_markdown(&rows))?;
-    println!("Bericht: {}", out.display());
+    println!("Report: {}", out.display());
     Ok(())
 }
 ```
 
-- [ ] **Step 6: Kurzlauf**
+- [ ] **Step 6: Short run**
 
 Run: `cargo run --release -p extract-bench -- run --out /dev/stdout --backends pdf_oxide,pdf-extract`
-Expected: Bericht mit 14 Detailzeilen und 2 Summenzeilen auf stdout, keine Panik.
+Expected: report with 14 detail rows and 2 total rows on stdout, no panic.
 
 Run: `cargo test --workspace`
 Expected: PASS.
@@ -2376,9 +2376,9 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 9: Zed-Test mit zwei Language Servern (Schritt 0b)
+### Task 9: Zed Test with Two Language Servers (Step 0b)
 
-Wegwerf-Code. Er beantwortet eine Frage und wird danach nicht weiterentwickelt.
+Throwaway code. It answers one question and is not developed further afterward.
 
 **Files:**
 - Modify: `Cargo.toml`
@@ -2388,11 +2388,11 @@ Wegwerf-Code. Er beantwortet eine Frage und wird danach nicht weiterentwickelt.
 - Create: `docs/research/14-zed-two-language-servers.md`
 
 **Interfaces:**
-- Produces: Programm `lsp-coexist` (stdio-Language-Server), Dev-Extension `bib-spike`, Protokoll mit Ergebnis je Funktion
+- Produces: program `lsp-coexist` (stdio language server), dev extension `bib-spike`, log with the result per function
 
-- [ ] **Step 1: Crate anlegen und Tests für die Key-Suche schreiben**
+- [ ] **Step 1: Create the crate and write tests for key lookup**
 
-`Cargo.toml`: `"spikes/lsp-coexist"` zu `members`; Abhängigkeiten:
+`Cargo.toml`: add `"spikes/lsp-coexist"` to `members`; dependencies:
 
 ```toml
 tower-lsp-server = "0.23"
@@ -2418,8 +2418,8 @@ tokio.workspace = true
 `spikes/lsp-coexist/src/lib.rs`:
 
 ```rust
-//! Wegwerf-Code für Schritt 0b: findet `@key`-Referenzen in Typst-Text.
-//! Spalten in UTF-16-Codeeinheiten, wie LSP sie verlangt.
+//! Throwaway code for step 0b: finds `@key` references in Typst text.
+//! Columns in UTF-16 code units, as required by LSP.
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyHit {
@@ -2443,7 +2443,7 @@ mod tests {
 
     #[test]
     fn finds_keys_and_strips_trailing_punctuation() {
-        let hits = find_keys("Laut @dwork2006.\nUnd @a:b-c_d, fertig.");
+        let hits = find_keys("From @dwork2006.\nAnd @a:b-c_d, done.");
         assert_eq!(
             hits,
             vec![
@@ -2455,7 +2455,7 @@ mod tests {
 
     #[test]
     fn ignores_emails_and_escaped_at() {
-        assert!(find_keys("mail an a@b.de und \\@nicht").is_empty());
+        assert!(find_keys("email to a@b.de and \\@not").is_empty());
     }
 
     #[test]
@@ -2467,7 +2467,7 @@ mod tests {
 
     #[test]
     fn key_at_hits_inside_and_at_edges() {
-        let text = "siehe @dwork2006 hier";
+        let text = "about @dwork2006 here";
         assert_eq!(key_at(text, 0, 6).unwrap().key, "dwork2006");
         assert_eq!(key_at(text, 0, 16).unwrap().key, "dwork2006");
         assert!(key_at(text, 0, 2).is_none());
@@ -2475,16 +2475,16 @@ mod tests {
 }
 ```
 
-`spikes/lsp-coexist/src/main.rs` (vorläufig):
+`spikes/lsp-coexist/src/main.rs` (temporary):
 
 ```rust
 fn main() {}
 ```
 
 Run: `cargo test -p lsp-coexist`
-Expected: FAIL mit `not yet implemented`.
+Expected: FAIL with `not yet implemented`.
 
-- [ ] **Step 2: Key-Suche implementieren**
+- [ ] **Step 2: Implement key lookup**
 
 ```rust
 pub fn find_keys(text: &str) -> Vec<KeyHit> {
@@ -2523,15 +2523,15 @@ pub fn find_keys(text: &str) -> Vec<KeyHit> {
 ```
 
 Run: `cargo test -p lsp-coexist`
-Expected: PASS, 4 Tests.
+Expected: PASS, 4 tests.
 
-- [ ] **Step 3: Language Server schreiben**
+- [ ] **Step 3: Write the language server**
 
 `spikes/lsp-coexist/src/main.rs`:
 
 ```rust
-//! Wegwerf-Language-Server für Schritt 0b. Jede Antwort ist mit „bib-spike" markiert,
-//! damit in Zed sichtbar ist, von welchem Server sie stammt.
+//! Throwaway language server for step 0b. Every response is tagged with "bib-spike",
+//! so it's visible in Zed which server it came from.
 
 use std::collections::HashMap;
 
@@ -2558,7 +2558,7 @@ impl Spike {
                 range: range(hit),
                 severity: Some(DiagnosticSeverity::HINT),
                 source: Some("bib-spike".into()),
-                message: format!("bib-spike sieht @{}", hit.key),
+                message: format!("bib-spike sees @{}", hit.key),
                 ..Default::default()
             })
             .collect();
@@ -2594,7 +2594,7 @@ impl LanguageServer for Spike {
     }
 
     async fn initialized(&self, _: InitializedParams) {
-        self.client.log_message(MessageType::INFO, "bib-spike bereit").await;
+        self.client.log_message(MessageType::INFO, "bib-spike ready").await;
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -2616,7 +2616,7 @@ impl LanguageServer for Spike {
         Ok(self.hit(&p.text_document.uri, p.position).await.map(|(_, hit)| Hover {
             contents: HoverContents::Markup(MarkupContent {
                 kind: MarkupKind::Markdown,
-                value: format!("**bib-spike** Hover für `{}`", hit.key),
+                value: format!("**bib-spike** hover for `{}`", hit.key),
             }),
             range: Some(range(&hit)),
         }))
@@ -2645,7 +2645,7 @@ impl LanguageServer for Spike {
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
         Ok(self.hit(&params.text_document.uri, params.range.start).await.map(|(_, hit)| {
             vec![CodeActionOrCommand::CodeAction(CodeAction {
-                title: format!("bib-spike: Aktion für {}", hit.key),
+                title: format!("bib-spike: action for {}", hit.key),
                 kind: Some(CodeActionKind::QUICKFIX),
                 ..Default::default()
             })]
@@ -2655,7 +2655,7 @@ impl LanguageServer for Spike {
     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
         Ok(Some(CompletionResponse::Array(vec![CompletionItem::new_simple(
             "bibspike2026".into(),
-            "bib-spike Vervollständigung".into(),
+            "bib-spike completion".into(),
         )])))
     }
 }
@@ -2668,16 +2668,16 @@ async fn main() {
 ```
 
 Run: `cargo build -p lsp-coexist`
-Expected: kompiliert ohne Fehler.
+Expected: compiles without errors.
 
-- [ ] **Step 4: Zed-Extension und Testdokument anlegen**
+- [ ] **Step 4: Create the Zed extension and test document**
 
 `spikes/zed-coexist-ext/extension.toml`:
 
 ```toml
 id = "bib-spike"
 name = "bib spike"
-description = "Wegwerf-Test: zweiter Language Server für Typst neben tinymist"
+description = "Throwaway test: second language server for Typst alongside tinymist"
 version = "0.0.1"
 schema_version = 1
 authors = ["Anton Oehler <antonoehler@gmx.de>"]
@@ -2704,7 +2704,7 @@ path = "src/lib.rs"
 [dependencies]
 zed_extension_api = "0.7.0"
 
-# Eigener Workspace: wird für wasm32-wasip2 gebaut, nicht mit dem Haupt-Workspace.
+# Separate workspace: built for wasm32-wasip2, not with the main workspace.
 [workspace]
 ```
 
@@ -2723,7 +2723,7 @@ impl zed::Extension for BibSpike {
     fn language_server_command(&mut self, _id: &LanguageServerId, worktree: &zed::Worktree) -> Result<zed::Command> {
         let command = worktree
             .which("lsp-coexist")
-            .ok_or_else(|| "lsp-coexist nicht im PATH: `cargo install --path spikes/lsp-coexist`".to_string())?;
+            .ok_or_else(|| "lsp-coexist not in PATH: `cargo install --path spikes/lsp-coexist`".to_string())?;
         Ok(zed::Command { command, args: vec![], env: vec![] })
     }
 }
@@ -2734,11 +2734,11 @@ zed::register_extension!(BibSpike);
 `spikes/typst-sample/main.typ`:
 
 ```typst
-= Testdokument für bib-spike
+= Test document for bib-spike
 
-Differential Privacy nach @dwork2006 und nochmals @dwork2006.
+Differential Privacy according to @dwork2006 and again @dwork2006.
 
-Ein unbekannter Key: @unbekannt2020.
+An unknown key: @unknown2020.
 
 #bibliography("refs.bib")
 ```
@@ -2755,7 +2755,7 @@ Ein unbekannter Key: @unbekannt2020.
 ```
 
 Run: `rustup target add wasm32-wasip2 && cargo build --manifest-path spikes/zed-coexist-ext/Cargo.toml --target wasm32-wasip2`
-Expected: Target installiert, Build erfolgreich.
+Expected: target installed, build successful.
 
 - [ ] **Step 5: Commit (Code)**
 
@@ -2767,45 +2767,45 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 ```
 
-- [ ] **Step 6: Zustimmung des Nutzers einholen**
+- [ ] **Step 6: Obtain the user's consent**
 
-Dem Nutzer vor jedem Eingriff in seine Zed-Installation mitteilen, was passiert, und auf ein ausdrückliches Ja warten:
+Tell the user what will happen before any change to their Zed installation, and wait for an explicit yes:
 
-1. `cargo install --path spikes/lsp-coexist` (legt `~/.cargo/bin/lsp-coexist` ab)
+1. `cargo install --path spikes/lsp-coexist` (places `~/.cargo/bin/lsp-coexist`)
 2. In Zed: *Install Dev Extension* → `spikes/zed-coexist-ext`
-3. Falls nötig: `"languages": { "Typst": { "language_servers": ["tinymist", "bib-spike", "..."] } }` in `~/.config/zed/settings.json`
-4. Nach dem Test: Dev-Extension entfernen und `cargo uninstall lsp-coexist`
+3. If needed: `"languages": { "Typst": { "language_servers": ["tinymist", "bib-spike", "..."] } }` in `~/.config/zed/settings.json`
+4. After the test: remove the dev extension and run `cargo uninstall lsp-coexist`
 
-Ohne Zustimmung hier anhalten und Task 9 als offen melden.
+Without consent, stop here and report Task 9 as open.
 
-- [ ] **Step 7: Test in Zed durchführen**
+- [ ] **Step 7: Run the test in Zed**
 
-Mit Zustimmung: Schritte 1 und 2 ausführen, dann `zed spikes/typst-sample/main.typ` öffnen. Im Log (*zed: open log*) prüfen, dass `tinymist` **und** `bib-spike` gestartet sind; startet `bib-spike` nicht, Schritt 3 (mit bereits erteilter Zustimmung) ausführen und Zed neu starten.
+With consent: run steps 1 and 2, then open `zed spikes/typst-sample/main.typ`. In the log (*zed: open log*), check that `tinymist` **and** `bib-spike` have started; if `bib-spike` doesn't start, run step 3 (consent already given) and restart Zed.
 
-Dann jede Funktion auf `@dwork2006` in Zeile 3 ausprobieren und festhalten, **welcher Server** jeweils sichtbar ist:
+Then try every function on `@dwork2006` on line 3 and record **which server** is visible for each:
 
-| Funktion | Auslösen | Erwartung, falls Zed zusammenführt |
+| Function | Trigger | Expectation if Zed merges them |
 |---|---|---|
-| Diagnostics | Datei öffnen | Hinweise „bib-spike sieht @…" neben tinymists Meldung zu `@unbekannt2020` |
-| Hover | Maus über `@dwork2006` | tinymists Literaturinfo **und** „bib-spike Hover für `dwork2006`" |
-| Go to Definition | F12 | Ziele beider Server (Literaturverzeichnis und Zeile 1) |
-| Find All References | Shift+F12 | ein Multibuffer mit beiden Vorkommen, ohne Duplikate |
-| Code Actions | Ctrl+. | „bib-spike: Aktion für dwork2006" neben eventuellen tinymist-Aktionen |
-| Completion | `@` tippen | tinymists Keys **und** `bibspike2026` |
+| Diagnostics | Open the file | hints "bib-spike sees @…" alongside tinymist's message for `@unknown2020` |
+| Hover | Mouse over `@dwork2006` | tinymist's citation info **and** "bib-spike hover for `dwork2006`" |
+| Go to Definition | F12 | targets from both servers (bibliography and line 1) |
+| Find All References | Shift+F12 | one multibuffer with both occurrences, no duplicates |
+| Code Actions | Ctrl+. | "bib-spike: action for dwork2006" alongside any tinymist actions |
+| Completion | Type `@` | tinymist's keys **and** `bibspike2026` |
 
-- [ ] **Step 8: Protokoll schreiben**
+- [ ] **Step 8: Write up the log**
 
 `docs/research/14-zed-two-language-servers.md`:
 
 ```markdown
-# Zed mit zwei Typst-Language-Servern (Schritt 0b)
+# Zed with Two Typst Language Servers (Step 0b)
 
-Stand: <Datum des Tests>. Zed <Ausgabe von `zed --version`>, tinymist <Version aus dem Zed-Log>.
+As of: <date of the test>. Zed <output of `zed --version`>, tinymist <version from the Zed log>.
 
-Aufbau: `spikes/lsp-coexist` (Wegwerf-Server) über die Dev-Extension `spikes/zed-coexist-ext`,
-Testdokument `spikes/typst-sample/main.typ`. Settings-Änderung nötig: <ja/nein, welche>.
+Setup: `spikes/lsp-coexist` (throwaway server) via the dev extension `spikes/zed-coexist-ext`,
+test document `spikes/typst-sample/main.typ`. Settings change needed: <yes/no, which>.
 
-| Funktion | tinymist sichtbar | bib-spike sichtbar | Ergebnis |
+| Function | tinymist visible | bib-spike visible | Result |
 |---|---|---|---|
 | Diagnostics | | | |
 | Hover | | | |
@@ -2814,18 +2814,18 @@ Testdokument `spikes/typst-sample/main.typ`. Settings-Änderung nötig: <ja/nein
 | Code Actions | | | |
 | Completion | | | |
 
-## Folgen für Spec §9
+## Consequences for Spec §9
 
-<Welche geplanten Editor-Funktionen tragen, welche nicht, und was stattdessen.>
+<Which planned editor features hold up, which don't, and what to use instead.>
 ```
 
-Die spitzen Klammern und leeren Zellen werden mit den Beobachtungen aus Step 7 gefüllt; das Dokument wird erst mit echten Werten committet.
+The angle brackets and empty cells are filled in with the observations from Step 7; the document is only committed once it has real values.
 
-- [ ] **Step 9: Aufräumen**
+- [ ] **Step 9: Clean up**
 
-Dev-Extension in Zed entfernen, `cargo uninstall lsp-coexist`, eine eventuelle Settings-Änderung rückgängig machen. Dem Nutzer bestätigen, dass der Ausgangszustand wiederhergestellt ist.
+Remove the dev extension in Zed, run `cargo uninstall lsp-coexist`, revert any settings change. Confirm to the user that the original state has been restored.
 
-- [ ] **Step 10: Commit (Protokoll)**
+- [ ] **Step 10: Commit (log)**
 
 ```bash
 git add docs/research/14-zed-two-language-servers.md
@@ -2837,35 +2837,35 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 ---
 
-### Task 10: Benchmark auswerten und Spec aktualisieren
+### Task 10: Evaluate the Benchmark and Update the Spec
 
 **Files:**
-- Create: `bench/results/<Datum>.md`
+- Create: `bench/results/<date>.md`
 - Modify: `bench/README.md`, `docs/superpowers/specs/2026-09-16-library-core-typst-design.md` (§7, §9, §17, §18)
 
 **Interfaces:**
-- Consumes: Bericht aus Task 8, Korpus aus Task 7, Protokoll aus Task 9
-- Produces: festgelegtes Standard-Backend und Kaskaden-Backend für Plan 2
+- Consumes: the report from Task 8, the corpus from Task 7, the log from Task 9
+- Produces: the chosen default backend and cascade backend for Plan 2
 
-- [ ] **Step 1: Entscheidungsregel festhalten**
+- [ ] **Step 1: Record the decision rule**
 
-An `bench/README.md` anhängen:
+Append to `bench/README.md`:
 
 ```markdown
-## Entscheidungsregel (Schritt 0a)
+## Decision Rule (Step 0a)
 
-R(b) = gefundene Sätze / alle Sätze über den Korpus, O(b) = korrekte Reihenfolge-Paare / alle Paare.
-`mutool` ist nur Referenz (AGPL, nicht als Standard wählbar).
+R(b) = sentences found / all sentences across the corpus, O(b) = correct order pairs / all pairs.
+`mutool` is reference only (AGPL, not selectable as the default).
 
-1. **`pdf_oxide` bleibt Standard**, wenn R(pdf_oxide) ≥ max(R(pdfium), R(mutool)) − 0,05
-   **und** O(pdf_oxide) ≥ max(O(pdfium), O(mutool)) − 0,05
-   **und** bei jedem Dokument, in dem pdf_oxide Zeichen fehlen oder Steuerzeichen/`(cid:`/U+FFFD
-   auftreten, `pdf-extract` alle erwarteten Zeichen liefert (die Kaskade trägt).
-2. **Sonst pdfium**, wenn es Bedingung 1 mit pdfium an Stelle von pdf_oxide erfüllt.
-3. **Sonst anhalten** und die Ergebnisse mit dem Nutzer besprechen.
+1. **`pdf_oxide` remains the default** if R(pdf_oxide) ≥ max(R(pdfium), R(mutool)) − 0.05
+   **and** O(pdf_oxide) ≥ max(O(pdfium), O(mutool)) − 0.05
+   **and** for every document where pdf_oxide is missing characters or has control characters/`(cid:`/U+FFFD,
+   `pdf-extract` supplies all expected characters (the cascade covers it).
+2. **Otherwise pdfium**, if it satisfies condition 1 with pdfium in place of pdf_oxide.
+3. **Otherwise stop** and discuss the results with the user.
 ```
 
-- [ ] **Step 2: Vollständigen Lauf durchführen**
+- [ ] **Step 2: Run the full benchmark**
 
 ```bash
 cargo run -p extract-bench -- fetch
@@ -2873,36 +2873,36 @@ BIB_PDFIUM_LIB_DIR=$PWD/bench/cache/pdfium/lib \
   cargo run --release -p extract-bench --features pdfium -- run --out bench/results/$(date +%F).md
 ```
 
-Expected: Bericht mit 7 Dokumenten × 4 Backends. Gibt es Sätze, die **kein** Backend findet, zurück zu Task 7 Step 4 und die Aussage korrigieren, dann erneut laufen lassen.
+Expected: report with 7 documents × 4 backends. If there are sentences that **no** backend finds, go back to Task 7 Step 4 and fix the assertion, then run again.
 
-- [ ] **Step 3: Regel anwenden**
+- [ ] **Step 3: Apply the rule**
 
-Aus der Summentabelle R und O je Backend ablesen, die drei Bedingungen der Reihe nach prüfen und das Ergebnis mit den Zahlen unter den Bericht schreiben:
+Read R and O per backend from the totals table, check the three conditions in order, and write the result with the numbers below the report:
 
 ```markdown
-## Entscheidung
+## Decision
 
 - R: pdf_oxide …, pdfium …, mutool …, pdf-extract …
 - O: pdf_oxide …, pdfium …, mutool …, pdf-extract …
-- Dokumente mit Zeichenproblemen bei pdf_oxide: … — von pdf-extract abgedeckt: ja/nein
-- **Standard-Backend:** …  **Kaskade bei Verdacht:** …
+- Documents with character problems in pdf_oxide: … — covered by pdf-extract: yes/no
+- **Default backend:** …  **Cascade on suspicion:** …
 ```
 
-Trifft Regel 3 zu: hier anhalten, Bericht committen und dem Nutzer vorlegen.
+If rule 3 applies: stop here, commit the report, and present it to the user.
 
-- [ ] **Step 4: Spec aktualisieren**
+- [ ] **Step 4: Update the spec**
 
 In `docs/superpowers/specs/2026-09-16-library-core-typst-design.md`:
 
-- §7 „Kaskade, pro Seite": Standard-Backend und Kaskade gemäß Entscheidung eintragen, Verweis auf `bench/results/<Datum>.md`.
-- §9: Absatz zu Zed gemäß `docs/research/14-zed-two-language-servers.md` von „nicht praktisch getestet" auf das Ergebnis ändern.
-- §17: Zeilen „Benchmark (Schritt 0a)" und „Zed mit zwei Language Servern (Schritt 0b)" mit den Kernzahlen ergänzen; die Zeile „Aus Doku und Issues, nicht praktisch getestet" entfernen.
-- §18: die Punkte zum Benchmark-Ergebnis und zum Zed-Test streichen.
+- §7 "Cascade, per page": record the default backend and cascade according to the decision, with a reference to `bench/results/<date>.md`.
+- §9: change the paragraph about Zed, per `docs/research/14-zed-two-language-servers.md`, from "not tested in practice" to the result.
+- §17: add the rows "Benchmark (step 0a)" and "Zed with two language servers (step 0b)" with the key figures; remove the row "From docs and issues, not tested in practice".
+- §18: strike the bullet points about the benchmark result and the Zed test.
 
-- [ ] **Step 5: Gesamtprüfung**
+- [ ] **Step 5: Full check**
 
 Run: `cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings`
-Expected: PASS ohne Warnungen. Clippy-Funde beheben, nicht unterdrücken.
+Expected: PASS with no warnings. Fix clippy findings, don't suppress them.
 
 - [ ] **Step 6: Commit**
 

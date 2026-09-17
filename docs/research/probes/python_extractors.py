@@ -1,6 +1,6 @@
-"""pdftotext-Datei, pdfplumber und PyMuPDF (AGPL) im Vergleich: Anzahl ε und Schriftarten.
+"""Compares a pdftotext file, pdfplumber, and PyMuPDF (AGPL): ε count and fonts.
 
-Aufruf: uv run -q --with pymupdf --with pdfplumber python python_extractors.py <pdf> [pdftotext.txt]
+Usage: uv run -q --with pymupdf --with pdfplumber python python_extractors.py <pdf> [pdftotext.txt]
 """
 import re
 import sys

@@ -1,61 +1,62 @@
-# Extraktions-Benchmark
+# Extraction benchmark
 
-Misst PDF-Backends an handkuratierten Aussagen (Stil olmOCR-Bench): Stehen bekannte Sätze
-zusammenhängend und in der richtigen Reihenfolge im normalisierten Text? Sind erwartete
-Sonderzeichen vorhanden? Wie viel Datenmüll entsteht?
+Measures PDF backends against hand-curated assertions (olmOCR-Bench style): do known sentences
+appear contiguously and in the correct order in the normalized text? Are expected special
+characters present? How much data garbage is produced?
 
 ```sh
 cargo run -p extract-bench -- fetch
 BIB_PDFIUM_LIB_DIR=$PWD/bench/cache/pdfium/lib \
-  cargo run --release -p extract-bench --features pdfium -- run --out bench/results/<datum>.md
+  cargo run --release -p extract-bench --features pdfium -- run --out bench/results/<date>.md
 ```
 
-`fetch` muss vor `cargo test --workspace` laufen: Die Integrationstests von `bib-extract`
-brauchen die Korpus-Dateien in `bench/cache/` (siehe `crates/bib-extract/tests/common/mod.rs`).
+`fetch` must run before `cargo test --workspace`: `bib-extract`'s integration tests need the
+corpus files in `bench/cache/` (see `crates/bib-extract/tests/common/mod.rs`).
 
-`libpdfium` liegt nicht im Repo und muss vor einem Lauf mit `--features pdfium` einmal geladen
-werden (Pfad wie oben in `BIB_PDFIUM_LIB_DIR`):
+`libpdfium` is not in the repo and must be downloaded once before a run with `--features pdfium`
+(path as above in `BIB_PDFIUM_LIB_DIR`):
 
 ```sh
 mkdir -p bench/cache/pdfium && curl -sSfL https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-x64.tgz | tar xz -C bench/cache/pdfium
 ```
 
-`releases/latest` zeigt auf die jeweils neueste Version; welcher Build tatsächlich geladen
-wurde, steht in jedem Bericht unter „Backends“ (`libpdfium`-Versionsnummer).
+`releases/latest` points to whichever version is newest; which build was actually loaded
+is recorded in every report under "Backends" (the `libpdfium` version number).
 
-## Kuration
+## Curation
 
-Pro Dokument:
+Per document:
 
-- **Drei Sätze:** (a) der erste Satz des Abstracts, (b) ein Satz aus der rechten Spalte
-  bzw. der zweiten Hälfte von Seite 2, (c) ein Satz aus dem letzten Absatz vor den Referenzen.
-- **Regeln für Sätze:** mindestens 8 Wörter, keine Formeln, keine Zitatmarker, keine
-  Fußnotenzeichen, endet mit Punkt. Wörtlich aus der LaTeX-Quelle, nicht aus einer
-  PDF-Extraktion kopiert (sonst misst der Benchmark das Werkzeug, mit dem kuratiert wurde).
-  Kein Satz, der im PDF an einem echten Bindestrich umbricht (`fine-⏎tuned`): Die
-  Normalisierung verbindet `-` am Zeilenende, der Satz wäre für jedes Backend unauffindbar.
-- **Ein Reihenfolge-Paar:** `before = [["<Anfang von b>", "<Anfang von c>"]]`, je ein
-  eindeutiges Stück von mindestens 5 Wörtern.
-- **Zeichen:** griechische Buchstaben, die im Fließtext gerendert werden (`\epsilon`,
-  `\varepsilon` → `ε`; `\delta` → `δ`).
-- **Prüfung gegen die Quelle:** jeder Satz muss in der LaTeX-Quelle stehen:
-  `tr -s '[:space:]' ' ' < <datei>.tex | grep -F -c '<satz>'` ≥ 1.
-- **Prüfung im PDF:** jeden Satz im PDF-Viewer suchen und sichtbar finden (Makros können den
-  gerenderten Text verändern).
-- Dokumente ohne LaTeX-Quelle (Dwork 2006): Sätze nur aus dem PDF-Viewer, per Augenschein
-  gegen die Seite geprüft.
+- **Three sentences:** (a) the first sentence of the abstract, (b) a sentence from the right
+  column or the second half of page 2, (c) a sentence from the last paragraph before the
+  references.
+- **Rules for sentences:** at least 8 words, no formulas, no citation markers, no footnote
+  markers, ends with a period. Copied verbatim from the LaTeX source, not from a PDF
+  extraction (otherwise the benchmark would measure the tool used to curate it). No sentence
+  that wraps at a real hyphen in the PDF (`fine-⏎tuned`): normalization joins `-` at line
+  breaks, so the sentence would be unfindable for every backend.
+- **One order pair:** `before = [["<start of b>", "<start of c>"]]`, each a unique
+  snippet of at least 5 words.
+- **Characters:** Greek letters rendered in body text (`\epsilon`, `\varepsilon` → `ε`;
+  `\delta` → `δ`).
+- **Verification against the source:** every sentence must appear in the LaTeX source:
+  `tr -s '[:space:]' ' ' < <file>.tex | grep -F -c '<sentence>'` ≥ 1.
+- **Verification in the PDF:** search for every sentence in the PDF viewer and find it
+  visibly (macros can alter the rendered text).
+- Documents without a LaTeX source (Dwork 2006): sentences taken only from the PDF viewer,
+  checked visually against the page.
 
-Findet nach dem ersten Lauf **kein einziges** Backend einen Satz, ist vermutlich die Aussage
-falsch: im PDF prüfen und korrigieren, bevor Ergebnisse gewertet werden.
+If after the first run **not a single** backend finds a sentence, the assertion is probably
+wrong: check and correct it in the PDF before results are scored.
 
-## Entscheidungsregel (Schritt 0a)
+## Decision rule (step 0a)
 
-R(b) = gefundene Sätze / alle Sätze über den Korpus, O(b) = korrekte Reihenfolge-Paare / alle Paare.
-`mutool` ist nur Referenz (AGPL, nicht als Standard wählbar).
+R(b) = sentences found / all sentences across the corpus, O(b) = correct order pairs / all pairs.
+`mutool` is reference only (AGPL, not selectable as default).
 
-1. **`pdf_oxide` bleibt Standard**, wenn R(pdf_oxide) ≥ max(R(pdfium), R(mutool)) − 0,05
-   **und** O(pdf_oxide) ≥ max(O(pdfium), O(mutool)) − 0,05
-   **und** bei jedem Dokument, in dem pdf_oxide Zeichen fehlen oder Steuerzeichen/`(cid:`/U+FFFD
-   auftreten, `pdf-extract` alle erwarteten Zeichen liefert (die Kaskade trägt).
-2. **Sonst pdfium**, wenn es Bedingung 1 mit pdfium an Stelle von pdf_oxide erfüllt.
-3. **Sonst anhalten** und die Ergebnisse mit dem Nutzer besprechen.
+1. **`pdf_oxide` remains the default** if R(pdf_oxide) ≥ max(R(pdfium), R(mutool)) − 0.05
+   **and** O(pdf_oxide) ≥ max(O(pdfium), O(mutool)) − 0.05
+   **and** for every document where pdf_oxide is missing characters or has control
+   characters/`(cid:`/U+FFFD, `pdf-extract` provides all expected characters (the cascade holds).
+2. **Otherwise pdfium**, if it satisfies condition 1 with pdfium in place of pdf_oxide.
+3. **Otherwise stop** and discuss the results with the user.

@@ -1,46 +1,46 @@
-# Semantic Reader Project (Allen AI und Partner)
+# Semantic Reader Project (Allen AI and partners)
 
-Recherche 2026-09-14. Zusammenarbeit von NLP- und HCI-Forschenden (AI2, UC Berkeley,
-University of Washington u. a.). Ergebnis ist die Semantic-Reader-Anwendung auf
-semanticscholar.org plus eine Reihe von Forschungsprototypen.
+Research 2026-09-14. Collaboration between NLP and HCI researchers (AI2, UC Berkeley,
+University of Washington, and others). The result is the Semantic Reader application on
+semanticscholar.org plus a series of research prototypes.
 
-Überblick: [Semantic Reader Project (arXiv)](https://ar5iv.labs.arxiv.org/html/2303.14334) · [CACM-Artikel](https://dl.acm.org/doi/10.1145/3659096) · [Open Research Platform](https://openreader.semanticscholar.org/)
+Overview: [Semantic Reader Project (arXiv)](https://ar5iv.labs.arxiv.org/html/2303.14334) · [CACM article](https://dl.acm.org/doi/10.1145/3659096) · [Open Research Platform](https://openreader.semanticscholar.org/)
 
-## Konzepte aus den Prototypen
+## Concepts from the prototypes
 
-| Prototyp | Idee | Relevanz für uns |
+| Prototype | Idea | Relevance for us |
 |---|---|---|
-| **CiteSee** | Zitate im PDF farbig nach persönlichem Kontext: schon gelesen, gespeichert, selbst zitiert. Paper-Karten erklären, wie die zitierte Arbeit zur eigenen Lesehistorie steht. Als Chrome-Extension auf Basis von ScholarPhi gebaut (~5.000 neue, ~17.000 Zeilen TypeScript gesamt). | Einfärbung nach A/B/C-Stufe, zitiert, ungelesen, fehlt |
-| **CiteRead** | Zeigt am Rand der Quelle, was spätere zitierende Papers **über genau diese Stelle** sagen. Drei Beiträge: wichtige Citer auswählen, Kommentar in der Quelle lokalisieren, Randnotiz-Interaktion. Studie mit 12 Forschenden: besseres Verständnis und Erinnern als mit einer Liste von Citern. | Gegenrichtung zu „wo zitiere ich das?" |
-| **ScholarPhi** | Definitionen von Begriffen und Symbolen direkt an der Stelle; bevorzugt die Definition kurz vor der Verwendung; Formel-Erklärungen mit Symboldefinitionen am Rand. | ε und Co. in DP-Formeln |
-| **Scim** | Beim Überfliegen werden Ziel, Neuheit, Methode, Ergebnis farbig hervorgehoben. | Belegquellen, die man nicht ganz liest |
-| **Relatedly** | Lesen und Querverweisen von Related-Work-Absätzen, die sich über Papers hinweg überschneiden. | Überblick über ein Feld |
-| **Threddy** | Beim Lesen Passagen (v. a. aus Related Work anderer Papers) sammeln und zu eigenen hierarchischen „Threads" ordnen. | Gliederung entsteht beim Lesen |
-| **Synergi** | Wie Threddy, plus LLM-generierte hierarchische Zusammenfassungen; KI als Gerüst, Urteil bleibt beim Menschen. | Gruppierung nach Kapiteln |
-| **PaperWeaver** | Empfiehlt neue Papers basierend auf der eigenen Sammlung. | Lücken in der Bibliothek |
-| **Papeos** | Verknüpft Paper-Stellen mit Vortragsvideos. | eher nicht |
-| **ReaderQuizzer** | Just-in-time-Verständnisfragen beim Lesen. | eher nicht |
+| **CiteSee** | Citations in the PDF colored by personal context: already read, saved, self-cited. Paper cards explain how the cited work relates to one's own reading history. Built as a Chrome extension on top of ScholarPhi (~5,000 new lines, ~17,000 lines of TypeScript total). | Coloring by A/B/C tier: cited, unread, missing |
+| **CiteRead** | Shows in the margin of the source what later citing papers say **about this exact spot**. Three contributions: selecting important citers, localizing the comment in the source, margin-note interaction. Study with 12 researchers: better understanding and recall than with a plain list of citers. | Opposite direction of "where do I cite this?" |
+| **ScholarPhi** | Definitions of terms and symbols shown right at the point of use; prefers the definition shortly before first use; formula explanations with symbol definitions in the margin. | ε and friends in DP formulas |
+| **Scim** | While skimming, goal, novelty, method, and result are highlighted in color. | Supporting sources one doesn't read in full |
+| **Relatedly** | Reading and cross-referencing related-work paragraphs that overlap across papers. | Overview of a field |
+| **Threddy** | While reading, collect passages (mainly from other papers' related work) and organize them into one's own hierarchical "threads." | Outline emerges while reading |
+| **Synergi** | Like Threddy, plus LLM-generated hierarchical summaries; AI as scaffolding, judgment stays with the human. | Grouping by chapter |
+| **PaperWeaver** | Recommends new papers based on one's own collection. | Gaps in the library |
+| **Papeos** | Links paper passages to talk videos. | probably not |
+| **ReaderQuizzer** | Just-in-time comprehension questions while reading. | probably not |
 
-Quellen: [CiteSee](https://arxiv.org/pdf/2302.07302) · [CiteRead](https://dl.acm.org/doi/fullHtml/10.1145/3490099.3511162) · [Threddy](https://arxiv.org/html/2208.03455) · [Synergi](https://ar5iv.labs.arxiv.org/html/2308.07517) · [Papeos](https://arxiv.org/pdf/2308.15224) · [ReaderQuizzer](https://arxiv.org/pdf/2308.07988) · [Semantic Reader Produktseite](https://www.semanticscholar.org/product/semantic-reader)
+Sources: [CiteSee](https://arxiv.org/pdf/2302.07302) · [CiteRead](https://dl.acm.org/doi/fullHtml/10.1145/3490099.3511162) · [Threddy](https://arxiv.org/html/2208.03455) · [Synergi](https://ar5iv.labs.arxiv.org/html/2308.07517) · [Papeos](https://arxiv.org/pdf/2308.15224) · [ReaderQuizzer](https://arxiv.org/pdf/2308.07988) · [Semantic Reader product page](https://www.semanticscholar.org/product/semantic-reader)
 
-## Zustand des Open-Source-Codes
+## State of the open-source code
 
-Abgefragt über die GitHub-API am 2026-09-14.
+Queried via the GitHub API on 2026-09-14.
 
-| Repo | Zweck | Letzter Push | Sterne | Lizenz | Einschätzung |
+| Repo | Purpose | Last push | Stars | License | Assessment |
 |---|---|---|---|---|---|
-| `allenai/papermage` | PDF → Dokument aus Schichten (Symbole, Tokens, Zeilen, Sätze, Absätze, Abschnitte, Literaturverzeichnis, Gleichungen, Tabellen …; 27 Schichten), Parser + Rasterizer + Predictors | 2024-11-08 | 803 | Apache-2.0 | README: *„research prototype for EMNLP 2023 … unlikely to be addressing issues / maintaining this on a regular cadence“*, Nachfolge unter AI2s Dolma-Projekt angekündigt. **Parser ist pdfplumber** → erbt dessen ε-Problem (siehe `04`). |
-| `allenai/pdf-component-library` („PaperCraft") | React-Komponenten für PDF-Leser mit Overlays, Citation Cards, Thumbnails, Notizen; auf React-PDF aufgebaut | 2024-02-15 | 93 | Repo ohne Lizenzdatei; `ui/library/package.json`: Apache-2.0, Paket `@allenai/pdf-components` 0.0.1 | eingeschlafen |
-| `allenai/scholarphi` | interaktiver PDF-Leser, Basis von CiteSee | 2023-07-19 | 428 | Apache-2.0 | eingeschlafen |
-| `allenai/s2orc-doc2json` | PDF/LaTeX → JSON (S2ORC-Format) | 2024-04-11 | 476 | Apache-2.0 | eingeschlafen |
-| `allenai/olmocr` | PDF → Markdown mit 7B-Vision-Language-Modell; Formeln, Tabellen, Leserichtung, entfernt Kopf-/Fußzeilen | 2026-03-25 | 19.468 | Apache-2.0 | **aktiv**, aber lokal nur mit NVIDIA-GPU ≥ 12 GB VRAM (getestet RTX 4090, L40S, A100, H100), ~30 GB Platz. Gehostet bei Cirrascale, DeepInfra, Parasail für ca. 0,07–0,20 $ pro Million Tokens. |
+| `allenai/papermage` | PDF → document made of layers (symbols, tokens, lines, sentences, paragraphs, sections, bibliography, equations, tables, …; 27 layers), parser + rasterizer + predictors | 2024-11-08 | 803 | Apache-2.0 | README: *"research prototype for EMNLP 2023 … unlikely to be addressing issues / maintaining this on a regular cadence"*, successor announced under AI2's Dolma project. **The parser is pdfplumber** → inherits its ε problem (see `04`). |
+| `allenai/pdf-component-library` ("PaperCraft") | React components for PDF readers with overlays, citation cards, thumbnails, notes; built on React-PDF | 2024-02-15 | 93 | Repo has no license file; `ui/library/package.json`: Apache-2.0, package `@allenai/pdf-components` 0.0.1 | dormant |
+| `allenai/scholarphi` | interactive PDF reader, basis of CiteSee | 2023-07-19 | 428 | Apache-2.0 | dormant |
+| `allenai/s2orc-doc2json` | PDF/LaTeX → JSON (S2ORC format) | 2024-04-11 | 476 | Apache-2.0 | dormant |
+| `allenai/olmocr` | PDF → Markdown with a 7B vision-language model; formulas, tables, reading order, strips headers/footers | 2026-03-25 | 19,468 | Apache-2.0 | **active**, but locally requires an NVIDIA GPU ≥ 12 GB VRAM (tested on RTX 4090, L40S, A100, H100), ~30 GB of space. Hosted at Cirrascale, DeepInfra, Parasail for roughly $0.07–0.20 per million tokens. |
 
-Auf der Open-Research-Platform-Seite werden PaperMage und PaperCraft weiterhin als „aktiv" dargestellt, das deckt sich nicht mit den Repos.
+The Open Research Platform page still lists PaperMage and PaperCraft as "active," which doesn't match the repos.
 
-Quellen: [papermage](https://github.com/allenai/papermage) · [pdf-component-library](https://github.com/allenai/pdf-component-library) · [scholarphi](https://github.com/allenai/scholarphi) · [olmocr](https://github.com/allenai/olmocr) · [olmOCR-Paper](https://arxiv.org/html/2502.18443)
+Sources: [papermage](https://github.com/allenai/papermage) · [pdf-component-library](https://github.com/allenai/pdf-component-library) · [scholarphi](https://github.com/allenai/scholarphi) · [olmocr](https://github.com/allenai/olmocr) · [olmOCR paper](https://arxiv.org/html/2502.18443)
 
-## Schlussfolgerungen
+## Conclusions
 
-1. **Konzepte übernehmen, Code nicht.** Besonders wertvoll: PaperMages Schichtenmodell (ein kanonischer Text, jede Schicht ist eine Menge von Bereichen plus Boxen), CiteSee-Färbung, CiteRead-Randnotizen.
-2. Das Schichtenmodell vereinheitlicht Notiz-Anker, Wortlaut-Prüfung und spätere Zitatmarker-Färbung.
-3. Die CiteSee-Färbung braucht die Verknüpfung „[18]" ↔ 18. Literaturverzeichnis-Eintrag. Das liefert GROBID (siehe `05`).
+1. **Adopt the concepts, not the code.** Especially valuable: PaperMage's layer model (one canonical text, each layer being a set of regions plus boxes), CiteSee coloring, CiteRead margin notes.
+2. The layer model unifies note anchors, wording verification, and later citation-marker coloring.
+3. CiteSee coloring needs the link "[18]" ↔ 18th bibliography entry. GROBID provides that (see `05`).

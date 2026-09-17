@@ -1,5 +1,5 @@
-//! `mutool` als externer Prozess (optional). mutool ist AGPL-lizenziert und wird
-//! deshalb nie gelinkt, nur aufgerufen.
+//! `mutool` as an external process (optional). mutool is AGPL-licensed and is
+//! therefore never linked, only invoked.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -37,14 +37,14 @@ impl Backend for Mutool {
                 let text = String::from_utf8_lossy(&out.stderr).into_owned() + &String::from_utf8_lossy(&out.stdout);
                 text.split_whitespace().skip_while(|w| *w != "version").nth(1).map(str::to_string)
             })
-            .unwrap_or_else(|| "unbekannt".to_string())
+            .unwrap_or_else(|| "unknown".to_string())
     }
 
     fn extract(&self, path: &Path) -> Result<Extraction, ExtractError> {
         let out_file = tempfile::Builder::new()
             .suffix(".xml")
             .tempfile()
-            .map_err(|e| ExtractError::Unavailable(format!("Temporärdatei: {e}")))?;
+            .map_err(|e| ExtractError::Unavailable(format!("temp file: {e}")))?;
         let output = Command::new(&self.program)
             .args(["draw", "-q", "-F", "stext", "-o"])
             .arg(out_file.path())

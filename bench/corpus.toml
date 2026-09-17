@@ -1,9 +1,9 @@
-# Korpus für den Extraktions-Benchmark. Kurationsregeln: bench/README.md.
+# Corpus for the extraction benchmark. Curation rules: bench/README.md.
 
 [[doc]]
 id = "dwork2006"
 url = "https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/dwork.pdf"
-category = "altes LaTeX, Type1-Mathe-Schrift ohne Unicode-Zuordnung"
+category = "old LaTeX, Type1 math font without Unicode mapping"
 [doc.expect]
 sentences = [
   "In 1977 Dalenius articulated a desideratum for statistical databases: nothing about an individual should be learnable from the database that cannot be learned without access to the database.",
@@ -16,7 +16,7 @@ chars = ["ε"]
 [[doc]]
 id = "abadi2016"
 url = "https://arxiv.org/pdf/1607.00133v2"
-category = "modernes zweispaltiges ACM-Paper mit Formeln"
+category = "modern two-column ACM paper with formulas"
 [doc.expect]
 sentences = [
   "Machine learning techniques based on neural networks are achieving remarkable results in a wide variety of domains.",
@@ -29,7 +29,7 @@ chars = ["ε", "δ"]
 [[doc]]
 id = "vaswani2017"
 url = "https://arxiv.org/pdf/1706.03762v7"
-category = "einspaltig, NeurIPS, Tabellen und Formeln"
+category = "single-column, NeurIPS, tables and formulas"
 [doc.expect]
 sentences = [
   "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder.",
@@ -42,7 +42,7 @@ chars = ["ε"]
 [[doc]]
 id = "devlin2019"
 url = "https://arxiv.org/pdf/1810.04805v2"
-category = "zweispaltig, ACL, Tabellen"
+category = "two-column, ACL, tables"
 [doc.expect]
 sentences = [
   "We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers.",
@@ -54,7 +54,7 @@ before = [["The advantage of these approaches is", "these results enable even lo
 [[doc]]
 id = "he2016"
 url = "https://arxiv.org/pdf/1512.03385v1"
-category = "zweispaltig, CVPR, Abbildungen und Tabellen"
+category = "two-column, CVPR, figures and tables"
 [doc.expect]
 sentences = [
   "We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously.",
@@ -66,7 +66,7 @@ before = [["These methods suggest that a good", "The detection implementation (s
 [[doc]]
 id = "shokri2017"
 url = "https://arxiv.org/pdf/1610.05820v2"
-category = "zweispaltig, IEEE S&P, Privacy-Thema"
+category = "two-column, IEEE S&P, privacy topic"
 [doc.expect]
 sentences = [
   "We quantitatively investigate how machine learning models leak information about the individual data records on which they were trained.",
@@ -79,7 +79,7 @@ chars = ["ε"]
 [[doc]]
 id = "carlini2021"
 url = "https://arxiv.org/pdf/2012.07805v2"
-category = "zweispaltig, USENIX Security, lange Anhänge"
+category = "two-column, USENIX Security, long appendices"
 [doc.expect]
 sentences = [
   "It has become common to publish large (billion parameter) language models that have been trained on private datasets.",

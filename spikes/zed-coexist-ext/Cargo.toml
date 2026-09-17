@@ -12,5 +12,5 @@ path = "src/lib.rs"
 [dependencies]
 zed_extension_api = "0.7.0"
 
-# Eigener Workspace: wird für wasm32-wasip2 gebaut, nicht mit dem Haupt-Workspace.
+# Own workspace: built for wasm32-wasip2, not with the main workspace.
 [workspace]

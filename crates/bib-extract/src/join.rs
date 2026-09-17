@@ -1,4 +1,4 @@
-//! Spans in Leserichtung zu Text zusammenfügen.
+//! Join spans into text in reading order.
 
 use crate::Span;
 

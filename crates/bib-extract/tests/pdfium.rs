@@ -9,16 +9,16 @@ use bib_extract::{Backend, PageContent, Rect};
 const TOLERANCE: f32 = 6.0;
 
 fn backend() -> Pdfium {
-    Pdfium::from_env().expect("BIB_PDFIUM_LIB_DIR setzen, z. B. auf bench/cache/pdfium/lib")
+    Pdfium::from_env().expect("set BIB_PDFIUM_LIB_DIR, e.g. to bench/cache/pdfium/lib")
 }
 
 fn first_box_containing(extraction: &bib_extract::Extraction, needle: &str) -> Rect {
-    let PageContent::Spans(spans) = &extraction.pages[0].content else { panic!("{}: keine Spans", extraction.backend) };
+    let PageContent::Spans(spans) = &extraction.pages[0].content else { panic!("{}: no spans", extraction.backend) };
     spans
         .iter()
         .filter(|s| s.text.contains(needle))
         .min_by(|a, b| a.bbox.top.total_cmp(&b.bbox.top))
-        .unwrap_or_else(|| panic!("{}: „{needle}“ nicht gefunden", extraction.backend))
+        .unwrap_or_else(|| panic!("{}: \"{needle}\" not found", extraction.backend))
         .bbox
 }
 
@@ -33,7 +33,7 @@ fn extracts_pages_with_geometry() {
 fn pdfium_and_mutool_agree_on_title_position() {
     let mutool = Mutool::default();
     if !mutool.is_available() {
-        eprintln!("ÜBERSPRUNGEN: mutool nicht installiert");
+        eprintln!("SKIPPED: mutool not installed");
         return;
     }
     let path = common::fixture("dwork2006");

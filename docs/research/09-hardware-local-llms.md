@@ -1,36 +1,36 @@
-# Hardware und lokale LLMs
+# Hardware and local LLMs
 
-Gemessen am 2026-09-14 auf dem Entwicklungs-Laptop.
+Measured on 2026-09-14 on the development laptop.
 
-## Ausstattung
+## Specs
 
-| Komponente | Wert |
+| Component | Value |
 |---|---|
-| CPU | AMD Ryzen 7 PRO 5850U, 8 Kerne / 16 Threads |
-| GPU | nur integriert: AMD Radeon Vega (Cezanne) |
-| VRAM | 1,0 GiB fest (`mem_info_vram_total`) + bis 15,1 GiB dynamisch aus dem RAM (`mem_info_gtt_total`) |
-| RAM | 30 GiB, zum Messzeitpunkt 24 GiB belegt, 8 GiB Swap |
-| Treiber | Vulkan-ICDs vorhanden (`radeon_icd.json` = RADV) → llama.cpp mit Vulkan-Backend möglich |
-| ROCm | nicht installiert; Cezanne offiziell nicht unterstützt |
-| LLM-Laufzeiten | keine installiert (weder Ollama noch llama.cpp) |
+| CPU | AMD Ryzen 7 PRO 5850U, 8 cores / 16 threads |
+| GPU | integrated only: AMD Radeon Vega (Cezanne) |
+| VRAM | 1.0 GiB fixed (`mem_info_vram_total`) + up to 15.1 GiB dynamically from RAM (`mem_info_gtt_total`) |
+| RAM | 30 GiB, 24 GiB in use at measurement time, 8 GiB swap |
+| Driver | Vulkan ICDs present (`radeon_icd.json` = RADV) → llama.cpp with Vulkan backend possible |
+| ROCm | not installed; Cezanne not officially supported |
+| LLM runtimes | none installed (neither Ollama nor llama.cpp) |
 | Kernel | Linux 6.17 |
 
-## Was lokal realistisch ist (Schätzung, nicht gemessen)
+## What's realistic locally (estimate, not measured)
 
-Engpass: DDR4-Speicherbandbreite für die Generierung; CPU/iGPU für das Einlesen langer Eingaben.
+Bottleneck: DDR4 memory bandwidth for generation; CPU/iGPU for ingesting long inputs.
 
-| Aufgabe | Lokal? | Einschätzung |
+| Task | Local? | Assessment |
 |---|---|---|
-| Embeddings, Suchindex, Reranking | ✅ | kleine Modelle; Index für einige Hundert Papers in Minuten |
-| Zitat-Prüfung Vorstufe (Stelle finden, grob einordnen) | ✅ | SemanticCite zeigt, dass kleine spezialisierte Modelle reichen |
-| LLM 3–4B | ✅ interaktiv | grob 10–20 Tokens/s |
-| LLM 7–8B oder MoE mit ~3B aktiven Parametern | ⚠️ Hintergrund | lange Eingaben dauern; MoE braucht ~17 GB RAM, bei aktueller Belegung knapp |
-| Extraktions-Matrix über viele Papers, lange Zusammenfassungen | ☁️ | Cloud oder lokaler Nachtlauf |
-| olmOCR lokal | ❌ | braucht NVIDIA ≥ 12 GB VRAM |
+| Embeddings, search index, reranking | yes | small models; index for a few hundred papers within minutes |
+| Quote verification pre-stage (locate the passage, rough classification) | yes | SemanticCite shows that small specialized models suffice |
+| 3–4B LLM | yes, interactively | roughly 10–20 tokens/s |
+| 7–8B LLM or MoE with ~3B active parameters | background only | long inputs take a while; MoE needs ~17 GB RAM, tight given current usage |
+| Extraction matrix across many papers, long summaries | cloud | cloud or a local overnight run |
+| olmOCR locally | no | needs NVIDIA ≥ 12 GB VRAM |
 
-## Muster, das daraus folgt
+## Resulting pattern
 
-- Alles Interaktive (Hover, Suche, Vorschläge) ohne großes LLM, nur Index und Embeddings.
-- LLM-Aufgaben in einer Warteschlange, lokal im Hintergrund abgearbeitet.
-- Cloud bewusst pro Aufgabe wählbar (Nutzerwunsch: „c), aber je mehr lokal geht, desto besser").
-- Echte Geschwindigkeit später mit kurzem Benchmark messen.
+- Everything interactive (hover, search, suggestions) without a large LLM, just index and embeddings.
+- LLM tasks in a queue, processed locally in the background.
+- Cloud deliberately selectable per task (user preference: "c), but the more that runs locally, the better").
+- Measure real throughput later with a short benchmark.
