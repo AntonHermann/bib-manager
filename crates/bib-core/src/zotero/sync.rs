@@ -531,6 +531,23 @@ mod tests {
             "sources are never deleted"
         );
         assert_eq!(open_count(&conn).unwrap(), 1);
+        let source_id: i64 = conn
+            .query_row("SELECT id FROM source WHERE item_key = 'DWORK001'", [], |r| r.get(0))
+            .unwrap();
+        let (kind, node_type, node_id, dedupe_key): (String, String, i64, String) = conn
+            .query_row(
+                "SELECT kind, node_type, node_id, dedupe_key FROM review_queue WHERE resolved_at IS NULL",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+            )
+            .unwrap();
+        assert_eq!(kind, "source_retired");
+        assert_eq!(node_type, "source");
+        assert_eq!(node_id, source_id);
+        assert_eq!(
+            dedupe_key,
+            format!("source_retired:{}:{}", LibraryRef::User, "DWORK001")
+        );
 
         zotero.set("/api/users/0/items/top", vec![item]);
         assert_eq!(sync_user(&mut conn, &zotero).sources_reactivated, 1);
