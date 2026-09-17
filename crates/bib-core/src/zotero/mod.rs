@@ -4,6 +4,7 @@ mod client;
 #[cfg(any(test, feature = "test-support"))]
 pub mod fake;
 mod model;
+pub mod sync;
 
 pub use client::{DEFAULT_URL, URL_ENV, ZoteroClient, ZoteroError};
 pub use model::{
