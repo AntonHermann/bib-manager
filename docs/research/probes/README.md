@@ -1,6 +1,6 @@
 # Testprogramme der PDF-Messungen
 
-Rekonstruiert aus den Läufen vom 2026-09-14 (siehe `../04-pdf-extraktion.md`). Wegwerf-Code,
+Rekonstruiert aus den Läufen vom 2026-09-14 (siehe `../04-pdf-extraction.md`). Wegwerf-Code,
 nur zur Reproduktion. Alle Programme zählen `ε ϵ 𝜖 𝜀` und schreiben den Text nach `out/`.
 
 ## Vorbereitung

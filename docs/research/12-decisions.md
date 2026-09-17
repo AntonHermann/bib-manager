@@ -34,5 +34,5 @@ Erste Version = 1 + 2.
 
 ## Stand des Designs
 
-Das Design wurde in einer parallelen Session ausgearbeitet und liegt als Spec vor: [`2026-09-16-bibliothek-kern-typst-design.md`](../superpowers/specs/2026-09-16-bibliothek-kern-typst-design.md).
+Das Design wurde in einer parallelen Session ausgearbeitet und liegt als Spec vor: [`2026-09-16-library-core-typst-design.md`](../superpowers/specs/2026-09-16-library-core-typst-design.md).
 Diese Recherche-Dateien stammen aus einem Fork der Brainstorming-Session und spiegeln den Stand vor der Spec.

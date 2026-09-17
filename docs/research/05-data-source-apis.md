@@ -83,4 +83,4 @@ Quellen: [GROBID: Koordinaten im PDF](https://grobid.readthedocs.io/en/latest/Co
 
 ## Crossref / Retraction Watch
 
-Siehe `01-werkzeuglandschaft.md`, Abschnitt „Zurückgezogene Papers", und `06-zotero.md`.
+Siehe `01-tool-landscape.md`, Abschnitt „Zurückgezogene Papers", und `06-zotero.md`.

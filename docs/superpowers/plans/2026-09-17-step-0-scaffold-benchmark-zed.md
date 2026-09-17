@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust (Edition 2024, rustc 1.95), `unicode-normalization`, `pdf_oxide` 0.3.78, `pdf-extract` 0.12.0, `pdfium-render` 0.9.4, `thiserror`, `anyhow`, `clap`, `serde`, `toml`, `sha2`, `tempfile`, `tower-lsp-server` 0.23, `tokio`, `zed_extension_api` 0.7.0; externe Programme `curl`, `mutool` (optional).
 
-**Spec:** `docs/superpowers/specs/2026-09-16-bibliothek-kern-typst-design.md` (Abschnitte 7, 9, 14, 15, 17, 18)
+**Spec:** `docs/superpowers/specs/2026-09-16-library-core-typst-design.md` (Abschnitte 7, 9, 14, 15, 17, 18)
 
 **Folgepläne** (werden mit den Ergebnissen dieses Plans geschrieben): Plan 2 = Spec-Schritte 1–3 (Datenmodell, Zotero-Abgleich, Extraktion mit Kaskade), Plan 3 = Schritte 4–6 (Anker, Typst-Parser, Import), Plan 4 = Schritte 7–8 (Language Server, Zed-Extension, Export).
 
@@ -66,7 +66,7 @@ bench/
 spikes/lsp-coexist/                Wegwerf-Language-Server (Task 9)
 spikes/zed-coexist-ext/            Wegwerf-Zed-Extension, eigener Workspace (Task 9)
 spikes/typst-sample/               Testdokument für Zed (Task 9)
-docs/research/14-zed-zwei-language-server.md   Protokoll des Zed-Tests (Task 9)
+docs/research/14-zed-two-language-servers.md   Protokoll des Zed-Tests (Task 9)
 ```
 
 ---
@@ -2385,7 +2385,7 @@ Wegwerf-Code. Er beantwortet eine Frage und wird danach nicht weiterentwickelt.
 - Create: `spikes/lsp-coexist/Cargo.toml`, `spikes/lsp-coexist/src/lib.rs`, `spikes/lsp-coexist/src/main.rs`
 - Create: `spikes/zed-coexist-ext/extension.toml`, `spikes/zed-coexist-ext/Cargo.toml`, `spikes/zed-coexist-ext/src/lib.rs`
 - Create: `spikes/typst-sample/main.typ`, `spikes/typst-sample/refs.bib`
-- Create: `docs/research/14-zed-zwei-language-server.md`
+- Create: `docs/research/14-zed-two-language-servers.md`
 
 **Interfaces:**
 - Produces: Programm `lsp-coexist` (stdio-Language-Server), Dev-Extension `bib-spike`, Protokoll mit Ergebnis je Funktion
@@ -2795,7 +2795,7 @@ Dann jede Funktion auf `@dwork2006` in Zeile 3 ausprobieren und festhalten, **we
 
 - [ ] **Step 8: Protokoll schreiben**
 
-`docs/research/14-zed-zwei-language-server.md`:
+`docs/research/14-zed-two-language-servers.md`:
 
 ```markdown
 # Zed mit zwei Typst-Language-Servern (Schritt 0b)
@@ -2828,7 +2828,7 @@ Dev-Extension in Zed entfernen, `cargo uninstall lsp-coexist`, eine eventuelle S
 - [ ] **Step 10: Commit (Protokoll)**
 
 ```bash
-git add docs/research/14-zed-zwei-language-server.md
+git add docs/research/14-zed-two-language-servers.md
 git commit -m "Record Zed behaviour with two Typst language servers
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
@@ -2841,7 +2841,7 @@ Claude-Session: https://claude.ai/code/session_016ecDAMwhZVb5J9kdrZD9PE"
 
 **Files:**
 - Create: `bench/results/<Datum>.md`
-- Modify: `bench/README.md`, `docs/superpowers/specs/2026-09-16-bibliothek-kern-typst-design.md` (§7, §9, §17, §18)
+- Modify: `bench/README.md`, `docs/superpowers/specs/2026-09-16-library-core-typst-design.md` (§7, §9, §17, §18)
 
 **Interfaces:**
 - Consumes: Bericht aus Task 8, Korpus aus Task 7, Protokoll aus Task 9
@@ -2892,10 +2892,10 @@ Trifft Regel 3 zu: hier anhalten, Bericht committen und dem Nutzer vorlegen.
 
 - [ ] **Step 4: Spec aktualisieren**
 
-In `docs/superpowers/specs/2026-09-16-bibliothek-kern-typst-design.md`:
+In `docs/superpowers/specs/2026-09-16-library-core-typst-design.md`:
 
 - §7 „Kaskade, pro Seite": Standard-Backend und Kaskade gemäß Entscheidung eintragen, Verweis auf `bench/results/<Datum>.md`.
-- §9: Absatz zu Zed gemäß `docs/research/14-zed-zwei-language-server.md` von „nicht praktisch getestet" auf das Ergebnis ändern.
+- §9: Absatz zu Zed gemäß `docs/research/14-zed-two-language-servers.md` von „nicht praktisch getestet" auf das Ergebnis ändern.
 - §17: Zeilen „Benchmark (Schritt 0a)" und „Zed mit zwei Language Servern (Schritt 0b)" mit den Kernzahlen ergänzen; die Zeile „Aus Doku und Issues, nicht praktisch getestet" entfernen.
 - §18: die Punkte zum Benchmark-Ergebnis und zum Zed-Test streichen.
 
@@ -2907,7 +2907,7 @@ Expected: PASS ohne Warnungen. Clippy-Funde beheben, nicht unterdrücken.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add bench/README.md bench/results docs/superpowers/specs/2026-09-16-bibliothek-kern-typst-design.md
+git add bench/README.md bench/results docs/superpowers/specs/2026-09-16-library-core-typst-design.md
 git commit -m "Record extraction benchmark decision and update spec
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
