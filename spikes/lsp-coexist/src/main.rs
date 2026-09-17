@@ -81,13 +81,24 @@ impl LanguageServer for Spike {
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
         let p = params.text_document_position_params;
-        Ok(self.hit(&p.text_document.uri, p.position).await.map(|(_, hit)| Hover {
-            contents: HoverContents::Markup(MarkupContent {
-                kind: MarkupKind::Markdown,
-                value: format!("**bib-spike** Hover für `{}`", hit.key),
-            }),
-            range: Some(range(&hit)),
-        }))
+        // Answer at every position so hover merging can be tested where tinymist also answers.
+        let hover = match self.hit(&p.text_document.uri, p.position).await {
+            Some((_, hit)) => Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: format!("**bib-spike** Hover für `{}`", hit.key),
+                }),
+                range: Some(range(&hit)),
+            },
+            None => Hover {
+                contents: HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: "**bib-spike** hover (no key here)".into(),
+                }),
+                range: None,
+            },
+        };
+        Ok(Some(hover))
     }
 
     async fn goto_definition(&self, params: GotoDefinitionParams) -> Result<Option<GotoDefinitionResponse>> {

@@ -212,7 +212,7 @@ Beim Wortlaut eines `#quote` wird der reine Text gesammelt, Escapes aufgelöst, 
 
 ## 9. Language Server und Zed
 
-Laut Zed-Doku und Issue #61865 führt Zed Hover, Definition und References über mehrere Server zusammen; Diagnostics kommen ohnehin von allen. Nur das Hervorheben von Symbolvorkommen nutzt den ersten Server, was hier nicht gebraucht wird. **Das ist nicht praktisch getestet** und wird deshalb in Schritt 0b mit einem Minimal-Server neben tinymist überprüft (Abschnitt 15). Fällt der Test negativ aus, trägt der Editor-Teil vor allem über Diagnostics und Code Actions, die in jedem Fall von allen Servern kommen.
+Tested in step 0b (Zed 1.20.2, tinymist 0.15.8, `docs/research/14-zed-zwei-language-server.md`): Zed starts a second Typst language server next to tinymist without any settings change. Diagnostics, hover and completion of both servers are merged (the second server's entries appeared first). Code actions, definition and references of the second server work; whether Zed merges them with tinymist's results is untested, because tinymist returned nothing at any position tried. At `@key` citations tinymist offers no hover, definition, references or completion, so the editor features below do not compete with tinymist there (caveat: tested in a single file without a pinned main file).
 
 **Meldungen:** Wortlaut stimmt nicht (mit Seitenqualität als Begründung); Key unbekannt; Key fehlt in der `.bib`; Metadaten weichen ab; dynamisches Zitat (Hinweis); optional: zitiert ohne Belegstelle. Der Schweregrad kommt aus `bib.toml`. Die Meldung zu unbekannten Keys ist abschaltbar, weil tinymist Ähnliches meldet.
 
@@ -377,8 +377,7 @@ Eigene Messungen (September 2026):
 | Zotero 9.0.1 (Snap), lokale API, nur lesend abgefragt | erreichbar, 168 Haupteinträge; `citationKey` als natives Feld gefüllt; **`version` überall 0, `Last-Modified-Version: 0`, kein `/deleted`-Endpunkt** → kein inkrementeller Abgleich; PDF-Pfad über Link `enclosure` (`file://…/Zotero/storage/<key>/…`); 274 Annotationen mit Text, Kommentar, Position und Seitenlabel lesbar; 14 Collections. Schreiben geht nur über die Web-API. |
 | Gruppenbibliotheken über die lokale API | `/api/users/0/groups` liefert 3 Gruppen, `/api/groups/<id>/items` funktioniert inklusive Anhängen und Annotationen (81 + 41 Haupteinträge, eine Gruppe leer). **17 Citation Keys kommen in mehr als einer Bibliothek vor** (16 zwischen eigener und einer Gruppenbibliothek). Ein Gruppeneintrag ohne Citation Key. |
 | Benchmark (Schritt 0a): 7 Dokumente, 21 Sätze, 7 Reihenfolge-Paare, `bench/results/2026-09-17.md` | Sätze: `pdf_oxide` 20/21, `pdf-extract` 21/21, `mutool` 21/21, pdfium 18/21; Reihenfolge überall 7/7. `pdf_oxide` fehlt ε in 2 Dokumenten (Dwork 2006, Shokri 2017), `pdf-extract` liefert es dort; `mutool` 191 × U+FFFD, pdfium 1128 Steuerzeichen (in den nachgezählten Dokumenten devlin2019 und abadi2016 überwiegend U+0002 als Trennmarke am Zeilenende, 527 der dort gezählten 573). → **Standard `pdf_oxide`, Kaskade `pdf-extract`** (Regel 1) |
-
-Aus Doku und Issues, **nicht praktisch getestet:** Zed führt bei zwei Language Servern Hover, References und Definition zusammen, Symbolhervorhebung nutzt nur den ersten Server → Schritt 0b.
+| Zed with two language servers (step 0b), `docs/research/14-zed-zwei-language-server.md` | Both servers start without settings change; diagnostics, hover and completion are merged; at `@key` tinymist provides no hover, definition, references or completion; merging of definition/references untested (tinymist had no results) |
 
 Fremde Quellen, die das Design geprägt haben: Jergas & Baethge (Zitatfehlerquote rund 25 %, Update 2025 ohne Verbesserung) als Begründung der Prüfung; W3C Web Annotation und Hypothesis für robuste Anker; PaperMage für das Schichtenmodell (Forschungsprototyp, seit 11/2024 ohne Pflege, nutzt pdfplumber und hätte das ε-Problem geerbt); CiteSee, CiteRead, Scim, ScholarPhi, Threddy, Synergi als Ideengeber für spätere Teilprojekte; SemanticCite für die vier Prüfstufen; Discourse Graphs für das Notizmodell.
 
@@ -387,7 +386,6 @@ Fremde Quellen, die das Design geprägt haben: Jergas & Baethge (Zitatfehlerquot
 ## 18. Offene Punkte
 
 - Öffnet Zed einen externen Link (`zotero://…`), den der Language Server über `window/showDocument` schickt? Falls nicht, übernimmt das CLI.
-- Ergebnis des Zed-Tests mit zwei Language Servern (Schritt 0b).
 - Unterstützt die lokale Zotero-API `sort=dateModified`? Die Abfrage lieferte als „neueste" Einträge solche vom Juni, obwohl im September Einträge hinzugekommen sind. Für den Vollabgleich unerheblich, für eine spätere Optimierung zu klären.
 - Beitrag an `pdf_oxide` für Glyphennamen aus eingebetteten Type1-Schriften: wünschenswert, nicht eingeplant.
 - Der Verdachtsprüfer aus §7 Schritt 2 erkennt nur Zeichen-Signale (Steuerzeichen, `(cid:…)`, kein Text). Der einzige verfehlte Satz von `pdf_oxide` im Benchmark (20/21: vaswani2017, Überschrift „Abstract“ mitten im Absatz statt davor) ist ein Reihenfolgefehler, den er nicht erkennen kann. Ob die separate Schrift-Heuristik (Mathe-Schrift wie CMMI ohne ein einziges griechisches Zeichen) auf den Seiten anschlägt, auf denen `pdf_oxide` ε stillschweigend verliert (dwork2006, shokri2017: 0 Steuerzeichen, 0 `(cid:`, 0 U+FFFD), ist ungemessen → wird in Plan 2 geklärt. Siehe `bench/results/2026-09-17.md`.
