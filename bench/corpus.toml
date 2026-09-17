@@ -5,10 +5,85 @@ id = "dwork2006"
 url = "https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/dwork.pdf"
 category = "altes LaTeX, Type1-Mathe-Schrift ohne Unicode-Zuordnung"
 [doc.expect]
-sentences = ["This is captured by differential privacy."]
+sentences = [
+  "In 1977 Dalenius articulated a desideratum for statistical databases: nothing about an individual should be learnable from the database that cannot be learned without access to the database.",
+  "An auxiliary information generator knowing the data therefore knows much about what the user will learn from the database.",
+  "This example was pivotal in convincing me of the viability of our shared approach.",
+]
+before = [["An auxiliary information generator knowing", "This example was pivotal in"]]
 chars = ["ε"]
 
 [[doc]]
 id = "abadi2016"
 url = "https://arxiv.org/pdf/1607.00133v2"
 category = "modernes zweispaltiges ACM-Paper mit Formeln"
+[doc.expect]
+sentences = [
+  "Machine learning techniques based on neural networks are achieving remarkable results in a wide variety of domains.",
+  "Deep neural networks, which are remarkably effective for many machine learning tasks, define parameterized functions from inputs to outputs as compositions of many layers of basic building blocks, such as affine transformations and simple nonlinear functions.",
+  "In particular, we would like to consider other classes of deep networks.",
+]
+before = [["Deep neural networks, which are remarkably", "we would like to consider other classes"]]
+chars = ["ε", "δ"]
+
+[[doc]]
+id = "vaswani2017"
+url = "https://arxiv.org/pdf/1706.03762v7"
+category = "einspaltig, NeurIPS, Tabellen und Formeln"
+[doc.expect]
+sentences = [
+  "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder.",
+  "Self-attention, sometimes called intra-attention is an attention mechanism relating different positions of a single sequence in order to compute a representation of the sequence.",
+  "We are grateful to Nal Kalchbrenner and Stephan Gouws for their fruitful comments, corrections and inspiration.",
+]
+before = [["Self-attention, sometimes called intra-attention is", "We are grateful to Nal Kalchbrenner"]]
+chars = ["ε"]
+
+[[doc]]
+id = "devlin2019"
+url = "https://arxiv.org/pdf/1810.04805v2"
+category = "zweispaltig, ACL, Tabellen"
+[doc.expect]
+sentences = [
+  "We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers.",
+  "The advantage of these approaches is that few parameters need to be learned from scratch.",
+  "In particular, these results enable even low-resource tasks to benefit from deep unidirectional architectures.",
+]
+before = [["The advantage of these approaches is", "these results enable even low-resource tasks"]]
+
+[[doc]]
+id = "he2016"
+url = "https://arxiv.org/pdf/1512.03385v1"
+category = "zweispaltig, CVPR, Abbildungen und Tabellen"
+[doc.expect]
+sentences = [
+  "We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously.",
+  "These methods suggest that a good reformulation or preconditioning can simplify the optimization.",
+  "The detection implementation (see appendix) of using both models is the same, so the gains can only be attributed to better networks.",
+]
+before = [["These methods suggest that a good", "The detection implementation (see appendix) of"]]
+
+[[doc]]
+id = "shokri2017"
+url = "https://arxiv.org/pdf/1610.05820v2"
+category = "zweispaltig, IEEE S&P, Privacy-Thema"
+[doc.expect]
+sentences = [
+  "We quantitatively investigate how machine learning models leak information about the individual data records on which they were trained.",
+  "The details of the models and the training algorithms are hidden from the data owners.",
+  "This work was supported by the NSF grant 1409442 and a Google Research Award.",
+]
+before = [["The details of the models and", "This work was supported by the"]]
+chars = ["ε"]
+
+[[doc]]
+id = "carlini2021"
+url = "https://arxiv.org/pdf/2012.07805v2"
+category = "zweispaltig, USENIX Security, lange Anhänge"
+[doc.expect]
+sentences = [
+  "It has become common to publish large (billion parameter) language models that have been trained on private datasets.",
+  "This process is repeated until a desired stopping criterion is reached.",
+  "Tom, Adam, and Colin gave advice on language models and machine learning background.",
+]
+before = [["This process is repeated until a", "Tom, Adam, and Colin gave"]]
