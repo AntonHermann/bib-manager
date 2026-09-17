@@ -1,5 +1,6 @@
 //! Project configuration `bib.toml` (spec §10). The file is hand-written and versioned with the project.
 
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, bail};
@@ -133,12 +134,23 @@ pub fn find_project_root(start: &Path) -> Option<PathBuf> {
 /// Writes a new `bib.toml` into `dir` and returns its path. Fails if the file exists.
 pub fn init_project(dir: &Path) -> anyhow::Result<PathBuf> {
     let path = dir.join(CONFIG_FILE);
-    if path.exists() {
-        bail!("{} already exists", path.display());
-    }
     let name = dir.file_name().and_then(|n| n.to_str()).unwrap_or("project");
     let text = skeleton(&uuid::Uuid::new_v4().to_string(), name);
-    std::fs::write(&path, text).with_context(|| format!("writing {}", path.display()))?;
+    // `create_new` makes the existence check and the creation one atomic operation, so a file
+    // created concurrently between a check and a write can never be silently overwritten.
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+        .map_err(|error| {
+            if error.kind() == std::io::ErrorKind::AlreadyExists {
+                anyhow::anyhow!("{} already exists", path.display())
+            } else {
+                anyhow::Error::new(error).context(format!("writing {}", path.display()))
+            }
+        })?;
+    file.write_all(text.as_bytes())
+        .with_context(|| format!("writing {}", path.display()))?;
     Ok(path)
 }
 
