@@ -162,9 +162,13 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "rusqlite",
+ "serde",
  "serde_json",
  "tempfile",
+ "thiserror",
+ "toml",
  "unicode-normalization",
+ "uuid",
 ]
 
 [[package]]
