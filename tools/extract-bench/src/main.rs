@@ -94,7 +94,7 @@ fn fetch() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn available_backends(selection: Option<Vec<String>>) -> Vec<Box<dyn Backend>> {
+fn available_backends(selection: Option<Vec<String>>) -> anyhow::Result<Vec<Box<dyn Backend>>> {
     let mut all: Vec<Box<dyn Backend>> = vec![Box::new(PdfOxide), Box::new(PdfExtract)];
     let mutool = Mutool::default();
     if mutool.is_available() {
@@ -108,14 +108,25 @@ fn available_backends(selection: Option<Vec<String>>) -> Vec<Box<dyn Backend>> {
         None => eprintln!("BIB_PDFIUM_LIB_DIR nicht gesetzt, pdfium übersprungen"),
     }
     match selection {
-        Some(names) => all.into_iter().filter(|b| names.iter().any(|n| n == b.name())).collect(),
-        None => all,
+        Some(names) => {
+            let unknown: Vec<&str> =
+                names.iter().filter(|n| !all.iter().any(|b| n.as_str() == b.name())).map(String::as_str).collect();
+            if !unknown.is_empty() {
+                bail!(
+                    "unbekannte oder nicht verfügbare Backends: {} (verfügbar: {})",
+                    unknown.join(", "),
+                    all.iter().map(|b| b.name()).collect::<Vec<_>>().join(", ")
+                );
+            }
+            Ok(all.into_iter().filter(|b| names.iter().any(|n| n == b.name())).collect())
+        }
+        None => Ok(all),
     }
 }
 
 fn run(out: PathBuf, selection: Option<Vec<String>>) -> anyhow::Result<()> {
     let corpus = load_corpus()?;
-    let backends = available_backends(selection);
+    let backends = available_backends(selection)?;
     let mut rows = Vec::new();
     for doc in &corpus.docs {
         let path = cache_path(&doc.id);

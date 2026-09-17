@@ -1,5 +1,11 @@
 //! Parser für mutools strukturiertes Textformat (`mutool draw -F stext`).
 //! Koordinaten sind dort bereits oben links verankert.
+//!
+//! Koordinatenannahme: `mutool stext` liefert Koordinaten im Device Space der Seite, also
+//! relativ zur CropBox und entlang der Seiten-Rotation ausgerichtet. Geprüft ist im
+//! Benchmark-Korpus nur der Fall MediaBox-Ursprung (0,0) ohne eigene CropBox und ohne
+//! `/Rotate`; eine abweichende CropBox oder eine versetzte MediaBox würde hier unbemerkt zu
+//! falschen Koordinaten führen (siehe Spec §18).
 
 use crate::{Page, PageContent, PageSize, Rect, Span};
 

@@ -36,7 +36,9 @@ fn extract_page(doc: &pdf_oxide::PdfDocument, index: usize) -> Result<Page, Extr
     let raw_spans = doc.extract_spans(index).map_err(page_error)?;
     let raw_spans: Vec<_> = raw_spans.into_iter().filter(|s| !s.text.trim().is_empty()).collect();
 
-    // Ohne eigene MediaBox (z. B. geerbt) keine verlässliche Umrechnung: nur Text, ehrlich ohne Geometrie.
+    // pdf_oxide löst geerbte Attribute selbst auf (get_page_media_box sieht auch eine von einem
+    // Vorfahrenknoten geerbte MediaBox); dieser Zweig greift nur, wenn die MediaBox ganz fehlt
+    // oder fehlerhaft ist. Dann nur Text, ehrlich ohne Geometrie.
     let Ok((llx, lly, urx, ury)) = doc.get_page_media_box(index) else {
         let spans: Vec<Span> = raw_spans
             .into_iter()

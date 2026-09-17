@@ -1,11 +1,20 @@
 //! Backend auf Basis von pdfium (Chromes PDF-Engine) über `pdfium-render`.
 //! Braucht `libpdfium.so` zur Laufzeit; Pfad über `BIB_PDFIUM_LIB_DIR`.
+//!
+//! Koordinatenannahme: pdfium liefert Seitengröße und Koordinaten bezogen auf die CropBox
+//! (nicht die MediaBox) und bereits rotationsbereinigt (Breite/Höhe bei 90°/270° vertauscht).
+//! Geprüft ist im Benchmark-Korpus nur der Fall MediaBox-Ursprung (0,0) ohne eigene CropBox und
+//! ohne `/Rotate`; eine abweichende CropBox oder eine versetzte MediaBox würde hier unbemerkt zu
+//! falschen Koordinaten führen (siehe Spec §18).
 
 use std::path::{Path, PathBuf};
 
 use pdfium_render::prelude::{PdfPageRenderRotation, Pdfium as PdfiumLib, PdfiumError};
 
 use crate::{Backend, ExtractError, Extraction, Page, PageContent, PageSize, Rect, Span, guard};
+
+/// Muss zur exakten Version in `Cargo.toml` (`=0.9.4`) passen.
+const PDFIUM_RENDER_VERSION: &str = "0.9.4";
 
 pub struct Pdfium {
     pub lib_dir: PathBuf,
@@ -37,8 +46,8 @@ impl Backend for Pdfium {
 
     fn version(&self) -> String {
         match read_libpdfium_build(&self.lib_dir) {
-            Some(build) => format!("pdfium-render 0.9.4, libpdfium {build}"),
-            None => format!("pdfium-render 0.9.4, libpdfium aus {}", self.lib_dir.display()),
+            Some(build) => format!("pdfium-render {PDFIUM_RENDER_VERSION}, libpdfium {build}"),
+            None => format!("pdfium-render {PDFIUM_RENDER_VERSION}, libpdfium aus {}", self.lib_dir.display()),
         }
     }
 

@@ -10,6 +10,19 @@ BIB_PDFIUM_LIB_DIR=$PWD/bench/cache/pdfium/lib \
   cargo run --release -p extract-bench --features pdfium -- run --out bench/results/<datum>.md
 ```
 
+`fetch` muss vor `cargo test --workspace` laufen: Die Integrationstests von `bib-extract`
+brauchen die Korpus-Dateien in `bench/cache/` (siehe `crates/bib-extract/tests/common/mod.rs`).
+
+`libpdfium` liegt nicht im Repo und muss vor einem Lauf mit `--features pdfium` einmal geladen
+werden (Pfad wie oben in `BIB_PDFIUM_LIB_DIR`):
+
+```sh
+mkdir -p bench/cache/pdfium && curl -sSfL https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-x64.tgz | tar xz -C bench/cache/pdfium
+```
+
+`releases/latest` zeigt auf die jeweils neueste Version; welcher Build tatsächlich geladen
+wurde, steht in jedem Bericht unter „Backends“ (`libpdfium`-Versionsnummer).
+
 ## Kuration
 
 Pro Dokument:
