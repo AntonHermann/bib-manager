@@ -24,4 +24,5 @@ sha2 = "0.11"
 thiserror = "2.0"
 pdf_oxide = "=0.3.78"
 pdf-extract = "=0.12.0"
+pdfium-render = { version = "=0.9.4", default-features = false, features = ["pdfium_latest", "thread_safe"] }
 tempfile = "3.27"
