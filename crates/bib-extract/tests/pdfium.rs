@@ -4,10 +4,22 @@ mod common;
 
 use bib_extract::backends::mutool::Mutool;
 use bib_extract::backends::pdfium::Pdfium;
-use bib_extract::{Backend, PageContent};
+use bib_extract::{Backend, PageContent, Rect};
+
+const TOLERANCE: f32 = 6.0;
 
 fn backend() -> Pdfium {
     Pdfium::from_env().expect("BIB_PDFIUM_LIB_DIR setzen, z. B. auf bench/cache/pdfium/lib")
+}
+
+fn first_box_containing(extraction: &bib_extract::Extraction, needle: &str) -> Rect {
+    let PageContent::Spans(spans) = &extraction.pages[0].content else { panic!("{}: keine Spans", extraction.backend) };
+    spans
+        .iter()
+        .filter(|s| s.text.contains(needle))
+        .min_by(|a, b| a.bbox.top.total_cmp(&b.bbox.top))
+        .unwrap_or_else(|| panic!("{}: „{needle}“ nicht gefunden", extraction.backend))
+        .bbox
 }
 
 #[test]
@@ -25,11 +37,8 @@ fn pdfium_and_mutool_agree_on_title_position() {
         return;
     }
     let path = common::fixture("dwork2006");
-    let top_of = |e: &bib_extract::Extraction| {
-        let PageContent::Spans(spans) = &e.pages[0].content else { panic!("keine Spans") };
-        spans.iter().filter(|s| s.text.contains("Differential")).map(|s| s.bbox.top).fold(f32::INFINITY, f32::min)
-    };
-    let reference = top_of(&mutool.extract(&path).unwrap());
-    let pdfium = top_of(&backend().extract(&path).unwrap());
-    assert!((reference - pdfium).abs() < 6.0, "top: mutool {reference} vs pdfium {pdfium}");
+    let reference = first_box_containing(&mutool.extract(&path).unwrap(), "Differential");
+    let pdfium = first_box_containing(&backend().extract(&path).unwrap(), "Differential");
+    assert!((reference.top - pdfium.top).abs() < TOLERANCE, "top: mutool {} vs pdfium {}", reference.top, pdfium.top);
+    assert!((reference.left - pdfium.left).abs() < TOLERANCE, "left: mutool {} vs pdfium {}", reference.left, pdfium.left);
 }

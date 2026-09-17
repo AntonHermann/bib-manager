@@ -36,7 +36,10 @@ impl Backend for Pdfium {
     }
 
     fn version(&self) -> String {
-        format!("pdfium-render 0.9.4, libpdfium aus {}", self.lib_dir.display())
+        match read_libpdfium_build(&self.lib_dir) {
+            Some(build) => format!("pdfium-render 0.9.4, libpdfium {build}"),
+            None => format!("pdfium-render 0.9.4, libpdfium aus {}", self.lib_dir.display()),
+        }
     }
 
     fn extract(&self, path: &Path) -> Result<Extraction, ExtractError> {
@@ -81,4 +84,15 @@ impl Backend for Pdfium {
             Ok(Extraction { backend: self.name(), backend_version: self.version(), pages })
         })
     }
+}
+
+/// `pdfium-render` 0.9.4 hat keine API, um die tatsächlich geladene `libpdfium`-Version zur
+/// Laufzeit abzufragen (`PdfiumApiVersion` spiegelt nur das zur Kompilierzeit gewählte
+/// `pdfium_*`-Feature wider, nicht das reale Binary). Stattdessen lesen wir die `VERSION`-Datei,
+/// die die `pdfium-binaries`-Releases neben `lib/` mitliefern (`MAJOR`/`MINOR`/`BUILD`/`PATCH`).
+fn read_libpdfium_build(lib_dir: &Path) -> Option<String> {
+    let content = std::fs::read_to_string(lib_dir.parent()?.join("VERSION")).ok()?;
+    let field = |key: &str| content.lines().find_map(|line| line.split_once('=').filter(|(k, _)| k.trim() == key).map(|(_, v)| v.trim()));
+    let (major, minor, build, patch) = (field("MAJOR")?, field("MINOR")?, field("BUILD")?, field("PATCH")?);
+    Some(format!("{major}.{minor}.{build}.{patch}"))
 }
