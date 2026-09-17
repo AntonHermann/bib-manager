@@ -47,15 +47,18 @@ fn fetch() -> anyhow::Result<()> {
         let path = cache_path(&doc.id);
         if !path.exists() {
             println!("lade {} …", doc.id);
+            let temp_path = path.with_extension("pdf.part");
             let status = Command::new("curl")
                 .args(["-sSfL", "--retry", "3", "-o"])
-                .arg(&path)
+                .arg(&temp_path)
                 .arg(&doc.url)
                 .status()
                 .context("curl nicht ausführbar")?;
             if !status.success() {
+                let _ = std::fs::remove_file(&temp_path);
                 bail!("Download von {} fehlgeschlagen ({})", doc.id, doc.url);
             }
+            std::fs::rename(&temp_path, &path)?;
         }
         let sha = sha256_hex(&std::fs::read(&path)?);
         match check_lock(&lock, &doc.id, &sha) {
