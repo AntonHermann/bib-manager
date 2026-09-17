@@ -169,9 +169,9 @@ Der Kern baut aus den Seiten den kanonischen Text und, wo vorhanden, die Zuordnu
 
 ### Kaskade, pro Seite
 
-1. Standard ist **`pdf_oxide`** (MIT/Apache, reines Rust, reichhaltige Daten).
+1. Standard ist **`pdf_oxide`** (MIT/Apache, reines Rust, reichhaltige Daten), bestätigt durch den Benchmark aus Schritt 0a (Entscheidungsregel 1, `bench/results/2026-09-17.md`).
 2. Ein **Verdachtsprüfer** bewertet: Steuerzeichen oder `(cid:…)`, Schriften ohne Unicode-Zuordnung, Mathe-Schriften wie CMMI ohne ein einziges griechisches Zeichen, gar kein Text.
-3. Bei Verdacht läuft **`pdf-extract`** (MIT) über dieselbe Seite; gespeichert wird das bessere Ergebnis samt Angabe des Backends.
+3. Bei Verdacht läuft **`pdf-extract`** (MIT) über dieselbe Seite; gespeichert wird das bessere Ergebnis samt Angabe des Backends. Im Benchmark lieferte `pdf-extract` in beiden Dokumenten, in denen `pdf_oxide` ε fehlte, alle erwarteten Zeichen.
 4. **`mutool`**, falls installiert, ist dritte Stufe und Vergleichsmaß im Benchmark.
 
 Pro Seite festzuhalten, welches Backend gewonnen hat, erlaubt später, einzelne kaputte Seiten gezielt durch ein OCR- oder Vision-Modell zu ersetzen.
@@ -376,6 +376,7 @@ Eigene Messungen (September 2026):
 | Semantic Scholar zur Hauptquelle des Seminars | 79 zitierende Papers, 41 mit Zitat-Satz, 3 „influential", **0 mit Zitationsabsicht** → Absichten sind zu dünn für Teilprojekt 5 |
 | Zotero 9.0.1 (Snap), lokale API, nur lesend abgefragt | erreichbar, 168 Haupteinträge; `citationKey` als natives Feld gefüllt; **`version` überall 0, `Last-Modified-Version: 0`, kein `/deleted`-Endpunkt** → kein inkrementeller Abgleich; PDF-Pfad über Link `enclosure` (`file://…/Zotero/storage/<key>/…`); 274 Annotationen mit Text, Kommentar, Position und Seitenlabel lesbar; 14 Collections. Schreiben geht nur über die Web-API. |
 | Gruppenbibliotheken über die lokale API | `/api/users/0/groups` liefert 3 Gruppen, `/api/groups/<id>/items` funktioniert inklusive Anhängen und Annotationen (81 + 41 Haupteinträge, eine Gruppe leer). **17 Citation Keys kommen in mehr als einer Bibliothek vor** (16 zwischen eigener und einer Gruppenbibliothek). Ein Gruppeneintrag ohne Citation Key. |
+| Benchmark (Schritt 0a): 7 Dokumente, 21 Sätze, 7 Reihenfolge-Paare, `bench/results/2026-09-17.md` | Sätze: `pdf_oxide` 20/21, `pdf-extract` 21/21, `mutool` 21/21, pdfium 18/21; Reihenfolge überall 7/7. `pdf_oxide` fehlt ε in 2 Dokumenten (Dwork 2006, Shokri 2017), `pdf-extract` liefert es dort; `mutool` 191 × U+FFFD, pdfium 1128 Steuerzeichen (meist U+0002 als Trennmarke am Zeilenende). → **Standard `pdf_oxide`, Kaskade `pdf-extract`** (Regel 1) |
 
 Aus Doku und Issues, **nicht praktisch getestet:** Zed führt bei zwei Language Servern Hover, References und Definition zusammen, Symbolhervorhebung nutzt nur den ersten Server → Schritt 0b.
 
@@ -386,7 +387,6 @@ Fremde Quellen, die das Design geprägt haben: Jergas & Baethge (Zitatfehlerquot
 ## 18. Offene Punkte
 
 - Öffnet Zed einen externen Link (`zotero://…`), den der Language Server über `window/showDocument` schickt? Falls nicht, übernimmt das CLI.
-- Ergebnis des Backend-Benchmarks (Schritt 0a). Fällt `pdf_oxide` durch, wird pdfium mit eigenem Reparaturschritt zum Standard.
 - Ergebnis des Zed-Tests mit zwei Language Servern (Schritt 0b).
 - Unterstützt die lokale Zotero-API `sort=dateModified`? Die Abfrage lieferte als „neueste" Einträge solche vom Juni, obwohl im September Einträge hinzugekommen sind. Für den Vollabgleich unerheblich, für eine spätere Optimierung zu klären.
 - Beitrag an `pdf_oxide` für Glyphennamen aus eingebetteten Type1-Schriften: wünschenswert, nicht eingeplant.

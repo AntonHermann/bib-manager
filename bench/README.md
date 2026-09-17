@@ -34,3 +34,15 @@ Pro Dokument:
 
 Findet nach dem ersten Lauf **kein einziges** Backend einen Satz, ist vermutlich die Aussage
 falsch: im PDF prüfen und korrigieren, bevor Ergebnisse gewertet werden.
+
+## Entscheidungsregel (Schritt 0a)
+
+R(b) = gefundene Sätze / alle Sätze über den Korpus, O(b) = korrekte Reihenfolge-Paare / alle Paare.
+`mutool` ist nur Referenz (AGPL, nicht als Standard wählbar).
+
+1. **`pdf_oxide` bleibt Standard**, wenn R(pdf_oxide) ≥ max(R(pdfium), R(mutool)) − 0,05
+   **und** O(pdf_oxide) ≥ max(O(pdfium), O(mutool)) − 0,05
+   **und** bei jedem Dokument, in dem pdf_oxide Zeichen fehlen oder Steuerzeichen/`(cid:`/U+FFFD
+   auftreten, `pdf-extract` alle erwarteten Zeichen liefert (die Kaskade trägt).
+2. **Sonst pdfium**, wenn es Bedingung 1 mit pdfium an Stelle von pdf_oxide erfüllt.
+3. **Sonst anhalten** und die Ergebnisse mit dem Nutzer besprechen.

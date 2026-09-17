@@ -40,12 +40,12 @@ pub fn parse_stext(xml: &str) -> Vec<Page> {
                     }
                 }
             }
-        } else if tag == "/font" {
-            if let (Some(s), Some((_, spans))) = (span.take(), current.as_mut()) {
-                if !s.text.trim().is_empty() && s.bbox.left.is_finite() {
-                    spans.push(s);
-                }
-            }
+        } else if tag == "/font"
+            && let (Some(s), Some((_, spans))) = (span.take(), current.as_mut())
+            && !s.text.trim().is_empty()
+            && s.bbox.left.is_finite()
+        {
+            spans.push(s);
         }
     }
     pages

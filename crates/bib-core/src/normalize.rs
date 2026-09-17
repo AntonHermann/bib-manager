@@ -58,7 +58,7 @@ fn map_characters(input: &str) -> Vec<Unit> {
 
         // Check what comes after this character segment in the original input
         let following_is_letter = if let Some(idx) = next_char_idx {
-            input[idx..].chars().next().map_or(false, |ch| ch.is_alphabetic())
+            input[idx..].chars().next().is_some_and(|ch| ch.is_alphabetic())
         } else {
             false
         };
@@ -77,7 +77,7 @@ fn map_characters(input: &str) -> Vec<Unit> {
                 '\u{201C}' | '\u{201D}' | '\u{201E}' | '\u{201F}' => push(&mut units, '"', false),
                 '\u{03A3}' => {
                     // Capital Sigma: check if it should be final sigma (ς) or regular sigma (σ)
-                    let preceding_is_letter = !units.is_empty() && units.last().map_or(false, |u| u.ch.is_alphabetic());
+                    let preceding_is_letter = !units.is_empty() && units.last().is_some_and(|u| u.ch.is_alphabetic());
                     if preceding_is_letter && !following_is_letter {
                         push(&mut units, '\u{03C2}', false); // ς (final sigma)
                     } else {
@@ -120,10 +120,10 @@ fn collapse(units: &[Unit]) -> Normalized {
             i += 1;
             continue;
         }
-        if let Some((start, end)) = pending_space.take() {
-            if !text.is_empty() {
-                push_char(&mut text, &mut spans, ' ', start, end);
-            }
+        if let Some((start, end)) = pending_space.take()
+            && !text.is_empty()
+        {
+            push_char(&mut text, &mut spans, ' ', start, end);
         }
         push_char(&mut text, &mut spans, unit.ch, unit.start, unit.end);
         i += 1;
