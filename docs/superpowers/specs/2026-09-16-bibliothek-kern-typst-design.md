@@ -146,7 +146,12 @@ Eine Belegstelle ist ein wörtlicher, prüfbarer Ausschnitt; eine Notiz sind eig
 
 **Zotero ist die einzige Quelle für Quellen.** Jede `source` stammt aus Zotero. Quellen, die nur in einer `.bib` stehen, werden nicht angelegt; das Tool fordert auf, sie in Zotero anzulegen (mit dem Connector ein Klick). Fremde `.bib`-Dateien lassen sich bei Bedarf in eine eigene Zotero-Bibliothek importieren.
 
-**Mehrere Bibliotheken.** Geteilte Literatur läuft typischerweise über Zotero-Gruppenbibliotheken. Eine Quelle wird deshalb über das Paar *Bibliothek + Item-Key* identifiziert, nicht über den Item-Key allein, und der Abgleich ist so gebaut, dass er über mehrere Bibliotheken laufen kann. Ob die lokale API Gruppenbibliotheken ausliefert (`/api/groups/<id>/…`), ist noch ungeprüft (Abschnitt 18). Kommt derselbe Citation Key in zwei Bibliotheken vor, landet das in der Prüfliste.
+**Mehrere Bibliotheken.** Geteilte Literatur läuft über Zotero-Gruppenbibliotheken; die lokale API liefert sie aus (`/api/users/0/groups` listet sie, `/api/groups/<id>/items` liefert Einträge, Anhänge und Annotationen — gemessen, Abschnitt 17). Daraus folgt:
+
+- Eine Quelle wird über das Paar **Bibliothek + Item-Key** identifiziert, nicht über den Item-Key allein. Der Abgleich läuft über alle Bibliotheken.
+- **Citation Keys sind nicht bibliotheksübergreifend eindeutig.** Im gemessenen Bestand kommen 17 Keys in mehr als einer Bibliothek vor, meist dasselbe Paper in eigener und Gruppenbibliothek. Welche Bibliotheken ein Projekt benutzt und in welcher Reihenfolge, steht deshalb in `bib.toml` (`[zotero] libraries`). Ein Key wird in dieser Reihenfolge aufgelöst.
+- **Kollision innerhalb der Bibliotheken eines Projekts:** Stimmen DOI oder Titel und Jahr überein, gilt es als dasselbe Werk, und die erste Bibliothek gewinnt, ohne Meldung. Sonst Prüfliste.
+- Einträge **ohne Citation Key** (kommt in Gruppenbibliotheken vor) werden übernommen, sind aber nicht zitierbar; `bib doctor` listet sie.
 
 **Die `.bib` wird gelesen, nie geschrieben** (Bibliothek `biblatex`, dieselbe wie in Typst), und zwar nur im Speicher — eine `.bib` ist in Millisekunden geparst, eine eigene Tabelle braucht es nicht. Daraus entstehen drei Meldungen: Key nur in der `.bib` („nicht in Zotero, bitte dort anlegen"), Key nur in Zotero (Export veraltet, Zitat kompiliert nicht), Metadaten auseinandergelaufen.
 
@@ -242,6 +247,9 @@ kind = "paper"
 [[documents]]
 path = "presentation/slides.typ"
 kind = "slides"
+
+[zotero]
+libraries = ["user", "group:6573630"]   # Auflösungsreihenfolge für Citation Keys
 
 [bibliography]
 path = "ehr_privacy.bib"
@@ -361,6 +369,7 @@ Eigene Messungen (September 2026):
 | Übereinstimmung der Extraktoren untereinander | 64–89 % bei zufälligen 8-Wort-Ausschnitten, ohne Referenz keine Aussage über Richtigkeit → Benchmark nötig |
 | Semantic Scholar zur Hauptquelle des Seminars | 79 zitierende Papers, 41 mit Zitat-Satz, 3 „influential", **0 mit Zitationsabsicht** → Absichten sind zu dünn für Teilprojekt 5 |
 | Zotero 9.0.1 (Snap), lokale API, nur lesend abgefragt | erreichbar, 168 Haupteinträge; `citationKey` als natives Feld gefüllt; **`version` überall 0, `Last-Modified-Version: 0`, kein `/deleted`-Endpunkt** → kein inkrementeller Abgleich; PDF-Pfad über Link `enclosure` (`file://…/Zotero/storage/<key>/…`); 274 Annotationen mit Text, Kommentar, Position und Seitenlabel lesbar; 14 Collections. Schreiben geht nur über die Web-API. |
+| Gruppenbibliotheken über die lokale API | `/api/users/0/groups` liefert 3 Gruppen, `/api/groups/<id>/items` funktioniert inklusive Anhängen und Annotationen (81 + 41 Haupteinträge, eine Gruppe leer). **17 Citation Keys kommen in mehr als einer Bibliothek vor** (16 zwischen eigener und einer Gruppenbibliothek). Ein Gruppeneintrag ohne Citation Key. |
 
 Aus Doku und Issues, **nicht praktisch getestet:** Zed führt bei zwei Language Servern Hover, References und Definition zusammen, Symbolhervorhebung nutzt nur den ersten Server → Schritt 0b.
 
@@ -373,6 +382,5 @@ Fremde Quellen, die das Design geprägt haben: Jergas & Baethge (Zitatfehlerquot
 - Öffnet Zed einen externen Link (`zotero://…`), den der Language Server über `window/showDocument` schickt? Falls nicht, übernimmt das CLI.
 - Ergebnis des Backend-Benchmarks (Schritt 0a). Fällt `pdf_oxide` durch, wird pdfium mit eigenem Reparaturschritt zum Standard.
 - Ergebnis des Zed-Tests mit zwei Language Servern (Schritt 0b).
-- Liefert die lokale Zotero-API Gruppenbibliotheken aus (`/api/groups/<id>/…`)? Nicht geprüft, weil Zotero zum Zeitpunkt der Abfrage nicht lief.
 - Unterstützt die lokale Zotero-API `sort=dateModified`? Die Abfrage lieferte als „neueste" Einträge solche vom Juni, obwohl im September Einträge hinzugekommen sind. Für den Vollabgleich unerheblich, für eine spätere Optimierung zu klären.
 - Beitrag an `pdf_oxide` für Glyphennamen aus eingebetteten Type1-Schriften: wünschenswert, nicht eingeplant.
