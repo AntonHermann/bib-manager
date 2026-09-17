@@ -6,3 +6,4 @@ pub mod normalize;
 pub mod paths;
 pub mod project;
 pub mod review;
+pub mod zotero;
