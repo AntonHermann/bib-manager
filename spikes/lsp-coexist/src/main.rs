@@ -44,7 +44,10 @@ impl Spike {
 impl LanguageServer for Spike {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
         Ok(InitializeResult {
-            server_info: Some(ServerInfo { name: "bib-spike".into(), version: None }),
+            server_info: Some(ServerInfo {
+                name: "bib-spike".into(),
+                version: None,
+            }),
             capabilities: ServerCapabilities {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
@@ -122,13 +125,16 @@ impl LanguageServer for Spike {
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
-        Ok(self.hit(&params.text_document.uri, params.range.start).await.map(|(_, hit)| {
-            vec![CodeActionOrCommand::CodeAction(CodeAction {
-                title: format!("bib-spike: action for {}", hit.key),
-                kind: Some(CodeActionKind::QUICKFIX),
-                ..Default::default()
-            })]
-        }))
+        Ok(self
+            .hit(&params.text_document.uri, params.range.start)
+            .await
+            .map(|(_, hit)| {
+                vec![CodeActionOrCommand::CodeAction(CodeAction {
+                    title: format!("bib-spike: action for {}", hit.key),
+                    kind: Some(CodeActionKind::QUICKFIX),
+                    ..Default::default()
+                })]
+            }))
     }
 
     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
@@ -141,6 +147,11 @@ impl LanguageServer for Spike {
 
 #[tokio::main]
 async fn main() {
-    let (service, socket) = LspService::new(|client| Spike { client, docs: Mutex::new(HashMap::new()) });
-    Server::new(tokio::io::stdin(), tokio::io::stdout(), socket).serve(service).await;
+    let (service, socket) = LspService::new(|client| Spike {
+        client,
+        docs: Mutex::new(HashMap::new()),
+    });
+    Server::new(tokio::io::stdin(), tokio::io::stdout(), socket)
+        .serve(service)
+        .await;
 }

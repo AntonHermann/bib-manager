@@ -17,16 +17,32 @@ pub fn parse_stext(xml: &str) -> Vec<Page> {
         if tag.starts_with("page ") {
             let width = attr(tag, "width").and_then(|v| v.parse().ok()).unwrap_or(0.0);
             let height = attr(tag, "height").and_then(|v| v.parse().ok()).unwrap_or(0.0);
-            current = Some((PageSize { width, height, rotation: None }, Vec::new()));
+            current = Some((
+                PageSize {
+                    width,
+                    height,
+                    rotation: None,
+                },
+                Vec::new(),
+            ));
         } else if tag == "/page" {
             if let Some((size, spans)) = current.take() {
-                pages.push(Page { index: pages.len(), size: Some(size), content: PageContent::Spans(spans) });
+                pages.push(Page {
+                    index: pages.len(),
+                    size: Some(size),
+                    content: PageContent::Spans(spans),
+                });
             }
         } else if tag.starts_with("font ") {
             let font = attr(tag, "name").map(unescape).unwrap_or_default();
             span = Some(Span {
                 text: String::new(),
-                bbox: Rect { left: f32::INFINITY, top: f32::INFINITY, right: f32::NEG_INFINITY, bottom: f32::NEG_INFINITY },
+                bbox: Rect {
+                    left: f32::INFINITY,
+                    top: f32::INFINITY,
+                    right: f32::NEG_INFINITY,
+                    bottom: f32::NEG_INFINITY,
+                },
                 font,
             });
         } else if tag.starts_with("char ") {
@@ -61,7 +77,11 @@ pub fn parse_stext(xml: &str) -> Vec<Page> {
 /// `>` is not necessarily (e.g. `c=">"`); so we split at the last `>` before the next `<`.
 /// Between the tags, mutool's output only has whitespace.
 fn tags(xml: &str) -> impl Iterator<Item = &str> {
-    xml.split('<').skip(1).filter_map(|chunk| chunk.rsplit_once('>').map(|(tag, _)| tag.trim_end_matches('/').trim_end()))
+    xml.split('<').skip(1).filter_map(|chunk| {
+        chunk
+            .rsplit_once('>')
+            .map(|(tag, _)| tag.trim_end_matches('/').trim_end())
+    })
 }
 
 fn attr<'a>(tag: &'a str, name: &str) -> Option<&'a str> {
@@ -137,12 +157,29 @@ mod tests {
     fn parses_pages_spans_and_boxes() {
         let pages = parse_stext(SAMPLE);
         assert_eq!(pages.len(), 2);
-        assert_eq!(pages[0].size, Some(PageSize { width: 612.0, height: 792.0, rotation: None }));
-        let PageContent::Spans(spans) = &pages[0].content else { panic!("no spans") };
+        assert_eq!(
+            pages[0].size,
+            Some(PageSize {
+                width: 612.0,
+                height: 792.0,
+                rotation: None
+            })
+        );
+        let PageContent::Spans(spans) = &pages[0].content else {
+            panic!("no spans")
+        };
         assert_eq!(spans.len(), 2);
         assert_eq!(spans[0].text, "D&>");
         assert_eq!(spans[0].font, "CMBX12");
-        assert_eq!(spans[0].bbox, Rect { left: 238.0, top: 116.0, right: 259.0, bottom: 126.0 });
+        assert_eq!(
+            spans[0].bbox,
+            Rect {
+                left: 238.0,
+                top: 116.0,
+                right: 259.0,
+                bottom: 126.0
+            }
+        );
         assert_eq!(spans[1].text, "ϵ");
         assert_eq!(pages[1].index, 1);
         assert_eq!(pages[1].content, PageContent::Spans(vec![]));

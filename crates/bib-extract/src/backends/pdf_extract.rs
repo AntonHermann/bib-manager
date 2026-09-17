@@ -25,9 +25,17 @@ impl Backend for PdfExtract {
             let pages = texts
                 .into_iter()
                 .enumerate()
-                .map(|(index, text)| Page { index, size: None, content: PageContent::Plain(text) })
+                .map(|(index, text)| Page {
+                    index,
+                    size: None,
+                    content: PageContent::Plain(text),
+                })
                 .collect();
-            Ok(Extraction { backend: self.name(), backend_version: self.version(), pages })
+            Ok(Extraction {
+                backend: self.name(),
+                backend_version: self.version(),
+                pages,
+            })
         })
     }
 }

@@ -54,7 +54,9 @@ pub fn check_lock(lock: &BTreeMap<String, String>, id: &str, sha: &str) -> LockS
     match lock.get(id) {
         None => LockStatus::New,
         Some(expected) if expected == sha => LockStatus::Match,
-        Some(expected) => LockStatus::Mismatch { expected: expected.clone() },
+        Some(expected) => LockStatus::Mismatch {
+            expected: expected.clone(),
+        },
     }
 }
 
@@ -92,7 +94,10 @@ mod tests {
         .unwrap();
         assert_eq!(corpus.docs.len(), 2);
         assert_eq!(corpus.docs[0].expect.sentences, vec!["One two three."]);
-        assert_eq!(corpus.docs[0].expect.before, vec![("One".to_string(), "three".to_string())]);
+        assert_eq!(
+            corpus.docs[0].expect.before,
+            vec![("One".to_string(), "three".to_string())]
+        );
         assert_eq!(corpus.docs[0].expect.chars, vec!["ε"]);
         assert!(corpus.docs[1].expect.sentences.is_empty());
     }
@@ -111,7 +116,9 @@ mod tests {
         assert_eq!(check_lock(&lock, "a", "111"), LockStatus::Match);
         assert_eq!(
             check_lock(&lock, "a", "222"),
-            LockStatus::Mismatch { expected: "111".to_string() }
+            LockStatus::Mismatch {
+                expected: "111".to_string()
+            }
         );
         assert_eq!(check_lock(&lock, "b", "333"), LockStatus::New);
     }

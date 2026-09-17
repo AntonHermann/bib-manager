@@ -28,7 +28,11 @@ pub fn render_markdown(rows: &[Row]) -> String {
                 s.sentences_total,
                 s.order_ok,
                 s.order_total,
-                if s.chars_missing.is_empty() { "–".to_string() } else { s.chars_missing.join(" ") },
+                if s.chars_missing.is_empty() {
+                    "–".to_string()
+                } else {
+                    s.chars_missing.join(" ")
+                },
                 s.control_chars,
                 s.cid_markers,
                 s.replacement_chars,
@@ -46,7 +50,9 @@ pub fn render_markdown(rows: &[Row]) -> String {
     }
 
     md.push_str("\n## Totals per backend\n\n");
-    md.push_str("| Backend | Sentences | Order | Docs with missing chars | Control chars | (cid:) | U+FFFD | Errors |\n");
+    md.push_str(
+        "| Backend | Sentences | Order | Docs with missing chars | Control chars | (cid:) | U+FFFD | Errors |\n",
+    );
     md.push_str("|---|---|---|---|---|---|---|---|\n");
     let mut backends: Vec<&str> = Vec::new();
     for row in rows {
@@ -93,7 +99,15 @@ mod tests {
     }
 
     fn row(doc: &str, backend: &str, scores: Option<TextScores>, error: Option<&str>) -> Row {
-        Row { doc: doc.into(), backend: backend.into(), scores, pages: 6, pages_with_geometry: 6, millis: 120, error: error.map(Into::into) }
+        Row {
+            doc: doc.into(),
+            backend: backend.into(),
+            scores,
+            pages: 6,
+            pages_with_geometry: 6,
+            millis: 120,
+            error: error.map(Into::into),
+        }
     }
 
     #[test]
@@ -103,7 +117,10 @@ mod tests {
             row("b", "pdf_oxide", Some(scores(3, 3, 0)), None),
             row("a", "mutool", None, Some("not installed")),
         ]);
-        assert!(md.contains("| a | pdf_oxide | 2/3 | 1/1 | ε | 2 | 0 | 0 | 6/6 | 120 |"), "{md}");
+        assert!(
+            md.contains("| a | pdf_oxide | 2/3 | 1/1 | ε | 2 | 0 | 0 | 6/6 | 120 |"),
+            "{md}"
+        );
         assert!(md.contains("| a | mutool | error: not installed |"), "{md}");
         assert!(md.contains("| pdf_oxide | 5/6 | 1/2 | 2 | 4 | 0 | 0 | 0 |"), "{md}");
     }
