@@ -1,0 +1,5 @@
+/target
+bench/cache/
+spikes/zed-coexist-ext/target
+spikes/zed-coexist-ext/extension.wasm
+.superpowers/
