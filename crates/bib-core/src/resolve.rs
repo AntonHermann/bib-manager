@@ -38,7 +38,8 @@ pub fn resolve_key(conn: &Connection, key: &str, order: &[LibraryRef]) -> rusqli
 }
 
 pub fn same_work(a: &SourceRow, b: &SourceRow) -> bool {
-    let doi_match = matches!((&a.doi, &b.doi), (Some(x), Some(y)) if x.eq_ignore_ascii_case(y));
+    let doi_match =
+        matches!((&a.doi, &b.doi), (Some(x), Some(y)) if !x.is_empty() && !y.is_empty() && x.eq_ignore_ascii_case(y));
     let title = normalize(&a.title).text;
     let title_year_match =
         !title.is_empty() && title == normalize(&b.title).text && a.year.is_some() && a.year == b.year;
@@ -66,14 +67,20 @@ fn decide(mut candidates: Vec<SourceRow>) -> Resolution {
     if candidates.is_empty() {
         return Resolution::NotFound;
     }
-    let first = candidates.remove(0);
-    if candidates.iter().all(|other| same_work(&first, other)) {
+    // `same_work` is not transitive, so agreement with the first candidate alone is not enough: every pair in
+    // the group must agree, or a genuine conflict (e.g. A~B via title/year, A~C via DOI, but not B~C) would be
+    // silently merged into `Found`. See task-6 fix-round-1 for the counter-example.
+    let all_pairs_agree = candidates
+        .iter()
+        .enumerate()
+        .all(|(i, a)| candidates[i + 1..].iter().all(|b| same_work(a, b)));
+    if all_pairs_agree {
+        let first = candidates.remove(0);
         Resolution::Found {
             source: first,
             duplicates: candidates,
         }
     } else {
-        candidates.insert(0, first);
         Resolution::Conflict(candidates)
     }
 }
@@ -249,6 +256,26 @@ mod tests {
             !same_work(&row("", Some(2016), None), &row("", Some(2016), None)),
             "empty titles never match"
         );
+    }
+
+    #[test]
+    fn conflict_detection_is_pairwise_and_order_independent() {
+        // A~B agree on title+year, A~C agree on DOI, but B~C agree on neither: same_work is not transitive,
+        // so this must be a Conflict regardless of which library is checked first.
+        let conn = db();
+        add(&conn, 1, "A1", "poly2020", "T1", 2020, Some("10.1/d1"));
+        add(&conn, 2, "B1", "poly2020", "T1", 2020, None);
+        add(&conn, 3, "C1", "poly2020", "T2", 2021, Some("10.1/d1"));
+
+        let Resolution::Conflict(rows) = resolve_key(&conn, "poly2020", &[USER, LAB, OTHER]).unwrap() else {
+            panic!("expected Conflict for order [USER, LAB, OTHER]")
+        };
+        assert_eq!(keys(&rows), [(USER, "A1"), (LAB, "B1"), (OTHER, "C1")]);
+
+        let Resolution::Conflict(rows) = resolve_key(&conn, "poly2020", &[LAB, USER, OTHER]).unwrap() else {
+            panic!("expected Conflict for order [LAB, USER, OTHER]")
+        };
+        assert_eq!(keys(&rows), [(LAB, "B1"), (USER, "A1"), (OTHER, "C1")]);
     }
 
     #[test]
