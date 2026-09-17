@@ -1,0 +1,11 @@
+[package]
+name = "lsp-coexist"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+tower-lsp-server.workspace = true
+tokio.workspace = true

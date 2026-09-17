@@ -1,0 +1,16 @@
+[package]
+name = "zed-bib-spike"
+version = "0.0.1"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+zed_extension_api = "0.7.0"
+
+# Eigener Workspace: wird für wasm32-wasip2 gebaut, nicht mit dem Haupt-Workspace.
+[workspace]

@@ -4,6 +4,7 @@ members = [
     "crates/bib-core",
     "crates/bib-extract",
     "tools/extract-bench",
+    "spikes/lsp-coexist",
 ]
 exclude = ["spikes/zed-coexist-ext", "docs/research/probes"]
 
@@ -26,3 +27,5 @@ pdf_oxide = "=0.3.78"
 pdf-extract = "=0.12.0"
 pdfium-render = { version = "=0.9.4", default-features = false, features = ["pdfium_latest", "thread_safe"] }
 tempfile = "3.27"
+tower-lsp-server = "0.23"
+tokio = { version = "1", features = ["io-std", "macros", "rt-multi-thread", "sync"] }

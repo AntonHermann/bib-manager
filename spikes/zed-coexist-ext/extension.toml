@@ -1,0 +1,10 @@
+id = "bib-spike"
+name = "bib spike"
+description = "Wegwerf-Test: zweiter Language Server für Typst neben tinymist"
+version = "0.0.1"
+schema_version = 1
+authors = ["Anton Oehler <antonoehler@gmx.de>"]
+
+[language_servers.bib-spike]
+name = "bib spike"
+languages = ["Typst"]
