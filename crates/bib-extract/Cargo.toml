@@ -9,6 +9,8 @@ publish.workspace = true
 [dependencies]
 thiserror.workspace = true
 pdf_oxide.workspace = true
+pdf-extract.workspace = true
 
 [dev-dependencies]
 bib-core = { path = "../bib-core" }
+tempfile.workspace = true
