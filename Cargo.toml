@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "crates/bib-core",
+    "crates/bib-extract",
     "tools/extract-bench",
 ]
 exclude = ["spikes/zed-coexist-ext", "docs/research/probes"]
@@ -20,3 +21,5 @@ clap = { version = "4.6", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "1.1"
 sha2 = "0.11"
+thiserror = "2.0"
+pdf_oxide = "=0.3.78"
