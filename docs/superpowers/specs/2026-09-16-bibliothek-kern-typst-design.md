@@ -161,7 +161,11 @@ Eine Belegstelle ist ein wörtlicher, prüfbarer Ausschnitt; eine Notiz sind eig
 
 ### Schnittstelle
 
-Ein Backend liefert je Seite: Größe, Drehung, Spans (Text, Box, Schrift) in Leserichtung. Der Kern baut daraus den kanonischen Text und die Zuordnung Textbereich → Seite und Box. Spans statt einzelner Zeichen halten die Datenmenge klein; Zeichen lassen sich bei Bedarf je Seite nachladen.
+Ein Backend liefert je Seite **entweder** Spans (Text, Box, Schrift) in Leserichtung samt Seitengröße und Drehung **oder** nur reinen Text. Text ist Pflicht, Geometrie optional: `pdf-extract` liefert über seine öffentliche API nur Text. Seiten ohne Geometrie tragen das Qualitätsmerkmal *keine Geometrie*; Anker lösen dort über den Text auf, und „PDF an dieser Stelle öffnen" springt nur auf die Seite. In dieser Version rendert nichts Boxen, deshalb reicht das.
+
+Der Kern baut aus den Seiten den kanonischen Text und, wo vorhanden, die Zuordnung Textbereich → Seite und Box. Spans statt einzelner Zeichen halten die Datenmenge klein; Zeichen lassen sich bei Bedarf je Seite nachladen.
+
+**Ein Koordinatensystem für alle Backends:** Punkte, Ursprung oben links, y wächst nach unten, relativ zur MediaBox. Jedes Backend rechnet selbst um (`pdf_oxide` und pdfium liefern PDF-Koordinaten mit Ursprung unten links, `mutool` bereits oben links). Ein Test prüft, dass dieselbe Textstelle in verschiedenen Backends auf wenige Punkte genau an derselben Stelle liegt.
 
 ### Kaskade, pro Seite
 
@@ -352,6 +356,8 @@ Jeder Schritt ist für sich nutzbar; ab Schritt 3 ersetzt das Tool bereits Teile
 **Leseoberfläche.** Eigener PDF-Leser mit CiteSee-Färbung (Zitate markiert nach *in Bibliothek / Triage-Ebene / selbst zitiert / ungelesen / fehlt*), CiteRead-Randnotizen (was zitierende Papers über eine Stelle sagen) und Anzeige von Ankern, Belegstellen und Notizen. Setzt Zitatmarker aus GROBID und Zitatkontexte aus Teilprojekt 5 voraus.
 
 **Fremde oder geteilte `.bib` ohne Zotero.** Bewusst nicht modelliert. Wird es nötig (etwa bei gemeinsamen Papers mit häufig aktualisierter, von Hand gepflegter `.bib`), kommt es als eigenes Thema zurück; bis dahin ist der Weg eine eigene Zotero-Bibliothek oder eine Gruppenbibliothek.
+
+**Öffentliche Bibliographie als interaktive Webseite.** Eigene Paper, ausgewählte Notizen und Verknüpfungen als statisch erzeugte, durchsuchbare Seite mit Graph-Ansicht. Voraussetzungen fürs Datenmodell: Sichtbarkeit pro Notiz und Link (Standard *privat*, Veröffentlichung nur ausdrücklich), und beim Export keine Volltexte oder Ausschnitte über das Zitatrecht hinaus. Setzt Teilprojekt 4 (Notizen) und 5 (Graph) voraus.
 
 **Weitere Teilprojekte:** Notizen und Discourse Graph (4); hybride Suche aus BM25 und Embeddings, SPECTER2 auf Paper-Ebene (3); Zitationsgraph, Zitatkontexte zitierender Papers, Co-Autoren, Retraction-Check, Metadaten-Lint (5); Zitat-Prüfung inhaltlich per LLM, Extraktions-Matrix (6); Zurückschreiben nach Zotero, MCP-Server, Erfassung der Claude-Sessions eines Projekts (7).
 
