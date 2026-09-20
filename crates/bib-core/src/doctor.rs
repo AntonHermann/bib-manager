@@ -6,7 +6,7 @@ use std::path::Path;
 use rusqlite::Connection;
 use serde::Serialize;
 
-use crate::bibfile::{BibFinding, compare, parse_bib};
+use crate::bibfile::{BibEntry, BibFinding, compare, parse_bib};
 use crate::library::LibraryRef;
 use crate::project::ProjectConfig;
 use crate::resolve::{SourceRow, conflicts, keyed_sources};
@@ -297,8 +297,14 @@ fn check_project(
             return Ok(());
         }
     };
-    // A key already reported as a `key_conflict` has no single agreed-on Zotero source, so it must not
-    // silently drive a `.bib` comparison against whichever row `keyed_sources` happened to rank first.
+    // A key already reported as a `key_conflict` has no single agreed-on Zotero source, so doctor must not
+    // offer any opinion about its `.bib` state: neither a `metadata_drift` against whichever row
+    // `keyed_sources` happened to rank first, nor a `bib_only` claiming the key isn't in Zotero at all (it
+    // is, twice, which is exactly why it conflicts). Drop the key from both sides of the comparison.
+    let entries: Vec<BibEntry> = entries
+        .into_iter()
+        .filter(|entry| !conflicted_keys.contains(&entry.key))
+        .collect();
     let zotero: Vec<SourceRow> = keyed_sources(conn, &order)?
         .into_iter()
         .filter(|source| {
@@ -643,7 +649,7 @@ mod tests {
     }
 
     #[test]
-    fn conflicted_key_does_not_drive_a_drift_finding() {
+    fn conflicted_key_drives_no_bib_comparison_finding() {
         let conn = db();
         synced_user_library(&conn);
         add_source(&conn, "U1", Some("smith2020"), "Graph Databases", 2020);
@@ -665,6 +671,9 @@ mod tests {
         .unwrap();
         let found = codes(&findings);
         assert!(found.contains(&("key_conflict", Severity::Warning)), "{found:?}");
+        // Not just the wrong-value drift finding: no `.bib` comparison finding at all, in particular no
+        // `bib_only` falsely claiming the key isn't in Zotero (it is, twice, which is why it conflicts).
         assert!(!found.contains(&("metadata_drift", Severity::Warning)), "{found:?}");
+        assert!(!found.contains(&("bib_only", Severity::Warning)), "{found:?}");
     }
 }
