@@ -41,10 +41,31 @@ pub fn sync_all(conn: &mut Connection, client: &ZoteroClient) -> anyhow::Result<
             .into_iter()
             .map(|group| (LibraryRef::Group(group.id), Some(group.name))),
     );
-    targets
-        .into_iter()
-        .map(|(library, name)| sync_library(conn, client, library, name))
-        .collect()
+    // Every target is attempted regardless of earlier failures: sync_library upserts the `library`
+    // row and a `sync_run` row internally, so skipping a library here (as an eager-stop `collect`
+    // would) leaves it entirely invisible to `bib doctor` and permanently blocks every library
+    // ordered after it.
+    let mut reports = Vec::with_capacity(targets.len());
+    let mut failures = Vec::new();
+    for (library, name) in targets {
+        match sync_library(conn, client, library, name) {
+            Ok(report) => reports.push(report),
+            Err(err) => failures.push((library, err)),
+        }
+    }
+    if failures.is_empty() {
+        return Ok(reports);
+    }
+    let detail = failures
+        .iter()
+        .map(|(library, err)| format!("{library}: {err:#}"))
+        .collect::<Vec<_>>()
+        .join("; ");
+    anyhow::bail!(
+        "sync failed for {} of {} libraries: {detail}",
+        failures.len(),
+        reports.len() + failures.len()
+    )
 }
 
 pub fn sync_library(
@@ -635,6 +656,37 @@ mod tests {
         assert_eq!(status, "failed");
         assert!(error.contains("404"), "{error}");
         assert_eq!(last_successful_sync_age(&conn).unwrap(), None);
+    }
+
+    #[test]
+    fn sync_all_attempts_every_library_even_after_an_earlier_failure() {
+        let zotero = FakeZotero::start();
+        zotero.set("/api/users/0/groups", vec![fake::group(42, "Lab")]);
+        // The user library's `items/top` route is left unset (404), so the first target fails;
+        // the group's routes are all set, so the second target must still be attempted and succeed.
+        zotero.set(
+            "/api/groups/42/items/top",
+            vec![fake::item("GROUP001", "dwork2006", "Differential Privacy", "2006", "")],
+        );
+        zotero.set("/api/groups/42/items?itemType=attachment", vec![]);
+        zotero.set("/api/groups/42/collections", vec![]);
+        let mut conn = db();
+        let err = sync_all(&mut conn, &ZoteroClient::new(zotero.url())).unwrap_err();
+        assert!(err.to_string().contains("user"), "{err:#}");
+        assert_eq!(
+            count(&conn, "SELECT count(*) FROM library"),
+            2,
+            "the second library's row must exist even though the first library failed"
+        );
+        assert_eq!(count(&conn, "SELECT count(*) FROM sync_run"), 2);
+        let (kind, status): (String, String) = conn
+            .query_row(
+                "SELECT l.kind, r.status FROM sync_run r JOIN library l ON l.id = r.library_id WHERE l.kind = 'group'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!((kind.as_str(), status.as_str()), ("group", "ok"));
     }
 
     #[test]

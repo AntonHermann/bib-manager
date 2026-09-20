@@ -149,7 +149,6 @@ mod tests {
 
     const USER: LibraryRef = LibraryRef::User;
     const LAB: LibraryRef = LibraryRef::Group(42);
-    #[allow(dead_code)]
     const OTHER: LibraryRef = LibraryRef::Group(99);
 
     fn db() -> Connection {

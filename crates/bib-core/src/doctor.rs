@@ -1,4 +1,7 @@
 //! `bib doctor`: health of the database, the Zotero sync and the current project (spec §6, §10).
+//!
+//! `run` is not read-only: as a side effect, it enqueues `key_conflict` review items into the
+//! database before counting open review items for its own report.
 
 use std::collections::HashSet;
 use std::path::Path;
