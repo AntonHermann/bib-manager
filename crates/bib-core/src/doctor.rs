@@ -1,5 +1,6 @@
 //! `bib doctor`: health of the database, the Zotero sync and the current project (spec §6, §10).
 
+use std::collections::HashSet;
 use std::path::Path;
 
 use rusqlite::Connection;
@@ -95,6 +96,16 @@ pub fn run(input: &DoctorInput) -> anyhow::Result<Vec<Finding>> {
                 format!("{} has never been synced successfully", library.library),
             ),
         }
+        if let Some(error) = &library.latest_sync_error {
+            push(
+                Severity::Warning,
+                "library",
+                format!(
+                    "{} \"{}\": last sync failed: {error}; run `bib sync` again",
+                    library.library, library.name
+                ),
+            );
+        }
     }
 
     let without_key = strings(
@@ -180,6 +191,10 @@ struct LibraryStatus {
     active_sources: i64,
     /// Seconds since the last successful sync.
     age: Option<i64>,
+    /// Error message of the most recent `sync_run`, present only when that latest attempt failed
+    /// (`sync_run.error` is only ever set alongside `status = 'failed'`), regardless of whether an
+    /// earlier attempt succeeded.
+    latest_sync_error: Option<String>,
 }
 
 fn library_status(conn: &Connection) -> anyhow::Result<Vec<LibraryStatus>> {
@@ -187,16 +202,24 @@ fn library_status(conn: &Connection) -> anyhow::Result<Vec<LibraryStatus>> {
         "SELECT l.kind, l.zotero_id, l.name,
                 (SELECT count(*) FROM source s WHERE s.library_id = l.id AND s.status = 'active'),
                 (SELECT CAST((julianday('now') - julianday(max(r.finished_at))) * 86400 AS INTEGER)
-                 FROM sync_run r WHERE r.library_id = l.id AND r.status = 'ok')
+                 FROM sync_run r WHERE r.library_id = l.id AND r.status = 'ok'),
+                (SELECT r.error FROM sync_run r WHERE r.library_id = l.id ORDER BY r.id DESC LIMIT 1)
          FROM library l ORDER BY l.kind = 'group', l.zotero_id",
     )?;
     let rows = stmt.query_map([], |row| {
         let kind: String = row.get(0)?;
-        Ok((kind, row.get::<_, i64>(1)?, row.get(2)?, row.get(3)?, row.get(4)?))
+        Ok((
+            kind,
+            row.get::<_, i64>(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+            row.get(5)?,
+        ))
     })?;
     let mut statuses = Vec::new();
     for row in rows {
-        let (kind, zotero_id, name, active_sources, age) = row?;
+        let (kind, zotero_id, name, active_sources, age, latest_sync_error) = row?;
         let library = LibraryRef::from_db(&kind, zotero_id)
             .ok_or_else(|| anyhow::anyhow!("unknown library kind {kind:?} in database"))?;
         statuses.push(LibraryStatus {
@@ -204,6 +227,7 @@ fn library_status(conn: &Connection) -> anyhow::Result<Vec<LibraryStatus>> {
             name,
             active_sources,
             age,
+            latest_sync_error,
         });
     }
     Ok(statuses)
@@ -232,6 +256,7 @@ fn check_project(
         }
     }
 
+    let mut conflicted_keys = HashSet::new();
     for (key, sources) in conflicts(conn, &order)? {
         let described: Vec<String> = sources.iter().map(describe).collect();
         let message = format!("citation key {key} names different works: {}", described.join("; "));
@@ -251,6 +276,7 @@ fn check_project(
                 dedupe_key: &format!("key_conflict:{}:{key}", config.id),
             },
         )?;
+        conflicted_keys.insert(key);
     }
 
     let Some(bibliography) = &config.bibliography else {
@@ -271,7 +297,18 @@ fn check_project(
             return Ok(());
         }
     };
-    for finding in compare(&entries, &keyed_sources(conn, &order)?) {
+    // A key already reported as a `key_conflict` has no single agreed-on Zotero source, so it must not
+    // silently drive a `.bib` comparison against whichever row `keyed_sources` happened to rank first.
+    let zotero: Vec<SourceRow> = keyed_sources(conn, &order)?
+        .into_iter()
+        .filter(|source| {
+            !source
+                .citation_key
+                .as_deref()
+                .is_some_and(|key| conflicted_keys.contains(key))
+        })
+        .collect();
+    for finding in compare(&entries, &zotero) {
         match finding {
             BibFinding::OnlyInBib { key } => push(
                 Severity::Warning,
@@ -532,5 +569,102 @@ mod tests {
         assert_eq!(format_age(300), "5 min");
         assert_eq!(format_age(3 * 3600 + 5), "3 h");
         assert_eq!(format_age(12 * 86400), "12 d");
+    }
+
+    #[test]
+    fn severity_orders_and_serializes_lowercase() {
+        assert!(Severity::Info < Severity::Warning);
+        assert!(Severity::Warning < Severity::Error);
+        assert!(Severity::Info < Severity::Error);
+        for (severity, text) in [
+            (Severity::Info, "\"info\""),
+            (Severity::Warning, "\"warning\""),
+            (Severity::Error, "\"error\""),
+        ] {
+            assert_eq!(serde_json::to_string(&severity).unwrap(), text);
+        }
+    }
+
+    #[test]
+    fn a_library_with_no_successful_sync_is_never_synced() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO library (id, kind, zotero_id, name) VALUES (1, 'user', 0, 'My Library')",
+            [],
+        )
+        .unwrap();
+        let findings = run(&input(&conn, None)).unwrap();
+        let never_synced = findings.iter().find(|f| f.code == "never_synced").unwrap();
+        assert_eq!(never_synced.severity, Severity::Warning);
+        assert!(never_synced.message.contains("user"), "{}", never_synced.message);
+        assert!(
+            never_synced.message.contains("has never been synced successfully"),
+            "{}",
+            never_synced.message
+        );
+    }
+
+    #[test]
+    fn retired_sources_are_reported() {
+        let conn = db();
+        synced_user_library(&conn);
+        add_source(&conn, "U1", Some("dwork2006"), "Differential Privacy", 2006);
+        conn.execute("UPDATE source SET status = 'retired'", []).unwrap();
+        let findings = run(&input(&conn, None)).unwrap();
+        assert!(
+            codes(&findings).contains(&("retired_sources", Severity::Info)),
+            "{:?}",
+            codes(&findings)
+        );
+    }
+
+    #[test]
+    fn a_failed_latest_sync_is_a_warning_even_after_an_earlier_success() {
+        let conn = db();
+        synced_user_library(&conn);
+        conn.execute(
+            "INSERT INTO sync_run (library_id, finished_at, status, error)
+             VALUES (1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), 'failed', 'connection refused')",
+            [],
+        )
+        .unwrap();
+        add_source(&conn, "U1", Some("dwork2006"), "Differential Privacy", 2006);
+        let findings = run(&input(&conn, None)).unwrap();
+        let found = codes(&findings);
+        // The stale successful age is still reported...
+        assert!(found.contains(&("library", Severity::Info)), "{found:?}");
+        // ...alongside a warning naming the library and the stored error.
+        let warning = findings
+            .iter()
+            .find(|f| f.code == "library" && f.severity == Severity::Warning)
+            .unwrap_or_else(|| panic!("no library warning in {found:?}"));
+        assert!(warning.message.contains("user"), "{}", warning.message);
+        assert!(warning.message.contains("connection refused"), "{}", warning.message);
+    }
+
+    #[test]
+    fn conflicted_key_does_not_drive_a_drift_finding() {
+        let conn = db();
+        synced_user_library(&conn);
+        add_source(&conn, "U1", Some("smith2020"), "Graph Databases", 2020);
+        add_source(&conn, "U2", Some("smith2020"), "Protein Folding", 2020);
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("refs.bib"),
+            "@article{smith2020, title = {Graph Databases}, year = {2021}}\n",
+        )
+        .unwrap();
+        let config = project_config(Some("refs.bib"));
+        let findings = run(&input(
+            &conn,
+            Some(Project {
+                root: dir.path(),
+                config: &config,
+            }),
+        ))
+        .unwrap();
+        let found = codes(&findings);
+        assert!(found.contains(&("key_conflict", Severity::Warning)), "{found:?}");
+        assert!(!found.contains(&("metadata_drift", Severity::Warning)), "{found:?}");
     }
 }
