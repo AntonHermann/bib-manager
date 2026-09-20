@@ -136,6 +136,7 @@ fn doctor_compares_the_project_bib_file() {
         .env("BIB_ZOTERO_URL", zotero.url())
         .output()
         .unwrap();
+    assert_eq!(doctor.status.code(), Some(1), "warnings exit with 1");
     let codes: Vec<String> = json(&doctor)
         .as_array()
         .unwrap()
@@ -147,6 +148,31 @@ fn doctor_compares_the_project_bib_file() {
         "project found from a subdirectory: {codes:?}"
     );
     assert!(codes.contains(&"bib_only".to_string()), "{codes:?}");
+}
+
+#[test]
+fn doctor_exits_zero_when_only_info_findings() {
+    let zotero = FakeZotero::start();
+    zotero.user_library(
+        vec![fake::item("DWORK001", "dwork2006", "Differential Privacy", "2006", "")],
+        vec![],
+        vec![],
+    );
+    let env = Env::new(zotero.url());
+    assert!(env.bib(&["sync"]).status.success());
+
+    let doctor = env.bib(&["doctor", "--json"]);
+    assert_eq!(
+        doctor.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&doctor.stdout)
+    );
+    let findings = json(&doctor);
+    assert!(
+        findings.as_array().unwrap().iter().all(|f| f["severity"] == "info"),
+        "{findings}"
+    );
 }
 
 #[test]
