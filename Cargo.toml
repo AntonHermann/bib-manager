@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "crates/bib-core",
+    "crates/bib-cli",
     "crates/bib-extract",
     "tools/extract-bench",
     "spikes/lsp-coexist",
