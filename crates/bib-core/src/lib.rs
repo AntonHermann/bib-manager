@@ -2,6 +2,7 @@
 
 pub mod bibfile;
 pub mod db;
+pub mod doctor;
 pub mod library;
 pub mod normalize;
 pub mod paths;
