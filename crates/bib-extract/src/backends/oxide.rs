@@ -26,13 +26,20 @@ impl Backend for PdfOxide {
             for index in 0..count {
                 pages.push(extract_page(&doc, index)?);
             }
-            Ok(Extraction { backend: self.name(), backend_version: self.version(), pages })
+            Ok(Extraction {
+                backend: self.name(),
+                backend_version: self.version(),
+                pages,
+            })
         })
     }
 }
 
 fn extract_page(doc: &pdf_oxide::PdfDocument, index: usize) -> Result<Page, ExtractError> {
-    let page_error = |e: pdf_oxide::Error| ExtractError::Page { index, message: e.to_string() };
+    let page_error = |e: pdf_oxide::Error| ExtractError::Page {
+        index,
+        message: e.to_string(),
+    };
     let raw_spans = doc.extract_spans(index).map_err(page_error)?;
     let raw_spans: Vec<_> = raw_spans.into_iter().filter(|s| !s.text.trim().is_empty()).collect();
 
@@ -44,11 +51,20 @@ fn extract_page(doc: &pdf_oxide::PdfDocument, index: usize) -> Result<Page, Extr
             .into_iter()
             .map(|s| Span {
                 text: s.text,
-                bbox: Rect { left: s.bbox.x, top: -s.bbox.y - s.bbox.height, right: s.bbox.x + s.bbox.width, bottom: -s.bbox.y },
+                bbox: Rect {
+                    left: s.bbox.x,
+                    top: -s.bbox.y - s.bbox.height,
+                    right: s.bbox.x + s.bbox.width,
+                    bottom: -s.bbox.y,
+                },
                 font: s.font_name,
             })
             .collect();
-        return Ok(Page { index, size: None, content: PageContent::Plain(join_spans(&spans)) });
+        return Ok(Page {
+            index,
+            size: None,
+            content: PageContent::Plain(join_spans(&spans)),
+        });
     };
 
     let rotation = doc.get_page_rotation(index).map_err(page_error)?.rem_euclid(360) as u16;
@@ -67,7 +83,11 @@ fn extract_page(doc: &pdf_oxide::PdfDocument, index: usize) -> Result<Page, Extr
         .collect();
     Ok(Page {
         index,
-        size: Some(PageSize { width: urx - llx, height: ury - lly, rotation: Some(rotation) }),
+        size: Some(PageSize {
+            width: urx - llx,
+            height: ury - lly,
+            rotation: Some(rotation),
+        }),
         content: PageContent::Spans(spans),
     })
 }

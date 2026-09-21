@@ -13,7 +13,9 @@ pub struct Mutool {
 
 impl Default for Mutool {
     fn default() -> Self {
-        Self { program: PathBuf::from("mutool") }
+        Self {
+            program: PathBuf::from("mutool"),
+        }
     }
 }
 
@@ -35,7 +37,10 @@ impl Backend for Mutool {
             .ok()
             .and_then(|out| {
                 let text = String::from_utf8_lossy(&out.stderr).into_owned() + &String::from_utf8_lossy(&out.stdout);
-                text.split_whitespace().skip_while(|w| *w != "version").nth(1).map(str::to_string)
+                text.split_whitespace()
+                    .skip_while(|w| *w != "version")
+                    .nth(1)
+                    .map(str::to_string)
             })
             .unwrap_or_else(|| "unknown".to_string())
     }
@@ -55,6 +60,10 @@ impl Backend for Mutool {
             return Err(ExtractError::Open(String::from_utf8_lossy(&output.stderr).into_owned()));
         }
         let xml = std::fs::read_to_string(out_file.path()).map_err(|e| ExtractError::Open(e.to_string()))?;
-        Ok(Extraction { backend: self.name(), backend_version: self.version(), pages: parse_stext(&xml) })
+        Ok(Extraction {
+            backend: self.name(),
+            backend_version: self.version(),
+            pages: parse_stext(&xml),
+        })
     }
 }

@@ -65,14 +65,17 @@ fn map_characters(input: &str) -> Vec<Unit> {
 
         for n in input[start..end].nfkc() {
             let push = |units: &mut Vec<Unit>, ch: char, joinable_hyphen: bool| {
-                units.push(Unit { ch, start, end, joinable_hyphen })
+                units.push(Unit {
+                    ch,
+                    start,
+                    end,
+                    joinable_hyphen,
+                })
             };
             match n {
                 '\u{00AD}' => {}
                 '-' => push(&mut units, '-', true),
-                '\u{2010}' | '\u{2011}' | '\u{2012}' | '\u{2013}' | '\u{2014}' => {
-                    push(&mut units, '-', false)
-                }
+                '\u{2010}' | '\u{2011}' | '\u{2012}' | '\u{2013}' | '\u{2014}' => push(&mut units, '-', false),
                 '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{201B}' => push(&mut units, '\'', false),
                 '\u{201C}' | '\u{201D}' | '\u{201E}' | '\u{201F}' => push(&mut units, '"', false),
                 '\u{03A3}' => {
@@ -175,7 +178,10 @@ mod tests {
 
     #[test]
     fn dashes_and_quotes_are_unified() {
-        assert_eq!(normalize("\u{201C}a\u{201D} \u{2018}b\u{2019} c\u{2014}d").text, "\"a\" 'b' c-d");
+        assert_eq!(
+            normalize("\u{201C}a\u{201D} \u{2018}b\u{2019} c\u{2014}d").text,
+            "\"a\" 'b' c-d"
+        );
     }
 
     #[test]

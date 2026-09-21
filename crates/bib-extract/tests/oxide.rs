@@ -26,14 +26,19 @@ fn first_page_size_is_plausible() {
 fn title_is_near_the_top_in_top_left_coordinates() {
     let extraction = PdfOxide.extract(&common::fixture("dwork2006")).unwrap();
     let page = &extraction.pages[0];
-    let PageContent::Spans(spans) = &page.content else { panic!("no spans") };
+    let PageContent::Spans(spans) = &page.content else {
+        panic!("no spans")
+    };
     let title_top = spans
         .iter()
         .filter(|s| s.text.contains("Differential"))
         .map(|s| s.bbox.top)
         .fold(f32::INFINITY, f32::min);
     let height = page.size.unwrap().height;
-    assert!(title_top < 0.25 * height, "title at top={title_top}, page height {height}");
+    assert!(
+        title_top < 0.25 * height,
+        "title at top={title_top}, page height {height}"
+    );
 }
 
 #[test]

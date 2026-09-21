@@ -109,8 +109,11 @@ fn available_backends(selection: Option<Vec<String>>) -> anyhow::Result<Vec<Box<
     }
     match selection {
         Some(names) => {
-            let unknown: Vec<&str> =
-                names.iter().filter(|n| !all.iter().any(|b| n.as_str() == b.name())).map(String::as_str).collect();
+            let unknown: Vec<&str> = names
+                .iter()
+                .filter(|n| !all.iter().any(|b| n.as_str() == b.name()))
+                .map(String::as_str)
+                .collect();
             if !unknown.is_empty() {
                 bail!(
                     "unknown or unavailable backends: {} (available: {})",
@@ -118,7 +121,10 @@ fn available_backends(selection: Option<Vec<String>>) -> anyhow::Result<Vec<Box<
                     all.iter().map(|b| b.name()).collect::<Vec<_>>().join(", ")
                 );
             }
-            Ok(all.into_iter().filter(|b| names.iter().any(|n| n == b.name())).collect())
+            Ok(all
+                .into_iter()
+                .filter(|b| names.iter().any(|n| n == b.name()))
+                .collect())
         }
         None => Ok(all),
     }

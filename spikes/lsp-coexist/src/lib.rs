@@ -35,7 +35,12 @@ pub fn find_keys(text: &str) -> Vec<KeyHit> {
             }
             let key: String = chars[i + 1..j].iter().collect();
             let width: u32 = chars[i..j].iter().map(|c| c.len_utf16() as u32).sum();
-            hits.push(KeyHit { key, line: line_no as u32, start: utf16_col, end: utf16_col + width });
+            hits.push(KeyHit {
+                key,
+                line: line_no as u32,
+                start: utf16_col,
+                end: utf16_col + width,
+            });
             utf16_col += width;
             i = j;
         }
@@ -44,7 +49,9 @@ pub fn find_keys(text: &str) -> Vec<KeyHit> {
 }
 
 pub fn key_at(text: &str, line: u32, character: u32) -> Option<KeyHit> {
-    find_keys(text).into_iter().find(|hit| hit.line == line && hit.start <= character && character <= hit.end)
+    find_keys(text)
+        .into_iter()
+        .find(|hit| hit.line == line && hit.start <= character && character <= hit.end)
 }
 
 #[cfg(test)]
@@ -57,8 +64,18 @@ mod tests {
         assert_eq!(
             hits,
             vec![
-                KeyHit { key: "dwork2006".into(), line: 0, start: 5, end: 15 },
-                KeyHit { key: "a:b-c_d".into(), line: 1, start: 4, end: 12 },
+                KeyHit {
+                    key: "dwork2006".into(),
+                    line: 0,
+                    start: 5,
+                    end: 15
+                },
+                KeyHit {
+                    key: "a:b-c_d".into(),
+                    line: 1,
+                    start: 4,
+                    end: 12
+                },
             ]
         );
     }

@@ -1,0 +1,22 @@
+[package]
+name = "bib-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "bib"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+bib-core = { path = "../bib-core" }
+clap.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+bib-core = { path = "../bib-core", features = ["test-support"] }
+serde_json.workspace = true
+tempfile.workspace = true

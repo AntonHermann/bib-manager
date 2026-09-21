@@ -22,7 +22,9 @@ pub struct Pdfium {
 
 impl Pdfium {
     pub fn from_env() -> Option<Self> {
-        std::env::var_os("BIB_PDFIUM_LIB_DIR").map(|dir| Self { lib_dir: PathBuf::from(dir) })
+        std::env::var_os("BIB_PDFIUM_LIB_DIR").map(|dir| Self {
+            lib_dir: PathBuf::from(dir),
+        })
     }
 
     /// Binds the native `libpdfium`. `pdfium-render` keeps the bindings process-wide in a
@@ -47,17 +49,25 @@ impl Backend for Pdfium {
     fn version(&self) -> String {
         match read_libpdfium_build(&self.lib_dir) {
             Some(build) => format!("pdfium-render {PDFIUM_RENDER_VERSION}, libpdfium {build}"),
-            None => format!("pdfium-render {PDFIUM_RENDER_VERSION}, libpdfium from {}", self.lib_dir.display()),
+            None => format!(
+                "pdfium-render {PDFIUM_RENDER_VERSION}, libpdfium from {}",
+                self.lib_dir.display()
+            ),
         }
     }
 
     fn extract(&self, path: &Path) -> Result<Extraction, ExtractError> {
         guard(|| {
             let pdfium = self.bind()?;
-            let doc = pdfium.load_pdf_from_file(path, None).map_err(|e| ExtractError::Open(e.to_string()))?;
+            let doc = pdfium
+                .load_pdf_from_file(path, None)
+                .map_err(|e| ExtractError::Open(e.to_string()))?;
             let mut pages = Vec::new();
             for (index, page) in doc.pages().iter().enumerate() {
-                let page_error = |e: PdfiumError| ExtractError::Page { index, message: e.to_string() };
+                let page_error = |e: PdfiumError| ExtractError::Page {
+                    index,
+                    message: e.to_string(),
+                };
                 let height = page.height().value;
                 let rotation = match page.rotation().map_err(page_error)? {
                     PdfPageRenderRotation::None => 0,
@@ -86,11 +96,19 @@ impl Backend for Pdfium {
                     .collect();
                 pages.push(Page {
                     index,
-                    size: Some(PageSize { width: page.width().value, height, rotation: Some(rotation) }),
+                    size: Some(PageSize {
+                        width: page.width().value,
+                        height,
+                        rotation: Some(rotation),
+                    }),
                     content: PageContent::Spans(spans),
                 });
             }
-            Ok(Extraction { backend: self.name(), backend_version: self.version(), pages })
+            Ok(Extraction {
+                backend: self.name(),
+                backend_version: self.version(),
+                pages,
+            })
         })
     }
 }
@@ -101,7 +119,13 @@ impl Backend for Pdfium {
 /// ship alongside `lib/` (`MAJOR`/`MINOR`/`BUILD`/`PATCH`).
 fn read_libpdfium_build(lib_dir: &Path) -> Option<String> {
     let content = std::fs::read_to_string(lib_dir.parent()?.join("VERSION")).ok()?;
-    let field = |key: &str| content.lines().find_map(|line| line.split_once('=').filter(|(k, _)| k.trim() == key).map(|(_, v)| v.trim()));
+    let field = |key: &str| {
+        content.lines().find_map(|line| {
+            line.split_once('=')
+                .filter(|(k, _)| k.trim() == key)
+                .map(|(_, v)| v.trim())
+        })
+    };
     let (major, minor, build, patch) = (field("MAJOR")?, field("MINOR")?, field("BUILD")?, field("PATCH")?);
     Some(format!("{major}.{minor}.{build}.{patch}"))
 }

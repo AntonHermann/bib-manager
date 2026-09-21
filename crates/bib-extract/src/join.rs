@@ -34,30 +34,51 @@ mod tests {
     use crate::Rect;
 
     fn span(text: &str, left: f32, top: f32, right: f32, bottom: f32) -> Span {
-        Span { text: text.into(), bbox: Rect { left, top, right, bottom }, font: "F".into() }
+        Span {
+            text: text.into(),
+            bbox: Rect {
+                left,
+                top,
+                right,
+                bottom,
+            },
+            font: "F".into(),
+        }
     }
 
     #[test]
     fn adjacent_spans_on_one_line_are_glued() {
-        let spans = [span("differ", 0.0, 100.0, 30.0, 110.0), span("ential", 30.5, 100.0, 60.0, 110.0)];
+        let spans = [
+            span("differ", 0.0, 100.0, 30.0, 110.0),
+            span("ential", 30.5, 100.0, 60.0, 110.0),
+        ];
         assert_eq!(join_spans(&spans), "differential");
     }
 
     #[test]
     fn spans_with_a_gap_on_one_line_get_a_space() {
-        let spans = [span("privacy", 0.0, 100.0, 30.0, 110.0), span("loss", 34.0, 100.0, 60.0, 110.0)];
+        let spans = [
+            span("privacy", 0.0, 100.0, 30.0, 110.0),
+            span("loss", 34.0, 100.0, 60.0, 110.0),
+        ];
         assert_eq!(join_spans(&spans), "privacy loss");
     }
 
     #[test]
     fn next_line_gets_a_newline() {
-        let spans = [span("end of line", 0.0, 100.0, 60.0, 110.0), span("next", 0.0, 112.0, 20.0, 122.0)];
+        let spans = [
+            span("end of line", 0.0, 100.0, 60.0, 110.0),
+            span("next", 0.0, 112.0, 20.0, 122.0),
+        ];
         assert_eq!(join_spans(&spans), "end of line\nnext");
     }
 
     #[test]
     fn jump_back_on_same_height_is_a_newline() {
-        let spans = [span("right column", 300.0, 100.0, 400.0, 110.0), span("left", 0.0, 100.0, 20.0, 110.0)];
+        let spans = [
+            span("right column", 300.0, 100.0, 400.0, 110.0),
+            span("left", 0.0, 100.0, 20.0, 110.0),
+        ];
         assert_eq!(join_spans(&spans), "right column\nleft");
     }
 

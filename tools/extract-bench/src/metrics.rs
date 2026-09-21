@@ -40,7 +40,10 @@ pub fn evaluate(expect: &Expect, raw: &str) -> TextScores {
         order_ok,
         order_total: expect.before.len(),
         chars_missing,
-        control_chars: raw.chars().filter(|c| c.is_control() && !matches!(c, '\n' | '\r' | '\t' | '\u{c}')).count(),
+        control_chars: raw
+            .chars()
+            .filter(|c| c.is_control() && !matches!(c, '\n' | '\r' | '\t' | '\u{c}'))
+            .count(),
         cid_markers: raw.matches("(cid:").count(),
         replacement_chars: raw.matches('\u{FFFD}').count(),
     }
@@ -52,7 +55,10 @@ mod tests {
 
     fn expect() -> Expect {
         Expect {
-            sentences: vec!["Deeper networks are harder to train.".into(), "Not in the text at all.".into()],
+            sentences: vec![
+                "Deeper networks are harder to train.".into(),
+                "Not in the text at all.".into(),
+            ],
             before: vec![("deeper networks".into(), "residual learning".into())],
             chars: vec!["ε".into(), "δ".into()],
         }
