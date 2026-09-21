@@ -139,7 +139,8 @@ An excerpt is a verbatim, verifiable passage; a note is in the author's own word
 
 - **Local API** at `127.0.0.1:23119/api/users/0/…`, offline, no rate limit, **read-only**. Requirement: Zotero is running and the "allow other applications" option is enabled.
 - **Full sync instead of incremental.** The local API returns `version = 0` and `Last-Modified-Version: 0` for every entry, and there is no `/deleted` endpoint (measured, section 17). The sync therefore fetches all entries page by page and compares against the database: new, changed (via `dateModified` and a checksum of the fields), gone. With a few hundred entries, this is cheap.
-- **Fallback:** a read-only copy of `zotero.sqlite` when Zotero isn't running. Without either, the tool works from the last known state, whose age is shown everywhere.
+- **Endpoints:** sources from `/items/top` (skipping notes, standalone attachments and annotations), PDFs from `/items?itemType=attachment` joined via `parentItem`, collections from `/collections`, groups from `/users/0/groups`; at most 100 items per page, `Total-Results` gives the total (`/items` alone returns every item type: 603 rows against 168 top-level items).
+- **Fallback:** a read-only copy of `zotero.sqlite` when Zotero isn't running. Without either, the tool works from the last known state, whose age is shown everywhere. Deferred (plan 2): until then, the tool works from the last synced state.
 - **Imported:** metadata, native citation key (field `citationKey`), tags, collections, attachments. The file path is not in the attachment data itself but in the `enclosure` link as a `file://` URL (alternatively `/items/<key>/file/view/url`). Attachments with `contentType = application/pdf` are considered, regardless of `linkMode`.
 - **Deleted, merged, or renamed entries** — recognized by being missing from the full sync or by their key having changed — are retired, not deleted, and land in the review queue because excerpts depend on them.
 - **Annotations** are readable via the local API (`annotationText`, `annotationComment`, `annotationPosition`, `annotationPageLabel`, …), but are only imported starting in subproject 4.
@@ -238,7 +239,7 @@ Tested in step 0b (Zed 1.20.2, tinymist 0.15.8, `docs/research/14-zed-two-langua
 
 ### Configuration
 
-`~/.config/bib/config.toml` for defaults, `bib.toml` in the project takes precedence and is versioned. Credentials live in neither file.
+`~/.config/bib/config.toml` for defaults, `bib.toml` in the project takes precedence and is versioned. Credentials live in neither file. Environment: `BIB_DATA_DIR` overrides the data directory (default `$XDG_DATA_HOME/bib` or `~/.local/share/bib`), `BIB_ZOTERO_URL` the Zotero address (default `http://127.0.0.1:23119`).
 
 ```toml
 id = "0193f2a1-…"
@@ -378,6 +379,7 @@ Own measurements (September 2026):
 | Group libraries via the local API | `/api/users/0/groups` returns 3 groups, `/api/groups/<id>/items` works including attachments and annotations (81 + 41 top-level entries, one group empty). **17 citation keys occur in more than one library** (16 between the personal library and a group library). One group entry without a citation key. |
 | Benchmark (step 0a): 7 documents, 21 sentences, 7 order pairs, `bench/results/2026-09-17.md` | Sentences: `pdf_oxide` 20/21, `pdf-extract` 21/21, `mutool` 21/21, pdfium 18/21; reading order 7/7 everywhere. `pdf_oxide` is missing ε in 2 documents (Dwork 2006, Shokri 2017), `pdf-extract` delivers it there; `mutool` 191 × U+FFFD, pdfium 1128 control characters (in the recounted documents devlin2019 and abadi2016, mostly U+0002 as a line-end hyphenation marker, 527 of the 573 counted there). → **default `pdf_oxide`, cascade `pdf-extract`** (rule 1) |
 | Zed with two language servers (step 0b), `docs/research/14-zed-two-language-servers.md` | Both servers start without settings change; diagnostics, hover and completion are merged; at `@key` tinymist provides no hover, definition, references or completion; merging of definition/references untested (tinymist had no results) |
+| Zotero sync smoke test (plan 2), `docs/research/15-zotero-sync-smoke-test.md` | 4 libraries (3 groups), 161/41/77/0 active sources; 17 citation keys occur in more than one library, 0 of those are different-work conflicts; first sync 0.34 s |
 
 External sources that shaped the design: Jergas & Baethge (quote error rate around 25%, a 2025 update showed no improvement) as the rationale for verification; W3C Web Annotation and Hypothesis for robust anchors; PaperMage for the layer model (a research prototype, unmaintained since 11/2024, uses pdfplumber and would have inherited the ε problem); CiteSee, CiteRead, Scim, ScholarPhi, Threddy, Synergi as sources of ideas for later subprojects; SemanticCite for the four verification stages; Discourse Graphs for the note model.
 
@@ -390,3 +392,5 @@ External sources that shaped the design: Jergas & Baethge (quote error rate arou
 - A contribution to `pdf_oxide` for glyph names from embedded Type1 fonts: desirable, not planned.
 - The suspicion detector from §7 step 2 only detects character-level signals (control characters, `(cid:…)`, no text). The one sentence `pdf_oxide` missed in the benchmark (20/21: vaswani2017, heading "Abstract" mid-paragraph instead of before it) is a reading-order error, which it cannot detect. Whether the separate font heuristic (math font like CMMI without a single Greek character) fires on the pages where `pdf_oxide` silently loses ε (dwork2006, shokri2017: 0 control characters, 0 `(cid:`, 0 U+FFFD) is unmeasured → to be clarified in plan 2. See `bench/results/2026-09-17.md`.
 - Test corpus: every corpus PDF has a MediaBox origin of (0,0), no separate CropBox, and no `/Rotate`; the cross-backend coordinate tests therefore cannot detect an offset MediaBox, a CropBox that differs from the MediaBox, or rotated pages (see the comments in `crates/bib-extract/src/backends/pdfium.rs` and `stext.rs`). Plan 2 needs a synthetic test file with an offset MediaBox, its own CropBox, and `/Rotate 90`, plus a decision on whether spans are reported in rotated or unrotated page space.
+- `zotero.sqlite` fallback when Zotero isn't running: deferred from plan 2.
+- "Key only in Zotero, citation won't compile" (§6) needs the cited keys and is implemented with the Typst parser (step 5).
