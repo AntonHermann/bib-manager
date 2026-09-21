@@ -36,11 +36,19 @@ directory was a temporary directory and has been deleted.
   title and year match) — none are conflicts.
 - The measured count of citation keys shared across libraries (17) matches the count already
   recorded in spec §17 exactly.
-- The user library's active-source count (161) plus its skipped-top-level count (7) sum to 168,
-  matching spec §17's previously recorded top-level entry count for the user library, despite the
-  days elapsed since that measurement.
-- One group library's active-source count differs from the corresponding figure in spec §17
-  (77 now vs. 81 previously for the larger of the two non-empty groups); the other non-empty group
-  and the empty group match. This is consistent with ordinary changes to that group's contents
-  since the spec's measurement date, not a sync defect — the sync and doctor runs above show no
-  errors, no unexpected retirements, and a clean second-sync no-op.
+- Per-library skipped-top-level counts (notes, standalone attachments), in the same order as the
+  "Active sources per library" row above (user, then the three groups): 7, 4, 0, 0 (sum 11, the
+  table's total).
+- Spec §17 records **top-level entries** per library (168 for the user library; 81 + 41 for the
+  two non-empty groups, one group empty), which include the notes and standalone attachments this
+  sync's "active sources" figure excludes. Adding this run's active-source and skipped-top-level
+  counts per library reproduces §17's figures exactly, with no discrepancy: user 161 + 7 = 168;
+  the larger group 77 + 4 = 81; the smaller group 41 + 0 = 41; the empty group 0 + 0 = 0. The
+  apparent 77-vs-81 difference is fully accounted for by this definitional difference between the
+  two documents' measures; there is no evidence of any actual change to that group's contents.
+- **Difference from spec §17:** §17 records "one group entry without a citation key," but this
+  run measured 0 active sources without a citation key (table above). The cause was not
+  determined. One possibility, not verified: that entry is now among the skipped top-level items,
+  or has since been retired, either of which would remove it from the "active sources without a
+  citation key" count without being a sync problem — but this has not been checked and is not
+  established.
