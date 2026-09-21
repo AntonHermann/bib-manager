@@ -36,16 +36,16 @@ directory was a temporary directory and has been deleted.
   title and year match) — none are conflicts.
 - The measured count of citation keys shared across libraries (17) matches the count already
   recorded in spec §17 exactly.
-- Per-library skipped-top-level counts (notes, standalone attachments), in the same order as the
-  "Active sources per library" row above (user, then the three groups): 7, 4, 0, 0 (sum 11, the
-  table's total).
 - Spec §17 records **top-level entries** per library (168 for the user library; 81 + 41 for the
   two non-empty groups, one group empty), which include the notes and standalone attachments this
-  sync's "active sources" figure excludes. Adding this run's active-source and skipped-top-level
-  counts per library reproduces §17's figures exactly, with no discrepancy: user 161 + 7 = 168;
-  the larger group 77 + 4 = 81; the smaller group 41 + 0 = 41; the empty group 0 + 0 = 0. The
-  apparent 77-vs-81 difference is fully accounted for by this definitional difference between the
-  two documents' measures; there is no evidence of any actual change to that group's contents.
+  sync's "active sources" figure excludes. Pairing each library's active-source count with its own
+  skipped-top-level count (identified by which library it belongs to, not by position in any row):
+  the user library, 161 active + 7 skipped = 168; the group with **77** active sources, + 4
+  skipped = 81; the group with **41** active sources, + 0 skipped = 41; the empty group, 0 active +
+  0 skipped = 0 (all skipped counts sum to 11, the table's total). All four reproduce §17's figures
+  exactly. The apparent 77-vs-81 difference in the table above is fully accounted for by this
+  definitional difference between the two documents' measures; there is no evidence of any actual
+  change to that group's contents.
 - **Difference from spec §17:** §17 records "one group entry without a citation key," but this
   run measured 0 active sources without a citation key (table above). The cause was not
   determined. One possibility, not verified: that entry is now among the skipped top-level items,
