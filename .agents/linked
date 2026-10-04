@@ -1,0 +1,4 @@
+# Read-only PDF fixtures required by extraction integration tests.
+# Keep these paths ignored; do not link the writable cache directory.
+bench/cache/dwork2006.pdf
+bench/cache/abadi2016.pdf

@@ -1,11 +1,18 @@
+# Project instructions
+
+Superpowers process skills are active in this project. Use the personal
+installation; do not vendor its skills or bootstrap into this repository.
+
 ## Project commands
 
-Run these commands from the repository root:
+Run commands from the repository root with Rust 1.95 or newer.
 
 - Install dependencies: `./.agents/prepare`
-- Unit tests: `cargo test --workspace --lib --bins --locked`
+- Unit tests (no external PDF fixtures): `cargo test --workspace --lib --bins --locked`
 - Lint/typecheck: `cargo clippy --workspace --all-targets --locked -- -D warnings`
 
-The unit-test command does not cover fixture-dependent integration tests.
-The full integration-test baseline requires PDF fixtures that are not included
-in a fresh checkout.
+Extraction integration tests additionally require the ignored PDF fixtures
+listed in `.agents/linked`. Delta links them from the primary checkout on
+this machine when creating new checkouts; existing checkouts are not updated.
+The coordinate comparison also needs `mutool` to exercise both backends.
+See `bench/README.md` for corpus setup and optional PDFium requirements.
