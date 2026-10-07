@@ -177,11 +177,15 @@ crates/bib-core/     database, Zotero client and sync, citation-key resolution, 
 crates/bib-cli/      the `bib` binary
 crates/bib-extract/  PDF text extraction with several backends
 tools/extract-bench/ benchmark harness for the extraction backends
+docs/decisions/      architecture decision records and their rationale
 docs/research/       measurements and findings from the design phase
 docs/superpowers/    the spec and the implementation plans
 spikes/              throwaway experiments (Zed extension, Typst sample)
 bench/               PDF corpus for the extraction benchmark
 ```
+
+See the [architecture decision register](docs/decisions/README.md) for consequential
+choices, their status, and the workflow for recording or superseding them.
 
 ## Development
 
