@@ -145,15 +145,16 @@ pub fn run(input: &DoctorInput) -> anyhow::Result<Vec<Finding>> {
             ),
         );
     }
-    let without_file = count(
-        conn,
-        "SELECT count(*) FROM attachment WHERE status = 'active' AND path IS NULL",
-    )?;
-    if without_file > 0 {
+    let without_file = attachments_without_file(conn)?;
+    if !without_file.is_empty() {
         push(
             Severity::Info,
             "pdf_without_file",
-            format!("{without_file} PDF attachment(s) have no local file in Zotero"),
+            format!(
+                "{} PDF attachment(s) have no local file in Zotero: {}",
+                without_file.len(),
+                list(&without_file)
+            ),
         );
     }
     let retired = count(conn, "SELECT count(*) FROM source WHERE status = 'retired'")?;
@@ -347,6 +348,38 @@ fn describe(source: &SourceRow) -> String {
     format!("{}:{} \"{}\"{year}", source.library, source.item_key, source.title)
 }
 
+fn attachments_without_file(conn: &Connection) -> anyhow::Result<Vec<String>> {
+    let mut stmt = conn.prepare(
+        "SELECT l.kind, l.zotero_id, l.name, a.item_key, s.item_key, s.title
+         FROM attachment a JOIN library l ON l.id = a.library_id
+         LEFT JOIN source s ON s.id = a.source_id
+         WHERE a.status = 'active' AND a.path IS NULL
+         ORDER BY l.kind = 'group', l.zotero_id, a.item_key",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok((
+            row.get::<_, String>(0)?,
+            row.get::<_, i64>(1)?,
+            row.get::<_, String>(2)?,
+            row.get::<_, String>(3)?,
+            row.get::<_, Option<String>>(4)?,
+            row.get::<_, Option<String>>(5)?,
+        ))
+    })?;
+    let mut descriptions = Vec::new();
+    for row in rows {
+        let (kind, zotero_id, name, attachment_key, source_key, title) = row?;
+        let library = LibraryRef::from_db(&kind, zotero_id)
+            .ok_or_else(|| anyhow::anyhow!("unknown library kind {kind:?} in database"))?;
+        let mut description = format!("{library} \"{name}\": attachment {attachment_key}");
+        if let Some(source_key) = source_key {
+            description.push_str(&format!(", source {source_key} \"{}\"", title.unwrap_or_default()));
+        }
+        descriptions.push(description);
+    }
+    Ok(descriptions)
+}
+
 fn count(conn: &Connection, sql: &str) -> rusqlite::Result<i64> {
     conn.query_row(sql, [], |row| row.get(0))
 }
@@ -498,6 +531,56 @@ mod tests {
         }
         let missing = findings.iter().find(|f| f.code == "missing_citation_key").unwrap();
         assert!(missing.message.contains("user:NOKEY001"), "{}", missing.message);
+    }
+
+    #[test]
+    fn pdf_without_file_identifies_library_parent_and_attachment() {
+        let conn = db();
+        synced_user_library(&conn);
+        add_source(&conn, "PARENT01", Some("paper"), "A useful paper", 2020);
+        conn.execute_batch(
+            "INSERT INTO library (id, kind, zotero_id, name) VALUES (2, 'group', 42, 'Research');
+             INSERT INTO attachment (library_id, item_key, source_id, content_type, link_mode, path, status)
+             VALUES (1, 'ATT00001', 1, 'application/pdf', 'imported_url', NULL, 'active'),
+                    (2, 'ATT00001', NULL, 'application/pdf', 'imported_url', NULL, 'active'),
+                    (1, 'RETIRED1', NULL, 'application/pdf', 'imported_url', NULL, 'retired'),
+                    (1, 'HASPATH1', NULL, 'application/pdf', 'imported_url', '/missing.pdf', 'active');",
+        )
+        .unwrap();
+        let findings = run(&input(&conn, None)).unwrap();
+        let finding = findings.iter().find(|f| f.code == "pdf_without_file").unwrap();
+        assert_eq!(finding.severity, Severity::Info);
+        assert!(finding.message.starts_with("2 PDF attachment(s)"));
+        for detail in [
+            "user \"My Library\": attachment ATT00001, source PARENT01 \"A useful paper\"",
+            "group:42 \"Research\": attachment ATT00001",
+        ] {
+            assert!(finding.message.contains(detail), "{}", finding.message);
+        }
+        assert!(!finding.message.contains("RETIRED1"));
+        assert!(!finding.message.contains("HASPATH1"));
+    }
+
+    #[test]
+    fn pdf_without_file_limits_details_but_counts_all_attachments() {
+        let conn = db();
+        synced_user_library(&conn);
+        for i in (0..12).rev() {
+            conn.execute(
+                "INSERT INTO attachment (library_id, item_key, content_type, link_mode)
+                 VALUES (1, ?1, 'application/pdf', 'imported_url')",
+                [format!("ATT{i:05}")],
+            )
+            .unwrap();
+        }
+        let findings = run(&input(&conn, None)).unwrap();
+        let message = &findings.iter().find(|f| f.code == "pdf_without_file").unwrap().message;
+        assert!(message.starts_with("12 PDF attachment(s)"));
+        assert!(message.contains("ATT00000"));
+        assert!(message.contains("ATT00009"));
+        assert!(!message.contains("ATT00010"));
+        assert!(!message.contains("ATT00011"));
+        assert!(message.ends_with("and 2 more"));
     }
 
     fn project_config(bib: Option<&str>) -> ProjectConfig {
