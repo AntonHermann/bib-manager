@@ -12,6 +12,7 @@ to reverse—not for every implementation detail.
 | [0001: Keep Zotero as the source of truth](0001-keep-zotero-as-source-of-truth.md) | Accepted | Unknown; confirmed during 2026-09-14–2026-09-16 |
 | [0002: Use central SQLite storage](0002-use-central-sqlite-storage.md) | Accepted | Unknown; confirmed during 2026-09-14–2026-09-16 |
 | [0003: Select PDF extraction backends](0003-select-pdf-extraction-backends.md) | Accepted | 2026-09-17 |
+| [0004: Separate diagnostics, reporting, and observability](0004-separate-diagnostics-reporting-and-observability.md) | Accepted | 2026-10-08 |
 
 These first three records are retrospective summaries of existing decisions,
 not new approvals of the whole design spec. The source log for ADRs 0001 and
