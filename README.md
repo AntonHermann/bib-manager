@@ -29,6 +29,10 @@ cargo build --release -p bib-cli
 
 The binary lands at `target/release/bib`. Put it on your `PATH` or call it by path.
 
+For an isolated trial in an existing paper repository, see the
+[local test deployment guide](docs/local-testing.md). The optional `Justfile`
+provides `just build` and `just deploy-local`.
+
 ## Quick start
 
 ```bash
