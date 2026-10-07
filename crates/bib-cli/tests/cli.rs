@@ -31,6 +31,28 @@ impl Env {
             .output()
             .expect("run bib")
     }
+
+    #[cfg(unix)]
+    fn bib_in_tty(&self, args: &[&str]) -> Option<Output> {
+        let probe = Command::new("script")
+            .args(["-q", "-c", "true", "/dev/null"])
+            .output()
+            .ok()?;
+        if !probe.status.success() {
+            return None;
+        }
+
+        let binary = env!("CARGO_BIN_EXE_bib").replace('\'', "'\\''");
+        let command = format!("'{binary}' {}", args.join(" "));
+        Command::new("script")
+            .args(["-q", "-c", &command, "/dev/null"])
+            .current_dir(self.project.path())
+            .env("BIB_DATA_DIR", self.data.path())
+            .env("BIB_ZOTERO_URL", &self.zotero_url)
+            .env_remove("XDG_DATA_HOME")
+            .output()
+            .ok()
+    }
 }
 
 fn json(output: &Output) -> Value {
@@ -108,6 +130,41 @@ fn sync_then_doctor() {
 
     let text = env.bib(&["doctor"]);
     assert!(String::from_utf8_lossy(&text.stdout).contains("[warning] missing_citation_key:"));
+    assert!(
+        !text.stdout.contains(&0x1b),
+        "{}",
+        String::from_utf8_lossy(&text.stdout)
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn doctor_colors_severity_labels_when_stdout_is_a_terminal() {
+    let zotero = FakeZotero::start();
+    zotero.user_library(vec![fake::item("NOKEY001", "", "Untitled", "2020", "")], vec![], vec![]);
+    let env = Env::new(zotero.url());
+    assert!(env.bib(&["sync"]).status.success());
+
+    let Some(output) = env.bib_in_tty(&["doctor"]) else {
+        eprintln!("skipping pseudo-terminal assertions: compatible `script` utility unavailable");
+        return;
+    };
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("\u{1b}[33m[warning]\u{1b}[0m missing_citation_key:"),
+        "{stdout:?}"
+    );
+
+    std::fs::write(
+        env.project.path().join("bib.toml"),
+        "[zotero]\nlibraries = [\"group:abc\"]\n",
+    )
+    .unwrap();
+    let error = env
+        .bib_in_tty(&["doctor"])
+        .expect("compatible `script` utility was preflighted");
+    let output = String::from_utf8_lossy(&error.stdout);
+    assert!(output.contains("\u{1b}[31merror:\u{1b}[0m"), "{output:?}");
 }
 
 #[test]
@@ -195,7 +252,9 @@ fn invalid_project_file_is_a_failure() {
     write_config(env.project.path(), "[zotero]\nlibraries = [\"group:abc\"]\n");
     let output = env.bib(&["doctor"]);
     assert_eq!(output.status.code(), Some(2));
-    assert!(String::from_utf8_lossy(&output.stderr).contains("group:abc"));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("group:abc"));
+    assert!(!stderr.contains('\u{1b}'), "{stderr}");
 }
 
 #[test]

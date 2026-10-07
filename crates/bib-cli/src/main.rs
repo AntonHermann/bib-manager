@@ -11,6 +11,7 @@ use bib_core::zotero::sync::{LibraryReport, last_successful_sync_age, sync_all};
 use bib_core::zotero::{ZoteroClient, ZoteroError};
 use clap::{Parser, Subcommand};
 use serde_json::json;
+use std::io::IsTerminal;
 
 #[derive(Parser)]
 #[command(
@@ -50,7 +51,12 @@ fn main() -> ExitCode {
             if cli.json {
                 println!("{}", json!({"error": format!("{err:#}")}));
             } else {
-                eprintln!("error: {err:#}");
+                let label = color_label(
+                    "error:",
+                    severity_color(Severity::Error),
+                    std::io::stderr().is_terminal(),
+                );
+                eprintln!("{label} {err:#}");
             }
             ExitCode::from(2)
         }
@@ -166,12 +172,33 @@ fn doctor(cli: &Cli, conn: &Connection, db_path: &Path) -> anyhow::Result<ExitCo
 }
 
 fn print_finding(finding: &Finding) {
-    let label = match finding.severity {
+    let label = severity_label(finding.severity, std::io::stdout().is_terminal());
+    println!("{label} {}: {}", finding.code, finding.message);
+}
+
+fn severity_label(severity: Severity, enabled: bool) -> String {
+    let label = match severity {
         Severity::Info => "info",
         Severity::Warning => "warning",
         Severity::Error => "error",
     };
-    println!("[{label}] {}: {}", finding.code, finding.message);
+    color_label(&format!("[{label}]"), severity_color(severity), enabled)
+}
+
+fn severity_color(severity: Severity) -> &'static str {
+    match severity {
+        Severity::Info => "36",    // cyan
+        Severity::Warning => "33", // yellow
+        Severity::Error => "31",   // red
+    }
+}
+
+fn color_label(label: &str, color: &str, enabled: bool) -> String {
+    if enabled {
+        format!("\x1b[{color}m{label}\x1b[0m")
+    } else {
+        label.to_string()
+    }
 }
 
 fn backup(cli: &Cli, conn: &Connection) -> anyhow::Result<ExitCode> {
@@ -184,4 +211,17 @@ fn backup(cli: &Cli, conn: &Connection) -> anyhow::Result<ExitCode> {
         println!("backup written to {}", path.display());
     }
     Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn severity_labels_are_colored_by_severity_only_when_enabled() {
+        assert_eq!(severity_label(Severity::Info, true), "\x1b[36m[info]\x1b[0m");
+        assert_eq!(severity_label(Severity::Warning, true), "\x1b[33m[warning]\x1b[0m");
+        assert_eq!(severity_label(Severity::Error, true), "\x1b[31m[error]\x1b[0m");
+        assert_eq!(severity_label(Severity::Warning, false), "[warning]");
+    }
 }
