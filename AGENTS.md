@@ -33,6 +33,35 @@ the goal.
 Apply to new items and relevant changes; unrelated backfills are separate work.
 Review usefulness and accuracy, not comment counts. No blanket `missing_docs` lint.
 
+## Verification gates
+
+This policy takes precedence over Superpowers defaults for baseline checks,
+completion verification, review handoffs, and merge/landing verification.
+Choose verification based on the actual changes, not the workflow stage.
+
+- For planning/spec documents, prose-only documentation, or prose-only agent
+  instructions, do not run a Rust baseline, tests, or Clippy, including at
+  merge time. Review the diff, run `git diff --check`, and check links or
+  formatting as relevant. Report: "Rust tests not run: prose-only changes."
+- For Rust source (including compiled documentation examples), tests,
+  dependencies, build configuration, fixtures, or executable scripts, run
+  relevant checks during development and the required workspace test and
+  Clippy commands below before completion. Establish a baseline before
+  executable changes so existing failures can be distinguished from regressions.
+- For mixed changes or uncertainty about executable impact, use the executable
+  change gate. A documentation filename alone does not prove a change is
+  prose-only.
+
+Do not rerun a successful check within a thread while its relevant inputs,
+toolchain, environment, and command remain unchanged. Record the command,
+result, and verified revision or working-tree state so reuse is reviewable.
+Planning edits, review handoffs, and commits alone do not invalidate that
+evidence. Before merging or landing, inspect the resulting changes: rerun
+checks if the merge changes relevant inputs; otherwise reuse the recorded
+result and say so rather than claiming a fresh run. Do not reuse test results
+across threads without verifying that all relevant inputs and execution
+conditions match.
+
 ## Project commands
 
 Run commands from the repository root with Rust 1.95 or newer.
