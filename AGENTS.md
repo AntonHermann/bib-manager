@@ -33,6 +33,19 @@ the goal.
 Apply to new items and relevant changes; unrelated backfills are separate work.
 Review usefulness and accuracy, not comment counts. No blanket `missing_docs` lint.
 
+### Architecture decisions
+
+Record consequential architectural choices, significant tradeoffs, and
+costly-to-reverse decisions in `docs/decisions/`, following its README template
+and lifecycle. Add the ADR in the same branch as the relevant spec or code
+change, and update the index. Acceptance requires agreement on the decision,
+not merely implementation. Supersede accepted decisions with linked new ADRs
+rather than erasing their reasoning.
+
+ADRs explain why; specs describe intended behavior, plans describe implementation,
+and research or benchmarks provide evidence. Link those documents instead of
+duplicating them. Routine implementation details do not need ADRs.
+
 ## Verification gates
 
 This policy takes precedence over Superpowers defaults for baseline checks,
