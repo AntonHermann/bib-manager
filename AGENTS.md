@@ -58,8 +58,8 @@ Choose verification based on the actual changes, not the workflow stage.
   formatting as relevant. Report: "Rust tests not run: prose-only changes."
 - For Rust source (including compiled documentation examples), tests,
   dependencies, build configuration, fixtures, or executable scripts, run
-  relevant checks during development and the required workspace test and
-  Clippy commands below before completion. Establish a baseline before
+  relevant checks during development and `just check` (formatting, Clippy,
+  and fixture-free workspace tests) before completion. Establish a baseline before
   executable changes so existing failures can be distinguished from regressions.
 - For mixed changes or uncertainty about executable impact, use the executable
   change gate. A documentation filename alone does not prove a change is
@@ -80,8 +80,11 @@ conditions match.
 Run commands from the repository root with Rust 1.95 or newer.
 
 - Install dependencies: `./.agents/prepare`
-- Unit tests (no external PDF fixtures): `cargo test --workspace --lib --bins --locked`
-- Lint/typecheck: `cargo clippy --workspace --all-targets --locked -- -D warnings`
+- Required executable-change gate (no external PDF fixtures): `just check`
+- Extraction integration tests (PDF fixtures and `mutool` required): `just test-extraction`
+
+The `Justfile` defines the gates used locally and in CI. Without `just`, use
+the raw-command fallback in [README.md](README.md#development).
 
 Extraction integration tests additionally require the ignored PDF fixtures
 listed in `.agents/linked`. Delta links them from the primary checkout on

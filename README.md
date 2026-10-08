@@ -189,17 +189,47 @@ choices, their status, and the workflow for recording or superseding them.
 
 ## Development
 
+With Rust 1.95 or newer and [just](https://just.systems/man/en/packages.html)
+installed, run the required gate from the repository root:
+
 ```bash
-cargo test --workspace
-cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
+just check
 ```
 
-All three must pass. Tests never touch your real database or your real Zotero: they use an in-memory
+The [Justfile](Justfile) defines this gate, and
+[CI](.github/workflows/check.yml) runs the same recipe on Rust 1.95.
+It checks formatting, lints all targets, and runs workspace library and binary
+tests. It needs no PDF corpus, `mutool`, PDFium, or running Zotero, so it can run
+on a fresh clone.
+
+Without `just`, run these equivalent commands in order; all three must pass:
+
+```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test --workspace --lib --bins --locked
+```
+
+Tests never touch your real database or your real Zotero: they use an in-memory
 or temporary database and an in-process fake of the Zotero API (`bib_core::zotero::fake`, behind the
 `test-support` feature).
 
-The extraction benchmark needs its PDF corpus and a pdfium build; see [bench/README.md](bench/README.md).
+### Extraction integration tests
+
+These run separately from the required gate and CI. Provide
+`bench/cache/dwork2006.pdf` and `bench/cache/abadi2016.pdf` (the fixtures listed
+in [.agents/linked](.agents/linked)), and install `mutool` from MuPDF tools.
+See [bench/README.md](bench/README.md) for corpus setup.
+
+```bash
+just test-extraction
+```
+
+This recipe requires `mutool` so the cross-backend coordinate comparison cannot
+silently skip. Without `just`, ensure `mutool` is on `PATH`, then run
+`cargo test -p bib-extract --tests --locked`.
+The recipe does not enable the optional `pdfium` feature; PDFium tests and
+benchmark setup are described in [bench/README.md](bench/README.md).
 
 ## License
 
