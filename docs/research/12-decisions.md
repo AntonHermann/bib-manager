@@ -1,5 +1,12 @@
 # Decision log (brainstorming)
 
+**Status: Historical snapshot.** This records the brainstorming decisions, not
+the current decision register. The [ADR register](../decisions/README.md) is
+authoritative for recorded architectural decisions and their acceptance status;
+the [current spec](../superpowers/specs/2026-09-16-library-core-typst-design.md)
+describes intended behavior and retains choices not yet covered by ADRs.
+The original log below is preserved as provenance, including choices later revised.
+
 All points decided or confirmed by the user, 2026-09-14 to 2026-09-16.
 
 | # | Question | Decision | Rationale / context |

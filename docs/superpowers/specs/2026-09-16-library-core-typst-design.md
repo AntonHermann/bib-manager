@@ -1,7 +1,7 @@
 # Design: Library Core and Typst Integration (Subproject 1 + 2)
 
 **Date:** 2026-09-16
-**Status:** Draft pending acceptance
+**Status:** Steps 0–2 implemented; remaining steps designed but not implemented. Acceptance of architectural decisions is recorded in the [ADR register](../../decisions/README.md).
 **Predecessor:** `IDEA.md`
 
 ---
@@ -39,16 +39,21 @@ Known weaknesses of this workflow that the tool should fix: tables falling apart
 
 ## 2. Decisions
 
-| Decision | Rationale |
-|---|---|
-| **Zotero stays the source of truth**, the tool only reads | The Zotero connector and tablet sync are too valuable to replace. Writing back can be added later; the Zotero IDs are stored for that purpose. |
-| **All data centrally in SQLite** | Excerpts are usable across projects; an export brings them into the repo when needed. |
-| **Configuration, by contrast, lives in the repo** (`bib.toml`) | Hand-written, versioned, diffable. For AI rules specifically: the git history can prove which rules applied at submission time. |
-| **Rust, one program, one workspace** | No component of the first version needs Python. `typst-syntax` exists only in Rust and is the official parser. |
-| **License `MIT OR Apache-2.0`** | An explicit preference: impact in academia takes priority over copyleft. This rules out `mupdf-rs` (AGPL) as a dependency. |
-| **Extraction behind an interface, default `pdf_oxide`** | The backend choice stays cheap to revise; step 0a of the implementation is a benchmark. |
-| **No LLM in this version** | Everything needed is deterministic. Still, the groundwork for later LLM features is included (section 12). |
-| **No daemon** | The language server and CLI talk directly to SQLite (WAL). A daemon only pays off once models are loaded. |
+This table is a summary, not a second decision register. Linked ADRs are authoritative
+for rationale and acceptance status; this spec describes intended behavior, not proof
+that every feature is implemented. Rows without an ADR retain their design context
+until separately reviewed or recorded.
+
+| Decision | Summary / design context | Record |
+|---|---|---|
+| **Zotero stays the source of truth**, the tool only reads | Preserve the connector and tablet workflow; retain Zotero IDs for possible later write-back. | [ADR-0001](../../decisions/0001-keep-zotero-as-source-of-truth.md) |
+| **All data centrally in SQLite** | Share excerpts across projects; export irreplaceable data when needed (§5). | [ADR-0002](../../decisions/0002-use-central-sqlite-storage.md) |
+| **Configuration, by contrast, lives in the repo** (`bib.toml`) | Hand-written, versioned, diffable; policy history remains with the project. | [ADR-0002](../../decisions/0002-use-central-sqlite-storage.md) |
+| **Rust, one program, one workspace** | No component of the first version needs Python. `typst-syntax` exists only in Rust and is the official parser. | No ADR yet |
+| **License `MIT OR Apache-2.0`** | An explicit preference: impact in academia takes priority over copyleft. This rules out `mupdf-rs` (AGPL) as a dependency. | Project constraint |
+| **Extraction behind an interface, default `pdf_oxide`** | Step 0a selected `pdf_oxide`, with a planned `pdf-extract` fallback on suspicious pages (§7). | [ADR-0003](../../decisions/0003-select-pdf-extraction-backends.md) |
+| **No LLM in this version** | Everything needed is deterministic. Still, the groundwork for later LLM features is included (§12). | No ADR yet |
+| **No daemon** | The language server and CLI access SQLite directly in WAL mode. | [ADR-0002](../../decisions/0002-use-central-sqlite-storage.md) |
 
 ---
 
@@ -387,10 +392,17 @@ External sources that shaped the design: Jergas & Baethge (quote error rate arou
 
 ## 18. Open Questions
 
+Current unresolved design questions and assumptions live here. Known implementation
+and coverage gaps live in [deferred work](../../deferred-work.md); the
+[brainstorming question list](../../research/13-open-questions.md) is historical.
+Future-subproject questions below are not commitments for this version.
+
 - Does Zed open an external link (`zotero://…`) sent by the language server via `window/showDocument`? If not, the CLI takes over.
+- Does Zed merge definition, references, and code actions when both servers return results? Step 0b confirmed coexistence and merged diagnostics, hover, and completion, but tinymist returned no competing results for these other requests (§9).
 - Does the local Zotero API support `sort=dateModified`? The query returned entries from June as "newest," even though entries had been added in September. Irrelevant for the full sync, but worth clarifying for a later optimization.
-- A contribution to `pdf_oxide` for glyph names from embedded Type1 fonts: desirable, not planned.
-- The suspicion detector from §7 step 2 only detects character-level signals (control characters, `(cid:…)`, no text). The one sentence `pdf_oxide` missed in the benchmark (20/21: vaswani2017, heading "Abstract" mid-paragraph instead of before it) is a reading-order error, which it cannot detect. Whether the separate font heuristic (math font like CMMI without a single Greek character) fires on the pages where `pdf_oxide` silently loses ε (dwork2006, shokri2017: 0 control characters, 0 `(cid:`, 0 U+FFFD) is unmeasured → to be clarified in plan 2. See `bench/results/2026-09-17.md`.
-- Test corpus: every corpus PDF has a MediaBox origin of (0,0), no separate CropBox, and no `/Rotate`; the cross-backend coordinate tests therefore cannot detect an offset MediaBox, a CropBox that differs from the MediaBox, or rotated pages (see the comments in `crates/bib-extract/src/backends/pdfium.rs` and `stext.rs`). Plan 2 needs a synthetic test file with an offset MediaBox, its own CropBox, and `/Rotate 90`, plus a decision on whether spans are reported in rotated or unrotated page space.
-- `zotero.sqlite` fallback when Zotero isn't running: deferred from plan 2.
-- "Key only in Zotero, citation won't compile" (§6) needs the cited keys and is implemented with the Typst parser (step 5).
+- A contribution to `pdf_oxide` for glyph names from embedded Type1 fonts is desirable, not planned. The cause of the loss and whether its public API exposes enough font encoding and character-code data for an external repair remain unverified; the successful fallback does not establish either.
+- The suspicion detector from §7 step 2 only detects character-level signals (control characters, `(cid:…)`, no text). The one sentence `pdf_oxide` missed in the benchmark (20/21: vaswani2017, heading "Abstract" mid-paragraph instead of before it) is a reading-order error, which it cannot detect. Whether the separate font heuristic (math font like CMMI without a single Greek character) fires on the pages where `pdf_oxide` silently loses ε (dwork2006, shokri2017: 0 control characters, 0 `(cid:`, 0 U+FFFD) is unmeasured. Resolve this when implementing the cascade; the completed steps 1–2 did not settle it. See the [benchmark results](../../../bench/results/2026-09-17.md).
+- For rotated pages, should spans be reported in rotated or unrotated page space? The existing corpus cannot settle this convention; the missing offset/CropBox/rotation coverage is tracked in [deferred work](../../deferred-work.md#extraction-coordinate-coverage).
+- Before graph/enrichment work, measure OpenAlex and Semantic Scholar coverage of the actual library. The research sampled APIs, not library-wide coverage.
+- Before selecting local LLMs for a later subproject, measure throughput on the target laptop; the [hardware research](../../research/09-hardware-local-llms.md) contains estimates, not measurements.
+- Whether to use a cloud vision model (for example olmOCR) only for problematic pages remains an optional later idea, not a selected extraction stage. Any such design must obey §12 and the project's `[ai]` policy.

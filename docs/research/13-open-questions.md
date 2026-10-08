@@ -1,5 +1,28 @@
 # Open questions and unchecked assumptions
 
+**Status: Historical snapshot.** The list below is preserved as recorded during
+brainstorming; it is not the current backlog. Current open design questions and
+unchecked assumptions are in [spec §18](../superpowers/specs/2026-09-16-library-core-typst-design.md#18-open-questions);
+known implementation and coverage gaps are in [deferred work](../deferred-work.md).
+See the [ADR register](../decisions/README.md) for architectural decisions.
+
+Reconciled during the documentation review:
+
+- Project configuration, backup/export formats, PDF-less excerpts, sources outside
+  Zotero, page hints, text-layer changes, binary delivery, and ambiguous matches
+  have design answers in spec §§5–6 and §§8–11. Designed does not mean implemented.
+- Zotero API fields and epsilon normalization have evidence in spec §17.
+  Zed coexistence and extraction quality were tested in step 0; remaining merging,
+  repair, and detector questions are retained in §18.
+- The [benchmark](../../bench/results/2026-09-17.md) reports 14 pages for its
+  freshly fetched Abadi 2016 PDF. The earlier download's page-count discrepancy
+  remains a caveat on that historical measurement, not an unresolved requirement
+  to use that old file.
+- Library-wide API coverage and local LLM throughput remain unmeasured and are
+  carried into §18 for later subprojects.
+- Later ideas remain optional: Type1 repair and cloud vision are in §18; the
+  reading interface, discourse graph, and metadata lint are in spec §16.
+
 As of 2026-09-16.
 
 ## Unchecked, but assumed in the design

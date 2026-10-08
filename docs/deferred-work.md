@@ -1,8 +1,10 @@
 # Deferred work
 
-As of 2026-09-21, after plan 2 (steps 1–2: data model and Zotero sync).
+Initially recorded on 2026-09-21, after plan 2 (steps 1–2: data model and Zotero
+sync); updated with spec follow-ups during the documentation review.
 
-Every item here was raised by a code review during plan 2, judged real, and consciously deferred —
+Unless identified below as a spec follow-up, items here were raised by a code review
+during plan 2, judged real, and consciously deferred —
 either because it cannot produce a wrong answer today, or because the plan that would naturally fix
 it has not been written yet. None of them block the current code.
 
@@ -14,6 +16,33 @@ Two kinds of entry:
 
 Items resolved during plan 2 are not listed. The `sync_all` short-circuit and the stale
 `#[allow(dead_code)]` on `resolve.rs`'s test-only `OTHER` constant were both fixed before the merge.
+
+## Spec follow-ups
+
+These known implementation and coverage gaps were previously tracked in spec §18.
+Moving them here does not expand the implementation scope or claim they are done.
+
+### Offline Zotero database fallback
+
+The read-only `zotero.sqlite` fallback in
+[spec §6](superpowers/specs/2026-09-16-library-core-typst-design.md#6-zotero-sync)
+was deferred from plan 2. When Zotero is unavailable, the current tool uses its last
+synced state rather than reading Zotero's database directly.
+
+### Cited keys missing from the bibliography
+
+The "key only in Zotero, citation won't compile" case from spec §6 needs the keys
+actually cited in Typst. It remains scheduled with the Typst parser (step 5);
+the current `.bib` comparison cannot determine this from library contents alone.
+
+### Extraction coordinate coverage
+
+The current corpus has MediaBox origins of (0,0), no separate CropBox, and no
+`/Rotate`, so coordinate comparisons do not cover offsets, cropping, or rotation.
+Add synthetic coverage with an offset MediaBox, a distinct CropBox, and `/Rotate 90`
+when extending extraction. The rotated-versus-unrotated coordinate convention is
+still a [design question in spec §18](superpowers/specs/2026-09-16-library-core-typst-design.md#18-open-questions);
+do not treat existing tests as evidence for either convention.
 
 ## Behaviour
 
