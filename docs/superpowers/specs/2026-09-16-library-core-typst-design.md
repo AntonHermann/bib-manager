@@ -89,6 +89,13 @@ Excerpt ──► anchor in the canonical text ──► quote verification
 
 A single SQLite database at a fixed location (`~/.local/share/bib/bib.db`), WAL mode, versioned migrations, foreign keys enabled.
 
+**Implementation scope:** the table overview below describes the target model, not
+the schema already present. Migration 1 creates the library/source/attachment,
+tag/collection, and sync bookkeeping tables needed by steps 1–2, plus `review_queue`
+and the empty `llm_call` table required by §12. Anchors, excerpts, text layers,
+projects, documents, citations, usages, and the remaining target tables arrive
+with the features that use them, through later migrations.
+
 | Table | Contents |
 |---|---|
 | `source` | source from Zotero: library + item key (required), citation key, metadata, tags, status (active/retired) |
@@ -155,6 +162,7 @@ An excerpt is a verbatim, verifiable passage; a note is in the author's own word
 **Multiple libraries.** Shared literature goes through Zotero group libraries; the local API serves them (`/api/users/0/groups` lists them, `/api/groups/<id>/items` returns entries, attachments, and annotations — measured, section 17). It follows that:
 
 - A source is identified by the pair **library + item key**, not by the item key alone. The sync runs across all libraries.
+- The local user library is stored as `kind = "user"`, `zotero_id = 0`, matching the local API's `/users/0` address. Here `0` is the local-user convention, not a discovered Zotero account ID. A group is stored as `kind = "group"` with its actual group ID.
 - **Citation keys are not unique across libraries.** In the measured collection, 17 keys occur in more than one library, usually the same paper in both the personal and a group library. Which libraries a project uses, and in what order, is therefore set in `bib.toml` (`[zotero] libraries`). A key is resolved in that order.
 - **Collision within a project's libraries:** if the DOI matches, or the title and year match, it counts as the same work, and the first library wins silently. Otherwise, review queue.
 - Entries **without a citation key** (which occurs in group libraries) are imported but not citable; `bib doctor` lists them.
@@ -279,6 +287,11 @@ logging = "required"
 
 The file is mandatory and takes precedence over the database. If the same ID shows up at two paths, the review queue asks whether it was moved or copied.
 
+**Implementation scope:** steps 1–2 read `bib.toml` from disk; they do not yet
+persist a `project` table or detect one project ID at multiple paths. Those parts
+are scheduled with the Typst parser and tracked in
+[deferred work](../../deferred-work.md#project-persistence-and-duplicate-project-ids).
+
 ---
 
 ## 11. Import and Acceptance
@@ -311,6 +324,10 @@ Binding principles for all subprojects:
 ## 13. Error Handling
 
 Principle: nothing is silently discarded, everything unclear goes to the review queue, `bib review` is the only way out.
+
+**Review queue deduplication:** only open items sharing a `dedupe_key` are
+deduplicated. Once an item is resolved, a recurrence of the same problem can
+create a new item; the resolved record remains part of the history.
 
 | Problem | Behavior |
 |---|---|

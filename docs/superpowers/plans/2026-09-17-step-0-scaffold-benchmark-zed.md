@@ -1,5 +1,22 @@
 # Step 0: Scaffold, Extraction Benchmark, and Zed Test — Implementation Plan
 
+**Status: Completed — historical plan.** Step 0's implementation and recorded
+experiments are complete through
+[`82bdf2f`](https://github.com/AntonHermann/bib-manager/commit/82bdf2f7bf8744c19a0c636b1501668675cc8b44)
+(2026-09-17, final Zed coexistence report). Completion records the experiment,
+including its limits; it does not mean every possible editor interaction was verified.
+
+The original plan below is preserved as history. Its agent directives, checkboxes,
+language/commit conventions, and proposed follow-up schedule are not current
+instructions. Use the [ADR register](../../decisions/README.md),
+[current spec](../specs/2026-09-16-library-core-typst-design.md), and
+[deferred work](../../deferred-work.md) instead. Open design questions are in
+[spec §18](../specs/2026-09-16-library-core-typst-design.md#18-open-questions).
+The [benchmark](../../../bench/results/2026-09-17.md) and
+[Zed report](../../research/14-zed-two-language-servers.md) retain the evidence.
+
+---
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Set up a Rust workspace with normalization and swappable PDF backends, measure the backends against a curated corpus (step 0a), and check whether Zed cleanly merges a second Typst language server alongside tinymist (step 0b).

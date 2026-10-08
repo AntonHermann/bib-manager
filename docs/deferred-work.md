@@ -35,6 +35,14 @@ The "key only in Zotero, citation won't compile" case from spec §6 needs the ke
 actually cited in Typst. It remains scheduled with the Typst parser (step 5);
 the current `.bib` comparison cannot determine this from library contents alone.
 
+### Project persistence and duplicate project IDs
+
+The steps 1–2 plan deferred the `project` table and detection of the same project
+ID at multiple paths to the Typst parser plan. Currently `bib.toml` is read from
+disk only. Implement the persistence and moved-versus-copied review behavior
+described in [spec §10](superpowers/specs/2026-09-16-library-core-typst-design.md#10-cli)
+with that feature; neither is provided by the existing configuration reader.
+
 ### Extraction coordinate coverage
 
 The current corpus has MediaBox origins of (0,0), no separate CropBox, and no

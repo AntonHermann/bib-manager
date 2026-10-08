@@ -3,6 +3,32 @@
 Superpowers process skills are active in this project. Use the personal
 installation; do not vendor its skills or bootstrap into this repository.
 
+## Reading order and document lifecycle
+
+For current project context, read in this order:
+
+1. [Architecture decision register](docs/decisions/README.md), then ADRs relevant
+   to the task. Their status records agreement, not implementation progress.
+2. [Current design spec](docs/superpowers/specs/2026-09-16-library-core-typst-design.md),
+   focusing on the task's behavior and interfaces.
+3. [Deferred work](docs/deferred-work.md), for known implementation and coverage gaps.
+
+Read plans, research, and benchmark reports only when the task needs their
+execution details, history, or evidence. Completed plans are historical records,
+not current instructions: their checkboxes, agent directives, dependency versions,
+and follow-up schedules must not be treated as work to execute again.
+
+Plans should state their lifecycle status near the top. On completion, record
+the implemented scope and completion revision, and link unresolved work to its
+current home. Preserve the historical plan body rather than rewriting it to
+match later code.
+
+A durable decision made during planning or implementation must not live only in
+the plan. Record consequential architectural choices as proposed ADRs using the
+workflow below; put behavioral contracts and scope in the spec, and non-obvious
+implementation contracts in source documentation. Link existing coverage instead
+of copying it. Completion of a plan does not accept an architectural decision.
+
 ## Documentation
 
 Write primarily for maintainers: explain responsibilities, contracts, and

@@ -1,5 +1,33 @@
 # Steps 1–2: Data Model and Zotero Sync — Implementation Plan
 
+**Status: Completed — historical plan.** Spec steps 1–2 were implemented and
+merged in
+[`8aa96e4`](https://github.com/AntonHermann/bib-manager/commit/8aa96e4e2fda26bed081f1b4ff8c5fe3f75016f8)
+(2026-09-21). The [smoke-test report](../../research/15-zotero-sync-smoke-test.md)
+records the real-Zotero check and its limitations.
+
+The original plan below is preserved as history, not current instructions.
+Its agent directives, checkboxes, and follow-up schedule do not authorize
+re-execution. Consult the [ADR register](../../decisions/README.md),
+[current spec](../specs/2026-09-16-library-core-typst-design.md), and
+[deferred work](../../deferred-work.md) for current truth.
+
+The durable points from "Decisions made while writing this plan" now have
+current homes:
+
+- Scope and schema breadth: the spec's status, [§5](../specs/2026-09-16-library-core-typst-design.md#5-data-model),
+  and [§15](../specs/2026-09-16-library-core-typst-design.md#15-implementation-order).
+- Endpoint behavior and the local user-library convention:
+  [§6](../specs/2026-09-16-library-core-typst-design.md#6-zotero-sync).
+- Open-only review deduplication:
+  [§13](../specs/2026-09-16-library-core-typst-design.md#13-error-handling).
+- Deferred offline fallback, cited-key comparison, and project persistence:
+  [spec follow-ups](../../deferred-work.md#spec-follow-ups).
+- Formatting: [rustfmt.toml](../../../rustfmt.toml) is the current setting;
+  the one-time reformat is historical, not a recurring task.
+
+---
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A central SQLite database with versioned migrations and backups, a read-only full sync of all Zotero libraries (user + groups) into it, citation-key resolution across a project's libraries, an in-memory comparison against the project's `.bib` export, and the CLI commands `bib init`, `bib sync`, `bib doctor`, `bib backup`.
