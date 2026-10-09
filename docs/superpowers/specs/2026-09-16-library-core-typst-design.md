@@ -49,11 +49,13 @@ until separately reviewed or recorded.
 | **Zotero stays the source of truth**, the tool only reads | Preserve the connector and tablet workflow; retain Zotero IDs for possible later write-back. | [ADR-0001](../../decisions/0001-keep-zotero-as-source-of-truth.md) |
 | **All data centrally in SQLite** | Share excerpts across projects; export irreplaceable data when needed (§5). | [ADR-0002](../../decisions/0002-use-central-sqlite-storage.md) |
 | **Configuration, by contrast, lives in the repo** (`bib.toml`) | Hand-written, versioned, diffable; policy history remains with the project. | [ADR-0002](../../decisions/0002-use-central-sqlite-storage.md) |
-| **Rust, one program, one workspace** | No component of the first version needs Python. `typst-syntax` exists only in Rust and is the official parser. | No ADR yet |
+| **Rust, one program, one workspace** | `bib` provides CLI commands and `bib lsp`, launched by a Zed extension alongside tinymist (§4, §9). | [ADR-0007](../../decisions/0007-use-one-rust-program-with-a-companion-language-server.md) |
 | **License `MIT OR Apache-2.0`** | An explicit preference: impact in academia takes priority over copyleft. This rules out `mupdf-rs` (AGPL) as a dependency. | Project constraint |
 | **Extraction behind an interface, default `pdf_oxide`** | Step 0a selected `pdf_oxide`, with a planned `pdf-extract` fallback on suspicious pages (§7). | [ADR-0003](../../decisions/0003-select-pdf-extraction-backends.md) |
-| **No LLM in this version** | Everything needed is deterministic. Still, the groundwork for later LLM features is included (§12). | No ADR yet |
+| **No LLM in this version** | Everything needed is deterministic. Still, the groundwork for later LLM features is included (§12). | First-version scope; see [ADR-0006](../../decisions/0006-enforce-responsible-ai-invariants.md) |
 | **No daemon** | The language server and CLI access SQLite directly in WAL mode. | [ADR-0002](../../decisions/0002-use-central-sqlite-storage.md) |
+| **Anchors separate from content; shared node references** | Wording, context, and position support re-resolution as text layers change; features share `node_type` + `node_id` references (§5). | [ADR-0005](../../decisions/0005-separate-anchors-from-content.md) |
+| **Responsible-AI invariants across subprojects** | Separate model output from document writing; preserve provenance, mandatory call logging, and enforced project policy (§12). | [ADR-0006](../../decisions/0006-enforce-responsible-ai-invariants.md) |
 
 ---
 
@@ -314,7 +316,7 @@ Binding principles for all subprojects:
 4. **Reproducibility:** for every LLM call, the model, version, parameters, prompt, and input checksum are stored, along with the checksum of the `[ai]` policy in effect.
 5. **Automate the documentation obligation:** a complete log with tool, version, date, URL, prompt, result, and type of use; from this, an appendix table is generated deterministically, not written by hand.
 6. **Policy per project** in the `[ai]` section of `bib.toml`, enforced by the tool.
-7. **Make data flow visible:** for cloud calls, it is recorded which of the user's own text left the device.
+7. **Make data flow visible:** for cloud calls, record what data left the device, regardless of authorship or origin. This includes prompts, file contents, extracted passages, metadata, and any other transmitted context—not just text written by the user.
 8. **Don't automate away reading.** Hints like "cited but never read" are welcome; skimming aids remain reading aids.
 
 **Implemented in this version:** provenance fields (2), the `llm_call` table (empty, but mandatory for later features), the `[ai]` section in `bib.toml`. Principle 1 holds trivially, since no LLM is included.
