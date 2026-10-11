@@ -92,7 +92,8 @@ pub trait Backend {
     fn extract(&self, path: &Path) -> Result<Extraction, ExtractError>;
 }
 
-/// Catches panics from a backend (`pdf-extract` aborts hard on corrupt files).
+/// Converts unwinding backend panics into extraction errors.
+/// Does not catch process aborts or other failures that terminate the process.
 pub(crate) fn guard<T>(f: impl FnOnce() -> Result<T, ExtractError>) -> Result<T, ExtractError> {
     match std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)) {
         Ok(result) => result,
