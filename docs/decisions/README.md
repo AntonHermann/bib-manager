@@ -59,7 +59,18 @@ records to make an old choice look like the new one. If implementation or new
 evidence conflicts with an ADR, resolve that conflict explicitly rather than
 silently treating code as a new decision.
 
+An optional `Revisit when:` field can identify concrete evidence or changed
+circumstances that warrant reconsideration, especially for choices based on
+measurements or particular versions. It is not a review schedule and does not
+automatically invalidate an accepted decision. With maintainer agreement, adding
+such a trigger is an allowed in-place clarification if the decision, rationale,
+and original acceptance date remain unchanged. Changing the decision still
+requires the supersession workflow above.
+
 ## Template
+
+Omit `Revisit when:` if there is no useful concrete trigger; it is not required
+for every record.
 
 ```markdown
 # ADR-NNNN: Short decision title
@@ -67,6 +78,7 @@ silently treating code as a new decision.
 Status: Proposed
 Decision date: Pending
 Supersedes: None
+Revisit when: Optional concrete evidence or changed circumstances that warrant reconsideration.
 
 ## Context
 

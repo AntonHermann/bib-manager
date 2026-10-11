@@ -4,6 +4,13 @@ Status: Accepted
 Decision date: 2026-09-17
 Supersedes: None
 
+Revisit when: Evaluating an extraction-backend upgrade that could affect text
+quality or geometry; adding representative documents that expose failures
+outside the original benchmark; or measuring suspicion-detector coverage that
+reveals silent failures the planned fallback would miss. Review the relevant
+evidence before changing the backend choice—a new release alone does not reopen
+the decision.
+
 Provenance: Retrospectively reconstructed from the step 0a benchmark decision
 and the updated design spec. This records the measured selection and planned
 cascade, not a claim that the cascade is already implemented.
