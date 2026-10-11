@@ -1,8 +1,13 @@
 # ADR-0004: Separate diagnostics, reporting, and observability
 
-Status: Accepted
+Status: Superseded by [ADR-0008](0008-separate-diagnostics-from-cli-rendering.md), [ADR-0009](0009-use-tracing-for-runtime-observability.md), and [ADR-0010](0010-isolate-crash-prone-extraction.md)
 Decision date: 2026-10-08
 Supersedes: None
+
+Superseded on 2026-10-11. ADRs 0008–0009 preserve the diagnostic and
+runtime-observability choices separately. ADR-0010 revises the extraction
+decision to defer process isolation. The original record below is preserved
+as history, not the current extraction requirement.
 
 Provenance: Agreed with Anton during the color-eyre/miette source-walkthrough
 discussion. Records the intended architecture, not completed implementation.

@@ -55,8 +55,9 @@ programs are not additional application entry points for users.
 
 Direct CLI/server access to SQLite and the absence of a daemon are already
 decided in [ADR-0002](0002-use-central-sqlite-storage.md). This record neither
-reopens that choice nor prevents supervised extraction workers under
-[ADR-0004](0004-separate-diagnostics-reporting-and-observability.md).
+reopens that choice nor prevents supervised extraction workers. Their scope
+is now governed by [ADR-0010](0010-isolate-crash-prone-extraction.md), which
+defers isolation and supersedes that part of ADR-0004.
 
 ## Alternatives considered
 

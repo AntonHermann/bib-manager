@@ -336,10 +336,28 @@ create a new item; the resolved record remains part of the history.
 | Zotero isn't running | last known state, age shown |
 | PDF missing | source is citable, verification reports "no PDF" |
 | Extraction fails on a page | page flagged, rest remains usable |
-| Backend crashes (`pdf-extract` aborts hard on corrupt files) | run in isolation, failure recorded on the attachment |
+| Extraction terminates the application process | no first-version survival guarantee; investigate observed failures (ADR-0010, below) |
 | Error in the language server | no crash: background work, error surfaced as a diagnostic, timeouts on Zotero requests |
 
 Database: WAL for concurrent access from the CLI and the server, versioned migrations, automatic backup before every migration.
+
+### Extraction failure containment
+
+**First-version scope:** [ADR-0010](../../decisions/0010-isolate-crash-prone-extraction.md)
+defers process isolation, replacing that requirement from the superseded
+[ADR-0004](../../decisions/0004-separate-diagnostics-reporting-and-observability.md#extraction-failure-containment).
+
+- Retain in-process Rust extraction and report errors returned to the application,
+  including unwinding panics converted to errors by the existing guard.
+- Do not require supervised extraction workers, enforced process timeouts, forced
+  cancellation, worker-result transfer, or worker retry infrastructure.
+- Do not guarantee survival of process-level failures. Investigate actual failures
+  if they occur rather than adding speculative containment requirements.
+- Revisit when document-processing delays significantly disrupt normal program
+  flow. Investigate the cause and compare remedies before choosing an architecture;
+  separate worker processes are not automatically the solution.
+- Existing external extraction tools and the quality-based fallback in §7 are
+  unaffected. Resource sandboxing and crash-dump infrastructure remain out of scope.
 
 ---
 
